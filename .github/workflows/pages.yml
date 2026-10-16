@@ -45,6 +45,15 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html style.css core.js progress.js renderer.js game.js _site/
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = '_site/index.html';
+          let html = fs.readFileSync(path, 'utf8');
+          for (const file of ['style.css', 'core.js', 'progress.js', 'renderer.js', 'game.js']) {
+            html = html.replaceAll(`"${file}"`, `"${file}?v=${process.env.GITHUB_SHA}"`);
+          }
+          fs.writeFileSync(path, html);
+          NODE
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
