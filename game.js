@@ -217,7 +217,7 @@
     text('boss-name', boss ? boss.title + ' · ' + (boss.id === game.encounter?.bossId ? Math.ceil(boss.hp) + ' / ' + Math.ceil(boss.maxHp) + ' HP' : Math.ceil(boss.hp / boss.maxHp * 100) + '%') : '');
     const encounter = game.encounter;
     $('encounter-note').hidden = !encounter; arena.classList.toggle('has-encounter', Boolean(encounter));
-    if (encounter) text('encounter-note', encounter.phase === 'warning' ? 'ПЕЧАТЬ ЗАМКНЁТСЯ ЧЕРЕЗ ' + Math.ceil(encounter.warningLeft) + ' С' : 'СТЕНА ЗАКРЫТА · ПОБЕДИ БОССА: ' + NightEnemies[encounter.kind].title.toUpperCase());
+    if (encounter) text('encounter-note', encounter.phase === 'warning' ? 'ПЕЧАТЬ ЗАМКНЁТСЯ ЧЕРЕЗ ' + Math.ceil(encounter.warningLeft) + ' С' : 'СТЕНА: ' + Math.ceil(encounter.lockedLeft) + ' С · УБЕЙ БОССА, ЧТОБЫ СНЯТЬ РАНЬШЕ');
     if (game.stressMode) text('save-status', 'ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ');
     else if (status === 'ready') text('save-status', progress.available ? 'АВТОСОХРАНЕНИЕ' : 'ХРАНИЛИЩЕ НЕДОСТУПНО');
     text('dash-label', p.dashReady <= 0 ? 'РЫВОК ГОТОВ' : 'РЫВОК ' + p.dashReady.toFixed(1) + ' С');
@@ -375,8 +375,9 @@
     simulationMS += (performance.now() - simulationStart - simulationMS) * .1;
     if (game.events.includes('boss')) notify('БОСС: ' + game.lastBoss.toUpperCase());
     if (game.events.includes('arena-warning')) notify('ГОТОВЬСЯ: ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ СТЕНЫ');
-    if (game.events.includes('arena-clear')) notify('ПЕЧАТЬ СНЯТА · ЗАБЕРИ СУНДУК БОССА');
-    if (game.events.some(event => ['boss', 'arena-warning', 'arena-clear', 'chest-open'].includes(event))) saveCheckpoint();
+    if (game.events.includes('arena-clear') || game.events.includes('boss-defeated')) notify('БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК');
+    if (game.events.includes('arena-timeout')) notify('СТЕНА ИСЧЕЗЛА · БОСС ОСТАЛСЯ НА ПОЛЕ');
+    if (game.events.some(event => ['boss', 'arena-warning', 'arena-clear', 'arena-timeout', 'boss-defeated', 'chest-open'].includes(event))) saveCheckpoint();
     game.events.length = 0;
     if (now - lastHUD > 85) { updateHUD(); lastHUD = now; }
     if (!document.hidden && (game.status === 'running' || dirty)) {

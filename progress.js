@@ -29,7 +29,7 @@
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
       offers: game.offers.map(u => u.id), encountered: Array.from(game.encountered),
-      terrainEnabled: game.terrainEnabled, encounter: game.encounter ? { ...game.encounter } : null,
+      terrainEnabled: game.terrainEnabled, arenaBalance: 2, encounter: game.encounter ? { ...game.encounter } : null,
       chests: game.chests.map(chest => ({ ...chest })), reward: game.reward ? { ...game.reward, items: game.reward.items.map(item => ({ ...item })) } : null,
       enemies: game.enemies.filter(e => e.alive).map(e => [e.kind, ...enemyKeys.map(key => e[key])]),
       gems: game.gems.map(g => ({ x: g.x, y: g.y, value: g.value, bin: g.bin, magnetized: Boolean(g.magnetized) }))
@@ -90,8 +90,18 @@
           const a = save.encounter;
           if (!plain(a) || !['warning', 'locked'].includes(a.phase) || !Object.hasOwn(NightEnemies, a.kind) || !NightEnemies[a.kind].boss) return null;
           game.encounter = { ...numeric(a, ['x', 'y', 'radius', 'warningLeft', 'bossId']), phase: a.phase, kind: a.kind };
+          game.encounter.lockedLeft = a.lockedLeft === undefined ? NightBalance.arenaSeconds : number(a.lockedLeft, 0, NightBalance.arenaSeconds);
           number(a.radius, 120, 300); number(a.x, a.radius, game.width - a.radius); number(a.y, a.radius, game.height - a.radius); number(a.warningLeft, 0, 5);
           if (!uint(a.bossId) || a.phase === 'locked' && !game.enemies.some(e => e.id === a.bossId && e.boss && e.arenaMember)) return null;
+          if (a.phase === 'locked' && save.arenaBalance !== 2) {
+            const boss = game.enemies.find(e => e.id === a.bossId);
+            boss.hp *= .5; boss.maxHp *= .5; boss.damage *= NightBalance.arenaBossDamage;
+            game.player.invulnerable = Math.max(game.player.invulnerable, 1.5);
+            let minions = 0;
+            for (const enemy of game.enemies) if (enemy.arenaMember && !enemy.boss && ++minions > NightBalance.arenaSummonLimit) {
+              enemy.arenaMember = 0; game.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
+            }
+          }
         }
         game.chests = list(save.chests, 64).map(c => {
           if (!Object.hasOwn(NightEnemies, c.source) || !NightEnemies[c.source].boss || !uint(c.id) || c.id < 1 || c.id >= game.nextChestId) throw new Error('Invalid chest');

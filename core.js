@@ -50,7 +50,7 @@
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
   const SLOTS = ['needle', 'blades', 'pulse', 'lightning', 'boomerang', 'frost', 'meteor', 'poison', null];
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
-  const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6 });
+  const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
   const TERRAIN_TYPES = [
     { kind: 'grave', w: 46, h: 46, sprite: ' ._.\n |+|\n_|_|_', ink: 1 },
@@ -188,11 +188,16 @@
       }
     }
     beginEncounter() {
-      this.encounter = { phase: 'warning', x: this.player.x, y: this.player.y, radius: this.arenaRadius, warningLeft: 5, bossId: 0, kind: BOSSES[this.bossIndex % BOSSES.length] };
+      this.encounter = { phase: 'warning', x: this.player.x, y: this.player.y, radius: this.arenaRadius, warningLeft: 5, lockedLeft: BALANCE.arenaSeconds, bossId: 0, kind: BOSSES[this.bossIndex % BOSSES.length] };
       this.events.push('arena-warning');
     }
     updateEncounter(dt) {
-      const arena = this.encounter; if (!arena || arena.phase !== 'warning') return;
+      const arena = this.encounter; if (!arena) return;
+      if (arena.phase === 'locked') {
+        arena.lockedLeft = Math.max(0, arena.lockedLeft - dt);
+        if (arena.lockedLeft <= 0) this.releaseArena('arena-timeout');
+        return;
+      }
       arena.x = clamp(this.player.x, arena.radius + 90, this.width - arena.radius - 90);
       arena.y = clamp(this.player.y, arena.radius + 90, this.height - arena.radius - 90);
       arena.warningLeft = Math.max(0, arena.warningLeft - dt);
@@ -201,9 +206,19 @@
       for (const enemy of this.enemies) { enemy.arenaMember = 0; this.resolveArena(enemy); }
       const angle = this.random() * TAU, distance = arena.radius * .56;
       const boss = this.spawn(arena.kind, arena.x + Math.cos(angle) * distance, arena.y + Math.sin(angle) * distance, 1);
-      boss.hp *= 2.5; boss.maxHp = boss.hp; boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
+      boss.hp *= BALANCE.arenaBossHealth; boss.maxHp = boss.hp; boss.damage *= BALANCE.arenaBossDamage;
+      boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
+      this.player.invulnerable = Math.max(this.player.invulnerable, 1);
       arena.bossId = boss.id; this.bossIndex++; this.bossSpawned = true; this.lastBoss = boss.title;
       this.events.push('boss');
+    }
+    releaseArena(event) {
+      if (!this.encounter) return;
+      this.encounter = null; this.nextBossAt = this.pressureTime + 90;
+      for (const enemy of this.enemies) enemy.arenaMember = 0;
+      for (const summon of this.summons) summon.arenaMember = 0;
+      this.resolveTerrain(this.player); this.player.invulnerable = Math.max(this.player.invulnerable, 1.5);
+      this.events.push(event);
     }
     dropChest(enemy) {
       const chest = { id: this.nextChestId++, x: enemy.x, y: enemy.y, source: enemy.kind, radius: 20 };
@@ -256,7 +271,7 @@
     aimedTarget(range = 620) {
       const p = this.player, aim = this.aimPoint(range), dx = aim.x - p.x, dy = aim.y - p.y, length = Math.hypot(dx, dy) || 1;
       let found = null, score = Infinity;
-      for (const e of this.enemies) if (e.alive) {
+      for (const e of this.enemies) if (e.alive && (this.encounter?.phase !== 'locked' || e.arenaMember)) {
         const ex = e.x - p.x, ey = e.y - p.y, along = (ex * dx + ey * dy) / length, side = Math.abs(ex * dy - ey * dx) / length;
         if (along > 0 && along < range && side < 48 + e.radius && along + side * 3 < score) { score = along + side * 3; found = e; }
       }
@@ -358,8 +373,9 @@
       if (e.boss) this.bossKills++;
       if (e.boss) {
         if (this.encounter?.bossId === e.id) {
-          this.encounter = null; this.nextBossAt = this.pressureTime + 90; this.resolveTerrain(this.player); this.events.push('arena-clear');
-        }
+          this.releaseArena('arena-clear');
+        } else this.events.push('boss-defeated');
+        this.nextBossAt = this.pressureTime + 90;
         this.dropChest(e);
       }
       this.addGem(e.x, e.y, e.xp);
@@ -381,12 +397,7 @@
     fire() {
       if (!this.levels.needle) return;
       const p = this.player;
-      let closest = null, distance = 700 * 700;
-      for (const e of this.enemies) if (e.alive) {
-        const d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2;
-        if (d < distance) { distance = d; closest = e; }
-      }
-      if (this.fireMode === 'manual') closest = this.aimPoint(700);
+      const closest = this.fireMode === 'manual' ? this.aimPoint(700) : this.targets(p.x, p.y, 700, 1)[0];
       if (!closest) return;
       const angle = Math.atan2(closest.y - p.y, closest.x - p.x);
       const count = 1 + this.levels.fork;
@@ -432,12 +443,13 @@
       return result;
     }
     targets(x = this.player.x, y = this.player.y, radius = 620, count = 2) {
-      const best = [], distances = [];
-      for (const e of this.enemies) if (e.alive) {
+      const best = [], distances = [], arena = this.encounter?.phase === 'locked' ? this.encounter : null;
+      for (const e of this.enemies) if (e.alive && (!arena || e.arenaMember)) {
         const d = (e.x - x) ** 2 + (e.y - y) ** 2; if (d >= radius * radius) continue;
-        let i = 0; while (i < distances.length && distances[i] < d) i++;
+        const score = arena?.bossId === e.id ? -1 : d;
+        let i = 0; while (i < distances.length && distances[i] < score) i++;
         if (i >= count) continue;
-        best.splice(i, 0, e); distances.splice(i, 0, d); if (best.length > count) { best.pop(); distances.pop(); }
+        best.splice(i, 0, e); distances.splice(i, 0, score); if (best.length > count) { best.pop(); distances.pop(); }
       }
       return best;
     }
@@ -542,6 +554,10 @@
       this.slashes = this.slashes.filter(s => s.life > 0);
     }
     queueSummons(e, kind, count) {
+      if (e.arenaMember && this.encounter?.phase === 'locked') {
+        const inside = this.enemies.filter(enemy => enemy.alive && enemy.arenaMember && !enemy.boss).length + this.summons.filter(summon => summon.arenaMember).length;
+        count = Math.min(count, Math.max(0, BALANCE.arenaSummonLimit - inside));
+      }
       for (let i = 0; i < count && this.summons.length < 24; i++) {
         const angle = this.random() * TAU, distance = 55 + this.random() * 40;
         this.summons.push({ kind, x: clamp(e.x + Math.cos(angle) * distance, 28, this.width - 28), y: clamp(e.y + Math.sin(angle) * distance, 28, this.height - 28), arenaMember: e.arenaMember });
@@ -623,7 +639,7 @@
 
       this.spawnClock -= dt;
       if (this.spawnClock <= 0) this.spawnWave();
-      if (!this.encounter && this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit) this.beginEncounter();
+      if (!this.encounter && this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit && !this.enemies.some(e => e.alive && e.boss)) this.beginEncounter();
       this.updateEncounter(dt);
       this.peakEnemies = Math.max(this.peakEnemies, this.enemies.length);
       for (const e of this.enemies) if (e.alive) {
