@@ -115,21 +115,27 @@
       for (const s of game.slashes) for (let a = -.95; a <= .95; a += .13) this.world(s.x + Math.cos(s.angle + a) * s.radius, s.y + Math.sin(s.angle + a) * s.radius, '/', 8);
       for (const e of game.enemies) {
         const ink = e.flash > 0 ? 8 : e.chilledTill > game.time ? 9 : e.ink, p = this.position(e);
+        if (e.windup > 0 && e.ai === 'blink') { this.circle(e.targetX, e.targetY, 32, 6, '!'); this.world(e.targetX, e.targetY, '[!]', 7); }
         const screen = this.point(p.x, p.y);
         if (screen.x < -35 || screen.x > this.width + 35 || screen.y < -45 || screen.y > this.height + 45) continue;
         // Thousands of overlapping bodies share a visible ASCII cell. Composite
         // one representative there; every enemy still runs in the simulation.
-        if (game.enemies.length > 1000 && e.kind !== 'reaper') {
+        if (game.enemies.length > 1000 && !e.boss) {
           const x = Math.max(0, Math.min(this.cols - 1, Math.floor(screen.x / this.cellW)));
           const y = Math.max(0, Math.min(this.rows - 1, Math.floor(screen.y / this.cellH))), key = y * this.cols + x;
           if (this.enemyCells[key]) continue;
           this.enemyCells[key] = 1;
         }
         this.renderedEnemies++;
-        const sprite = e.kind === 'ghoul' ? 'z' : e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.kind === 'skeleton' ? 'S' : e.kind === 'brute' ? ',_,\n[O]\n/ \\' : ' /W\\\n (x)\n/| |\\';
+        const sprite = e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.sprite;
         this.world(p.x, p.y, sprite, ink);
         if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - 38, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
+        if (e.windup > 0) {
+          this.world(p.x, p.y - 52, '!', 7);
+          if (e.ai === 'charge') this.line(p, { x: p.x + e.chargeX * 180, y: p.y + e.chargeY * 180 }, 6, ':');
+        }
       }
+      for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', 6); this.world(p.x, p.y, '*', 7); }
       for (const b of game.boomerangs) { const p = this.position(b); this.world(p.x, p.y, ['<)>', '/|\\', '<(>', '\\|/'][Math.floor(b.age * 16) % 4], 7); }
       for (const arc of game.arcs) for (let i = 1; i < arc.points.length; i++) this.line(arc.points[i - 1], arc.points[i], arc.life > .12 ? 8 : 5, i % 2 ? '~' : '/', true);

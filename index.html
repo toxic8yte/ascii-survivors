@@ -24,7 +24,7 @@
       <div class="stat-block level-block"><span class="stat-label">УРОВЕНЬ</span><strong id="level">01</strong></div>
     </section>
     <div class="xp-track" aria-label="Опыт до следующего уровня"><div id="xp-bar"></div><span id="xp-text">ОПЫТ 0 / 6</span></div>
-    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ОГНЕННАЯ ИГЛА</span><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
+    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ОГНЕННАЯ ИГЛА</span><span id="boss-name"></span><button id="bestiary-open" type="button">БЕСТИАРИЙ</button><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
 
     <section class="arena" id="arena" aria-label="Игровое поле">
       <canvas id="screen" role="img" aria-label="Бесконечная ASCII-арена. WASD или стрелки — движение, пробел — рывок, 1–9 — оружие, M — авто или ручной огонь, ЛКМ или F — ручная атака.">Для игры нужен браузер с поддержкой Canvas и JavaScript.</canvas>
@@ -54,8 +54,10 @@ ___|_____|___|__|___|_____|___</pre>
             <div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div>
             <div class="characters" id="characters" role="group" aria-label="Персонажи"></div>
             <div class="character-details"><h3 id="character-name">Мара / Охотница</h3><p id="character-description"></p><div id="character-stats"></div><b id="character-weapon"></b></div>
+            <div class="continue-box" id="continue-box" hidden><p id="continue-summary"></p><button class="primary-button" id="continue-run" type="button">ПРОДОЛЖИТЬ ЗАБЕГ →</button></div>
             <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
-            <div class="arsenal-note">6 ГЕРОЕВ · 8 ВИДОВ ОРУЖИЯ · 16 ДАРОВ</div>
+            <div class="arsenal-note">6 ГЕРОЕВ · 8 ОРУЖИЙ · 17 ВРАГОВ / 6 БОССОВ</div>
+            <div id="progress-summary" class="progress-summary"></div>
           </section>
         </div>
       </div>
@@ -89,10 +91,12 @@ ___|_____|___|__|___|_____|___</pre>
 
     <footer>
       <div class="loadout" id="loadout" aria-label="Оружие"></div>
-      <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · 1–9 оружие · M режим · ЛКМ / F атака · P пауза</span></div>
+      <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span id="save-status" role="status">АВТОСОХРАНЕНИЕ</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · 1–9 оружие · M режим · ЛКМ / F атака · P пауза</span></div>
     </footer>
   </main>
+  <dialog id="bestiary" aria-labelledby="bestiary-title"><div class="bestiary-heading"><div><div class="eyebrow">ОБИТАТЕЛИ КЛАДБИЩА</div><h2 id="bestiary-title">Бестиарий</h2></div><button id="bestiary-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Перед рывком появляется линия, перед телепортацией — метка. Уходи с линии атаки.</p><div id="bestiary-list" class="bestiary-grid"></div></dialog>
   <script src="core.js"></script>
+  <script src="progress.js"></script>
   <script src="renderer.js"></script>
   <script src="game.js"></script>
 </body>

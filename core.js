@@ -3,16 +3,28 @@
   const TAU = Math.PI * 2;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const ENEMIES = {
-    ghoul: { hp: 18, speed: 52, radius: 12, damage: 10, xp: 1, ink: 3, glyph: 'z' },
-    bat: { hp: 12, speed: 104, radius: 10, damage: 8, xp: 1, ink: 5, glyph: 'v' },
-    skeleton: { hp: 40, speed: 65, radius: 14, damage: 12, xp: 2, ink: 4, glyph: 'S' },
-    brute: { hp: 125, speed: 35, radius: 23, damage: 22, xp: 6, ink: 6, glyph: 'O' },
-    reaper: { hp: 1000, speed: 61, radius: 32, damage: 28, xp: 35, ink: 6, glyph: 'W' }
+    ghoul: { title: 'Зомби', text: 'Медленная толпа, которая берёт числом.', at: 0, weight: 30, hp: 18, speed: 52, radius: 12, damage: 10, xp: 1, ink: 3, glyph: 'z', sprite: 'z' },
+    bat: { title: 'Летучая мышь', text: 'Подлетает по извилистой траектории.', at: 9, weight: 18, ai: 'weave', hp: 12, speed: 104, radius: 10, damage: 8, xp: 1, ink: 5, glyph: 'v', sprite: '<v>' },
+    skeleton: { title: 'Скелет', text: 'Крепче зомби, но боится огня.', at: 24, weight: 20, hp: 40, speed: 65, radius: 14, damage: 12, xp: 2, ink: 4, glyph: 'S', sprite: 'S' },
+    brute: { title: 'Громила', text: 'Большой запас здоровья и тяжёлый удар.', at: 65, weight: 8, hp: 125, speed: 35, radius: 23, damage: 22, xp: 6, ink: 6, glyph: 'O', sprite: ',_,\n[O]\n/ \\' },
+    mummy: { title: 'Мумия', text: 'Проклятые бинты замедляют при попадании.', at: 18, weight: 15, hp: 58, speed: 43, radius: 15, damage: 12, slow: 1.8, xp: 3, ink: 4, glyph: '=', sprite: '[=]\n/=\\' },
+    spider: { title: 'Могильный паук', text: 'Быстро обходит героя с фланга.', at: 32, weight: 12, ai: 'weave', hp: 23, speed: 92, radius: 12, damage: 9, xp: 2, ink: 3, glyph: 'm', sprite: '/\\o/\\' },
+    pumpkin: { title: 'Джек-о-Лантерн', text: 'Хэллоуинская тыква бросает веер огненных шаров.', at: 42, weight: 8, ai: 'ranged', skill: 3.5, hp: 75, speed: 46, radius: 19, damage: 15, xp: 4, ink: 7, glyph: 'o', sprite: ' _|_\n{o.o}\n \\_/' },
+    lich: { title: 'Лич', text: 'Держит дистанцию и стреляет проклятиями.', at: 55, weight: 8, ai: 'ranged', skill: 3, hp: 85, speed: 58, radius: 16, damage: 15, xp: 5, ink: 5, glyph: 'L', sprite: ' /\\\n{L}\n /\\' },
+    vampire: { title: 'Вампир', text: 'Стремительно кружит вокруг своей жертвы.', at: 75, weight: 10, ai: 'weave', hp: 72, speed: 118, radius: 14, damage: 17, xp: 4, ink: 5, glyph: 'V', sprite: '\\V/\n(V)\n/\\' },
+    werewolf: { title: 'Оборотень', text: 'Замирает перед быстрым броском вперёд.', at: 90, weight: 9, ai: 'charge', skill: 4.5, hp: 130, speed: 74, radius: 20, damage: 20, xp: 6, ink: 4, glyph: 'w', sprite: '/^\\\n{w}\n/ \\' },
+    alien: { title: 'Чужой', text: 'Ксеноморф атакует рывком по намеченной линии.', at: 110, weight: 9, ai: 'charge', skill: 3.8, hp: 155, speed: 84, radius: 20, damage: 23, xp: 7, ink: 2, glyph: 'X', sprite: '/===\\\n (X)~\n /|\\' },
+    lichLord: { title: 'Лич-лорд', text: 'Босс: проклятия и призыв скелетов.', boss: true, ai: 'ranged', skill: 2.8, hp: 1100, speed: 54, radius: 29, damage: 24, xp: 45, ink: 5, glyph: 'W', sprite: ' \\W/\n [L]\n/| |\\' },
+    british: { title: 'Зомби-лорд Бритиш', text: 'Босс: поднимает зомби и мумий вокруг себя.', boss: true, ai: 'summoner', skill: 5, hp: 1800, speed: 39, radius: 31, damage: 30, xp: 55, ink: 6, glyph: 'B', sprite: ',W,\n[B]\n/|\\' },
+    freddy: { title: 'Фредди Крюгер', text: 'Босс: метит место появления и телепортируется.', boss: true, ai: 'blink', skill: 4, hp: 1350, speed: 67, radius: 25, damage: 26, xp: 50, ink: 6, glyph: 'F', sprite: '_===_\n (F)/\n /|\\' },
+    jason: { title: 'Джейсон Вурхиз', text: 'Босс: медленно преследует и делает тяжёлый рывок.', boss: true, ai: 'charge', skill: 4, hp: 2200, speed: 42, radius: 28, damage: 36, xp: 60, ink: 4, glyph: 'J', sprite: ' ._.\n[:;]/\n/|\\' },
+    alienQueen: { title: 'Матка Чужих', text: 'Босс: рывки и выводок ксеноморфов.', boss: true, ai: 'charge', skill: 4.8, hp: 2400, speed: 58, radius: 34, damage: 32, xp: 65, ink: 2, glyph: 'Q', sprite: ' /W\\\n(XXX)~\n/| |\\' },
+    reaper: { title: 'Жнец', text: 'Босс: неотступно преследует героя.', boss: true, hp: 1000, speed: 61, radius: 32, damage: 28, xp: 35, ink: 6, glyph: 'W', sprite: ' /W\\\n (x)\n/| |\\' }
   };
   const UPGRADES = [
     { id: 'needle', title: 'Огненная игла', icon: '*', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Огненные снаряды летят в ближайшую цель. Ступени усиливают урон и скорость стрельбы.' },
     { id: 'power', title: 'Сила проклятия', icon: '*', kind: 'УРОН', max: 5, text: 'Всё оружие наносит на 35% больше урона.' },
-    { id: 'haste', title: 'Быстрый ритуал', icon: '>>', kind: 'СКОРОСТЬ ОГНЯ', max: 5, text: 'Всё автоматическое оружие срабатывает на 22% чаще.' },
+    { id: 'haste', title: 'Быстрый ритуал', icon: '>>', kind: 'СКОРОСТЬ ОГНЯ', max: 5, text: 'Всё оружие срабатывает на 22% чаще.' },
     { id: 'fork', title: 'Раздвоение', icon: '\\|/', kind: 'СНАРЯДЫ', max: 3, text: 'Ещё один огненный снаряд при каждом выстреле.' },
     { id: 'blades', title: 'Лунные клинки', icon: '/@/', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Клинок вращается вокруг тебя и режет врагов. Повторный выбор добавляет клинок.' },
     { id: 'pulse', title: 'Мёртвый колокол', icon: '((+))', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Волна наносит урон и отбрасывает врагов. Ступени усиливают урон и радиус.' },
@@ -38,6 +50,8 @@
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
   const SLOTS = ['needle', 'blades', 'pulse', 'lightning', 'boomerang', 'frost', 'meteor', 'poison', null];
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
+  const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6 });
+  const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
 
   class NightGame {
     constructor(seed = Date.now(), characterId = 'hunter', options = {}) {
@@ -47,12 +61,14 @@
       this.wallTime = 0; this.pressureOffset = 0; this.steps = 0;
       this.stressMode = Boolean(options.stressMode);
       this.enemyLimit = clamp(Math.floor(Number(options.enemyLimit) || 6000), 100, 24000);
-      this.peakEnemies = 0; this.nextBossAt = 150;
+      this.peakEnemies = 0; this.nextBossAt = 60; this.bossIndex = 0; this.bossKills = 0; this.lastBoss = '';
+      this.runId = this.seed + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      this.encountered = new Set(); this.enemyShots = []; this.summons = [];
       this.status = 'ready'; this.time = 0; this.kills = 0; this.level = 1;
       this.xp = 0; this.xpNeed = 6; this.nextId = 1;
       this.character = CHARACTERS.find(c => c.id === characterId) || CHARACTERS[0];
       const centerX = this.width / 2, centerY = this.height / 2;
-      this.player = { x: centerX, y: centerY, prevX: centerX, prevY: centerY, radius: 12, hp: this.character.hp, maxHp: this.character.hp, invulnerable: 0, dash: 0, dashReady: 0, dirX: 0, dirY: 1 };
+      this.player = { x: centerX, y: centerY, prevX: centerX, prevY: centerY, radius: 12, hp: this.character.hp, maxHp: this.character.hp, invulnerable: 0, dash: 0, dashReady: 0, dirX: 0, dirY: 1, slowTill: 0 };
       this.input = { x: 0, y: 0, firing: false };
       this.aim = { x: centerX, y: centerY - 300, active: false };
       this.fireMode = options.fireMode === 'manual' ? 'manual' : 'auto';
@@ -89,9 +105,9 @@
     get power() { return Math.pow(1.35, this.levels.power); }
     get haste() { return Math.pow(1.22, this.levels.haste); }
     get damage() { return 20 * (1 + .25 * Math.max(0, this.levels.needle - 1)) * this.power; }
-    get cooldown() { return .68 / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)); }
-    get speed() { return this.character.speed * (1 + .15 * this.levels.stride); }
-    get dashCooldown() { return this.character.dash * Math.pow(.9, this.levels.stride); }
+    get cooldown() { return .68 * BALANCE.weaponCooldown / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)); }
+    get speed() { return this.character.speed * (1 + .15 * this.levels.stride) * (this.player.slowTill > this.time ? .65 : 1); }
+    get dashCooldown() { return this.character.dash * BALANCE.dashCooldown * Math.pow(.9, this.levels.stride); }
     get magnet() { return this.character.magnet + this.levels.magnet * 65; }
     get elapsed() { return Math.max(this.time, this.wallTime); }
     get pressureTime() { return this.elapsed + this.pressureOffset; }
@@ -139,14 +155,16 @@
         y = clamp(this.player.y + Math.sin(angle) * distance, 28, this.height - 28);
       }
       const scale = 1 + this.pressureTime / 280;
-      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU };
+      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: 0, chargeY: 0, targetX: x, targetY: y };
       this.enemies.push(enemy);
+      this.encountered.add(kind);
       return enemy;
     }
     spawnWave() {
-      const roll = this.random();
       const age = this.pressureTime;
-      const kind = age > 65 && roll < .14 ? 'brute' : age > 24 && roll < .39 ? 'skeleton' : age > 9 && roll < .64 ? 'bat' : 'ghoul';
+      const candidates = Object.keys(ENEMIES).filter(kind => !ENEMIES[kind].boss && age >= ENEMIES[kind].at);
+      let roll = this.random() * candidates.reduce((sum, kind) => sum + ENEMIES[kind].weight, 0);
+      const kind = candidates.find(kind => (roll -= ENEMIES[kind].weight) < 0) || 'ghoul';
       const count = Math.min(128, 2 + Math.floor(age / 45), this.enemyLimit - this.enemies.length);
       for (let i = 0; i < count; i++) this.spawn(kind);
       this.spawnClock += Math.max(.12, .86 - age * .0014);
@@ -185,6 +203,7 @@
           }
           if (budget <= 0) break;
         }
+        e.x = clamp(e.x, 28, this.width - 28); e.y = clamp(e.y, 28, this.height - 28);
       }
     }
     addGem(x, y, value) {
@@ -208,18 +227,20 @@
       }
       if (e.hp > 0) return;
       e.alive = false; this.kills++;
+      if (e.boss) this.bossKills++;
       this.addGem(e.x, e.y, e.xp);
-      if (!this.stressMode && (e.kind === 'reaper' || this.random() < .035)) this.hearts.push({ x: e.x + 14, y: e.y, value: e.kind === 'reaper' ? 60 : 20, expires: this.time + 120 });
-      this.burst(e.x, e.y, e.ink, e.kind === 'reaper' ? 28 : 6);
+      if (!this.stressMode && (e.boss || this.random() < .035)) this.hearts.push({ x: e.x + 14, y: e.y, value: e.boss ? 60 : 20, expires: this.time + 120 });
+      this.burst(e.x, e.y, e.ink, e.boss ? 28 : 6);
     }
     hurtPlayer(damage, source) {
       const p = this.player;
       if (this.stressMode || p.invulnerable > 0 || this.status !== 'running') return;
       p.hp = Math.max(0, p.hp - damage); p.invulnerable = .85;
+      if (source?.slow) p.slowTill = this.time + source.slow;
       this.damageFlash = .26; this.events.push('hurt'); this.burst(p.x, p.y, 6, 12);
       if (source) {
         const dx = source.x - p.x, dy = source.y - p.y, d = Math.hypot(dx, dy) || 1;
-        source.x += dx / d * 48; source.y += dy / d * 48;
+        source.x = clamp(source.x + dx / d * 48, 28, this.width - 28); source.y = clamp(source.y + dy / d * 48, 28, this.height - 28);
       }
       if (p.hp <= 0) this.status = 'dead';
     }
@@ -274,7 +295,7 @@
     bladePositions() {
       const n = this.fireMode === 'auto' ? this.levels.blades : 0, result = [];
       for (let i = 0; i < n; i++) {
-        const a = this.time * 3.2 * this.haste + i / n * TAU;
+        const a = this.time * 3.2 * this.haste / BALANCE.weaponCooldown + i / n * TAU;
         result.push({ x: this.player.x + Math.cos(a) * 88, y: this.player.y + Math.sin(a) * 88, angle: a });
       }
       return result;
@@ -343,16 +364,16 @@
     updateWeapons(dt) {
       const p = this.player;
       this.weaponClocks.blades = Math.max(0, this.weaponClocks.blades - dt);
-      if (this.fireMode === 'manual' && this.wantsFire('blades') && this.weaponClocks.blades <= 0) { this.castSlash(); this.consumeAttack('blades'); this.weaponClocks.blades = .65 / this.haste; }
+      if (this.fireMode === 'manual' && this.wantsFire('blades') && this.weaponClocks.blades <= 0) { this.castSlash(); this.consumeAttack('blades'); this.weaponClocks.blades = .65 * BALANCE.weaponCooldown / this.haste; }
       for (const id in CASTS) if (this.levels[id]) {
         const [method, cooldown] = CASTS[id];
         this.weaponClocks[id] = Math.max(0, this.weaponClocks[id] - dt);
-        if (this.weaponClocks[id] <= 0 && this.wantsFire(id)) { this[method](); this.consumeAttack(id); this.weaponClocks[id] = cooldown / this.haste; }
+        if (this.weaponClocks[id] <= 0 && this.wantsFire(id)) { this[method](); this.consumeAttack(id); this.weaponClocks[id] = cooldown * BALANCE.weaponCooldown / this.haste; }
       }
       if (this.levels.poison) {
         this.weaponClocks.poison = Math.max(0, this.weaponClocks.poison - dt);
         if (this.weaponClocks.poison <= 0 && this.wantsFire('poison')) {
-          this.castPoison(); this.consumeAttack('poison'); this.weaponClocks.poison = .75 / this.haste;
+          this.castPoison(); this.consumeAttack('poison'); this.weaponClocks.poison = .75 * BALANCE.weaponCooldown / this.haste;
         }
       }
       for (const b of this.boomerangs) {
@@ -389,6 +410,65 @@
       for (const slash of this.slashes) slash.life -= dt;
       this.slashes = this.slashes.filter(s => s.life > 0);
     }
+    queueSummons(e, kind, count) {
+      for (let i = 0; i < count && this.summons.length < 24; i++) {
+        const angle = this.random() * TAU, distance = 55 + this.random() * 40;
+        this.summons.push({ kind, x: clamp(e.x + Math.cos(angle) * distance, 28, this.width - 28), y: clamp(e.y + Math.sin(angle) * distance, 28, this.height - 28) });
+      }
+    }
+    enemySkill(e) {
+      if (e.ai === 'ranged') {
+        const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x), count = e.kind === 'lich' ? 1 : 3;
+        for (let i = 0; i < count && this.enemyShots.length < 256; i++) {
+          const a = angle + (i - (count - 1) / 2) * .22, speed = e.kind === 'pumpkin' ? 205 : 175;
+          this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * .8, radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
+        }
+        if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', 3);
+      } else if (e.ai === 'summoner') {
+        this.queueSummons(e, 'ghoul', 3); this.queueSummons(e, 'mummy', 1);
+      } else if (e.ai === 'blink') {
+        this.burst(e.x, e.y, e.ink, 10); e.x = e.targetX; e.y = e.targetY; e.prevX = e.x; e.prevY = e.y;
+        this.burst(e.x, e.y, e.ink, 10);
+      } else if (e.ai === 'charge') {
+        e.chargeTime = e.boss ? .65 : .45;
+        if (e.kind === 'alienQueen') this.queueSummons(e, 'alien', 2);
+      }
+    }
+    updateEnemy(e, dt) {
+      const p = this.player, ex = p.x - e.x, ey = p.y - e.y, d = Math.hypot(ex, ey) || 1;
+      const slow = e.chilledTill > this.time ? .4 : 1;
+      let vx = ex / d, vy = ey / d, speed = e.speed * Math.min(2.2, 1 + this.pressureTime / 600) * slow;
+      if (e.ai === 'weave') { const weave = Math.sin(this.time * 5 + e.phase) * .7; vx -= ey / d * weave; vy += ex / d * weave; }
+      if (e.ai === 'ranged') speed *= d > 380 ? 1 : d < 230 ? -.65 : 0;
+      e.skillClock = Math.max(0, e.skillClock - dt);
+      if (e.windup > 0) {
+        speed = 0; e.windup = Math.max(0, e.windup - dt);
+        if (e.windup === 0) this.enemySkill(e);
+      } else if (e.chargeTime > 0) {
+        e.chargeTime = Math.max(0, e.chargeTime - dt); vx = e.chargeX; vy = e.chargeY; speed = (e.boss ? 380 : 340) * slow;
+      } else if (e.skill && e.skillClock <= 0 && d < (e.ai === 'charge' ? 620 : 850)) {
+        e.skillClock = e.skill; e.windup = e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
+        e.chargeX = ex / d; e.chargeY = ey / d;
+        const angle = this.random() * TAU;
+        e.targetX = clamp(p.x + Math.cos(angle) * 150, 28, this.width - 28);
+        e.targetY = clamp(p.y + Math.sin(angle) * 150, 28, this.height - 28);
+        speed = 0;
+      }
+      e.x = clamp(e.x + vx * speed * dt, 28, this.width - 28);
+      e.y = clamp(e.y + vy * speed * dt, 28, this.height - 28);
+      e.flash = Math.max(0, e.flash - dt);
+    }
+    updateEnemyShots(dt) {
+      const p = this.player;
+      for (const shot of this.enemyShots) {
+        const x = shot.x, y = shot.y; shot.prevX = x; shot.prevY = y;
+        shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.life -= dt;
+        const dx = shot.x - x, dy = shot.y - y, lengthSq = dx * dx + dy * dy;
+        const t = lengthSq ? clamp(((p.x - x) * dx + (p.y - y) * dy) / lengthSq, 0, 1) : 0;
+        if (Math.hypot(p.x - x - t * dx, p.y - y - t * dy) < p.radius + shot.radius) { this.hurtPlayer(shot.damage); shot.life = 0; }
+      }
+      this.enemyShots = this.enemyShots.filter(s => s.life > 0 && s.x > 0 && s.x < this.width && s.y > 0 && s.y < this.height);
+    }
     update(dt) {
       if (this.status !== 'running') return;
       dt = clamp(dt, 0, .05);
@@ -411,17 +491,18 @@
 
       this.spawnClock -= dt;
       if (this.spawnClock <= 0) this.spawnWave();
-      if (this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit) { this.spawn('reaper'); this.bossSpawned = true; this.nextBossAt = this.pressureTime + 150; this.events.push('boss'); }
+      if (this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit) {
+        const kind = BOSSES[this.bossIndex++ % BOSSES.length]; this.spawn(kind); this.lastBoss = ENEMIES[kind].title;
+        this.bossSpawned = true; this.nextBossAt = this.pressureTime + 90; this.events.push('boss');
+      }
       this.peakEnemies = Math.max(this.peakEnemies, this.enemies.length);
       for (const e of this.enemies) if (e.alive) {
         e.prevX = e.x; e.prevY = e.y;
-        const ex = p.x - e.x, ey = p.y - e.y, d = Math.hypot(ex, ey) || 1;
-        const weave = e.kind === 'bat' ? Math.sin(this.time * 5 + e.phase) * .7 : 0;
-        const speed = e.speed * Math.min(2.2, 1 + this.pressureTime / 600) * (e.chilledTill > this.time ? .4 : 1);
-        e.x += (ex / d - ey / d * weave) * speed * dt;
-        e.y += (ey / d + ex / d * weave) * speed * dt;
-        e.flash = Math.max(0, e.flash - dt);
+        this.updateEnemy(e, dt);
       }
+      for (const summon of this.summons) { if (this.enemies.length >= this.enemyLimit) break; this.spawn(summon.kind, summon.x, summon.y); }
+      this.summons.length = 0;
+      this.updateEnemyShots(dt);
       this.buildGrid();
       // Bound local separation work even when thousands of enemies crowd one cell.
       this.separateCrowd();
@@ -445,14 +526,14 @@
       this.shots = this.shots.filter(s => s.life > 0 && s.remaining > 0);
 
       for (const b of this.bladePositions()) for (const e of this.nearby(b.x, b.y, 48)) {
-        if (e.alive && this.time - e.bladeAt > .35 && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 19) {
+        if (e.alive && this.time - e.bladeAt > .35 * BALANCE.weaponCooldown && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 19) {
           e.bladeAt = this.time; this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power, 13);
         }
       }
       if (this.levels.pulse) {
         this.pulseClock = Math.max(0, this.pulseClock - dt);
         if (this.pulseClock <= 0 && this.wantsFire('pulse')) {
-          this.castPulse(); this.consumeAttack('pulse'); this.pulseClock = 5 / this.haste; this.events.push('pulse');
+          this.castPulse(); this.consumeAttack('pulse'); this.pulseClock = 5 * BALANCE.weaponCooldown / this.haste; this.events.push('pulse');
         }
       }
       this.updateWeapons(dt);
@@ -476,5 +557,5 @@
       this.rings = this.rings.filter(r => r.life > 0);
     }
   }
-  root.NightGame = NightGame; root.NightEnemies = ENEMIES; root.NightUpgrades = UPGRADES; root.NightCharacters = CHARACTERS; root.NightSlots = SLOTS; root.NightWorld = WORLD;
+  root.NightGame = NightGame; root.NightEnemies = ENEMIES; root.NightUpgrades = UPGRADES; root.NightCharacters = CHARACTERS; root.NightSlots = SLOTS; root.NightWorld = WORLD; root.NightBalance = BALANCE;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

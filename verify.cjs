@@ -75,8 +75,8 @@ assert.equal(close.alive, false); assert.equal(far.alive, true); assert.equal(pu
 const blades = fixture(); blades.levels.blades = 2;
 const orb = blades.bladePositions()[0], bladeEnemy = blades.spawn('ghoul', orb.x, orb.y); tick(blades, .02); assert.equal(bladeEnemy.alive, false);
 
-const boss = fixture(); boss.time = 149.99; tick(boss, .03); assert.equal(boss.enemies.filter(e => e.kind === 'reaper').length, 1);
-tick(boss, 1); assert.equal(boss.enemies.filter(e => e.kind === 'reaper').length, 1, 'Only one reaper spawns');
+const boss = fixture(); boss.time = 59.99; tick(boss, .03); assert.equal(boss.enemies.filter(e => e.kind === 'lichLord').length, 1);
+tick(boss, 1); assert.equal(boss.enemies.filter(e => e.boss).length, 1, 'Only one boss spawns per interval');
 const endless = fixture(); endless.time = 179.99; tick(endless, .1); assert.equal(endless.status, 'running'); assert.ok(endless.time > 180);
 assert.ok(endless.dash()); endless.time = 1800; tick(endless, .1); assert.equal(endless.status, 'running'); assert.ok(endless.wave > 60);
 
@@ -167,6 +167,9 @@ terrainRenderer.world = (x, y, glyph, ink) => { drawn.push({ glyph, ink }); orig
 terrainRenderer.render(pickupGame, { x: 1600, y: 1200 });
 const xpDraw = drawn.findIndex(d => d.glyph === '*' && d.ink === 10), healDraw = drawn.findIndex(d => d.glyph === '[+]' && d.ink === 11);
 assert.ok(xpDraw > drawn.findIndex(d => d.glyph === 'z'), 'Brighter XP is drawn over enemies'); assert.ok(healDraw >= 0, 'Healing has a dedicated brighter ink');
+const farBlink = pickupGame.spawn('freddy', 3100, 1200); farBlink.windup = .5; farBlink.targetX = 1650; farBlink.targetY = 1200;
+drawn.length = 0; terrainRenderer.render(pickupGame, { x: 1600, y: 1200 });
+assert.ok(drawn.some(d => d.glyph === '[!]'), 'An offscreen Freddy still warns about his visible teleport destination');
 const packed = fixture(); for (let i = 0; i < 6000; i++) packed.spawn('ghoul', 1600 + i % 4, 1200 + i % 3);
 renderer.render(packed, { x: 1600, y: 1200 });
 assert.equal(packed.enemies.length, 6000, 'Rendering never removes simulated enemies');
@@ -178,7 +181,7 @@ manual.input.firing = true; tick(manual, .4); assert.equal(offAxis.alive, true, 
 manual.aim.x = 1800; manual.aim.y = 1200; tick(manual, 1); assert.equal(offAxis.alive, false, 'Held trigger fires toward the cursor');
 assert.equal(manual.selectSlot(9), false); assert.equal(manual.selectSlot(2), false, 'Locked weapons cannot be selected');
 manual.levels.blades = 1; assert.ok(manual.selectSlot(2)); assert.equal(manual.selectedWeapon, 'blades'); assert.deepEqual(manual.bladePositions(), [], 'Manual blades do not deal passive orbit damage');
-manual.input.firing = false; manual.weaponClocks.blades = 0; manual.buildGrid(); const slashTarget = manual.spawn('ghoul', 1690, 1200); slashTarget.speed = 0;
+manual.input.firing = false; manual.shots = []; manual.weaponClocks.blades = 0; manual.buildGrid(); const slashTarget = manual.spawn('ghoul', 1690, 1200); slashTarget.speed = 0;
 tick(manual, .1); assert.equal(slashTarget.alive, true); manual.input.firing = true; tick(manual, .02); assert.equal(slashTarget.alive, false, 'Manual blade performs an aimed slash');
 manual.setFireMode('auto'); assert.equal(manual.input.firing, false); assert.equal(manual.bladePositions().length, 1);
 const tap = fixture(); tap.setFireMode('manual'); tap.shootClock = 0; tap.requestAttack(); tap.input.firing = false; tick(tap, .02);

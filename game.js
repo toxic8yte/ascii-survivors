@@ -4,26 +4,67 @@
   const canvas = $('screen'), arena = $('arena');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new NightRenderer(canvas, reducedMotion);
-  let selectedCharacter = 'hunter';
-  try { const saved = localStorage.getItem('ascii-night-character'); if (NightCharacters.some(c => c.id === saved)) selectedCharacter = saved; } catch (_) {}
-  let fireModePreference = 'auto';
+  let storage = null; try { storage = localStorage; } catch (_) {}
+  const progress = new NightProgress(storage);
+  let savedRun = progress.loadRun(), lastSavedElapsed = 0, bestiaryWasRunning = false;
+  let selectedCharacter = progress.profile.character;
+  let fireModePreference = progress.profile.fireMode;
+  $('enemy-limit').value = progress.profile.enemyLimit;
   function options() { return { fireMode: fireModePreference, stressMode: $('stress-mode').checked, enemyLimit: Number($('enemy-limit').value) }; }
   let game = new NightGame(Date.now(), selectedCharacter, options()), keys = new Set();
   let camera = { x: game.player.x, y: game.player.y }, pointer = { x: 0, y: 0, id: null };
   let last = 0, accumulator = 0, lastHUD = 0, previousStatus = '', offersLevel = 0;
   let fpsFrames = 0, fpsSince = 0, displayFPS = 0, dirty = true;
-  let noticeUntil = 0, best = null, lastWave = 1;
+  let noticeUntil = 0, best = progress.profile.best, lastWave = 1;
   const frameTimes = new Float32Array(180), records = [];
   let frameIndex = 0, sampleCount = 0, frameMean = 0, frameP95 = 0, simulationMS = 0, renderMS = 0, lastRecord = -1;
   let mouseFiring = false, touchFiring = false;
   const mouseAim = { x: .5, y: .2, active: false };
   const textCache = new Map(), equipment = new Map();
-  try { best = JSON.parse(localStorage.getItem('ascii-night-best-v1') || 'null'); } catch (_) {}
   if (best && Number.isFinite(best.time)) $('best').textContent = formatTime(best.time) + ' / ' + (best.kills || 0) + ' ИЗГНАНО';
   canvas.tabIndex = 0;
 
   function formatTime(t) { return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
   function text(id, value) { if (textCache.get(id) !== value) { $(id).textContent = value; textCache.set(id, value); } }
+  function preferences() { progress.savePreferences(selectedCharacter, fireModePreference, Number($('enemy-limit').value)); }
+  function saveCheckpoint() {
+    if (game.stressMode || !['running', 'paused', 'upgrading'].includes(game.status)) return false;
+    const success = progress.checkpoint(game); lastSavedElapsed = game.elapsed;
+    text('save-status', success ? 'ПРОГРЕСС СОХРАНЁН' : 'НЕ УДАЛОСЬ СОХРАНИТЬ: ХРАНИЛИЩЕ НЕДОСТУПНО');
+    return success;
+  }
+  function progressSummary() {
+    $('continue-box').hidden = !savedRun;
+    if (savedRun) text('continue-summary', savedRun.character.name + ' · ' + formatTime(savedRun.elapsed) + ' · УР. ' + savedRun.level + ' · ' + Math.ceil(savedRun.player.hp) + ' HP');
+    text('start', savedRun ? 'НОВЫЙ ЗАБЕГ →' : 'ВОЙТИ В НОЧЬ →');
+    const p = progress.profile;
+    text('progress-summary', 'ЗАБЕГОВ: ' + p.runs + ' · ИЗГНАНО: ' + p.kills + ' · БОССОВ: ' + p.bossKills + (p.best ? ' · РЕКОРД: ' + formatTime(p.best.time) : ''));
+  }
+  function resumeSavedRun() {
+    const restored = progress.loadRun();
+    if (!restored) { savedRun = null; progressSummary(); notify('Сохранение недоступно. Можно начать новый забег.'); return; }
+    game = restored; selectedCharacter = game.character.id; fireModePreference = game.fireMode;
+    $('stress-mode').checked = false; $('enemy-limit').value = game.enemyLimit; preferences();
+    resetMetrics(); clearInput(); camera = { x: game.player.x, y: game.player.y }; last = accumulator = 0;
+    previousStatus = ''; offersLevel = 0; lastWave = game.wave; lastSavedElapsed = game.elapsed;
+    if (game.status === 'paused') game.pause();
+    resize(); updateCharacterDetails(); updateHUD();
+    if (game.status === 'running') canvas.focus({ preventScroll: true });
+    notify('ЗАБЕГ ВОССТАНОВЛЕН · ' + formatTime(game.elapsed));
+  }
+  function openBestiary() {
+    bestiaryWasRunning = game.status === 'running'; if (bestiaryWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
+    const seen = new Set([...progress.profile.seen, ...game.encountered]), fragment = document.createDocumentFragment();
+    for (const [kind, enemy] of Object.entries(NightEnemies)) {
+      const card = document.createElement('article'); card.className = 'enemy-card' + (enemy.boss ? ' boss' : '');
+      const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
+      const title = document.createElement('h3'); title.textContent = enemy.title;
+      const description = document.createElement('p'); description.textContent = enemy.text;
+      const hint = document.createElement('small'); hint.textContent = (enemy.boss ? 'БОСС' : 'С ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
+      card.append(sprite, title, description, hint); fragment.append(card);
+    }
+    $('bestiary-list').replaceChildren(fragment); $('bestiary').showModal();
+  }
   function resize() {
     renderer.resize(arena.clientWidth, arena.clientHeight, devicePixelRatio || 1);
     game.spawnRadius = Math.max(510, Math.min(920, Math.hypot(renderer.cols * 10, renderer.rows * 16) / 2 + 70));
@@ -57,7 +98,7 @@
     const sorted = Array.from(frameTimes.subarray(0, sampleCount)).sort((a, b) => a - b);
     frameMean = sorted.length ? sorted.reduce((a, b) => a + b, 0) / sorted.length : 0;
     frameP95 = sorted[Math.max(0, Math.ceil(sorted.length * .95) - 1)] || 0;
-    records.push({ seconds: +game.elapsed.toFixed(2), simulationSeconds: +game.time.toFixed(2), pressureSeconds: +game.pressureTime.toFixed(2), enemies: game.enemies.length, peakEnemies: game.peakEnemies, fps: displayFPS, frameMS: +frameMean.toFixed(2), frameP95MS: +frameP95.toFixed(2), simulationMS: +simulationMS.toFixed(2), renderMS: +renderMS.toFixed(2), drops: game.gems.length, projectiles: game.shots.length + game.boomerangs.length });
+    records.push({ seconds: +game.elapsed.toFixed(2), simulationSeconds: +game.time.toFixed(2), pressureSeconds: +game.pressureTime.toFixed(2), enemies: game.enemies.length, peakEnemies: game.peakEnemies, fps: displayFPS, frameMS: +frameMean.toFixed(2), frameP95MS: +frameP95.toFixed(2), simulationMS: +simulationMS.toFixed(2), renderMS: +renderMS.toFixed(2), drops: game.gems.length, projectiles: game.shots.length + game.boomerangs.length + game.enemyShots.length });
     if (records.length > 3600) records.shift();
   }
   function selectWeapon(number) {
@@ -69,6 +110,7 @@
     fireModePreference = game.fireMode === 'auto' ? 'manual' : 'auto'; game.setFireMode(fireModePreference); mouseFiring = touchFiring = false; keys.delete('KeyF');
     updateHUD(); dirty = true;
     notify(game.fireMode === 'manual' ? 'РУЧНОЙ: 1–9 оружие · ЛКМ / F атака · курсор — прицел.' : 'АВТО: всё найденное оружие атакует само.');
+    preferences();
   }
   function exportMetrics() {
     const payload = { version: 1, mode: game.stressMode ? 'stress' : 'survival', enemyLimit: game.enemyLimit, elapsed: game.elapsed, simulationSeconds: game.time, pressureSeconds: game.pressureTime, peakEnemies: game.peakEnemies, kills: game.kills, sampleWindow: 'last 3600 active seconds', samples: records };
@@ -77,29 +119,28 @@
   }
   function configureRun() {
     if (game.status !== 'ready') return;
-    game = new NightGame(Date.now(), selectedCharacter, options()); resetMetrics(); resize(); updateHUD();
+    game = new NightGame(Date.now(), selectedCharacter, options()); preferences(); resetMetrics(); resize(); updateHUD();
   }
   function updateCharacterDetails() {
     const c = game.character, weapon = NightUpgrades.find(u => u.id === c.weapon);
     text('character-name', c.name + ' / ' + c.role); text('character-description', c.text);
-    text('character-stats', c.hp + ' HP  /  ' + c.speed + ' СКОРОСТЬ  /  ' + c.dash + ' С РЫВОК');
+    text('character-stats', c.hp + ' HP  /  ' + c.speed + ' СКОРОСТЬ  /  ' + (c.dash * NightBalance.dashCooldown).toFixed(2) + ' С РЫВОК');
     text('character-weapon', weapon.icon + ' ' + weapon.title);
     for (const card of $('characters').children) card.setAttribute('aria-pressed', String(card.dataset.character === selectedCharacter));
   }
   function selectCharacter(id) {
     if (game.status !== 'ready' || !NightCharacters.some(c => c.id === id)) return;
     selectedCharacter = id; game = new NightGame(Date.now(), id, options()); resetMetrics(); resize(); updateCharacterDetails(); updateHUD();
-    try { localStorage.setItem('ascii-night-character', id); } catch (_) {}
+    preferences();
   }
   function notify(message) {
     $('notice').textContent = message; $('notice').classList.add('visible'); noticeUntil = performance.now() + 3300;
   }
   function saveBest() {
     if (game.stressMode) return;
-    if (!best || game.elapsed > best.time + .1 || Math.abs(game.elapsed - best.time) < .1 && game.kills > best.kills) {
-      best = { time: game.elapsed, kills: game.kills };
-      try { localStorage.setItem('ascii-night-best-v1', JSON.stringify(best)); } catch (_) {}
-    }
+    progress.finish(game); best = progress.profile.best;
+    if (savedRun?.runId === game.runId) savedRun = null;
+    if (best) text('best', formatTime(best.time) + ' / ' + best.kills + ' ИЗГНАНО');
   }
   function showOffers() {
     $('upgrade-level').textContent = String(game.level).padStart(2, '0');
@@ -133,6 +174,10 @@
     text('stage', (game.stressMode ? 'ТЕСТ ДВИЖКА / ' : '') + (status === 'ready' ? 'БЕСКОНЕЧНАЯ НОЧЬ' : 'ВОЛНА ' + game.wave));
     text('coords', Math.round(p.x) + ' : ' + Math.round(p.y));
     text('map-label', 'КЛАДБИЩЕ · ' + game.width.toLocaleString('ru-RU') + ' × ' + game.height.toLocaleString('ru-RU'));
+    const boss = game.enemies.find(e => e.alive && e.boss);
+    text('boss-name', boss ? boss.title + ' · ' + Math.ceil(boss.hp / boss.maxHp * 100) + '%' : '');
+    if (game.stressMode) text('save-status', 'ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ');
+    else if (status === 'ready') text('save-status', progress.available ? 'АВТОСОХРАНЕНИЕ' : 'ХРАНИЛИЩЕ НЕДОСТУПНО');
     text('dash-label', p.dashReady <= 0 ? 'РЫВОК ГОТОВ' : 'РЫВОК ' + p.dashReady.toFixed(1) + ' С');
     $('dash-bar').style.width = (100 * (1 - p.dashReady / game.dashCooldown)) + '%';
     $('dash-touch').disabled = status !== 'running' || p.dashReady > 0;
@@ -147,7 +192,7 @@
     text('metric-enemies', game.enemies.length + ' / ' + game.enemyLimit); text('metric-peak', game.peakEnemies); text('metric-rendered', renderer.renderedEnemies || 0);
     text('metric-fps', displayFPS || '—'); text('metric-frame', frameMean.toFixed(1) + ' / ' + frameP95.toFixed(1) + ' мс');
     text('metric-cpu', simulationMS.toFixed(1) + ' / ' + renderMS.toFixed(1) + ' мс'); text('metric-sim', formatTime(game.time)); text('metric-pressure', formatTime(game.pressureTime));
-    text('metric-objects', (game.shots.length + game.boomerangs.length) + ' / ' + game.gems.length);
+    text('metric-objects', (game.shots.length + game.boomerangs.length + game.enemyShots.length) + ' / ' + game.gems.length);
     if (status !== previousStatus) {
       dirty = true;
       $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won';
@@ -162,30 +207,36 @@
         $('restart').focus({ preventScroll: true });
       }
       if (status === 'paused') $('resume').focus({ preventScroll: true });
+      if (status === 'ready') progressSummary();
       previousStatus = status;
     }
-    if (status === 'upgrading' && offersLevel !== game.level) { clearInput(); showOffers(); }
+    if (status === 'upgrading' && offersLevel !== game.level) { clearInput(); showOffers(); saveCheckpoint(); }
     if (noticeUntil && performance.now() > noticeUntil) { $('notice').classList.remove('visible'); noticeUntil = 0; }
   }
   function start() {
+    if (game.status !== 'ready') return;
+    if (!game.stressMode && savedRun) { progress.finish(savedRun); savedRun = null; }
     game.start(); canvas.focus({ preventScroll: true }); updateHUD();
+    preferences(); saveCheckpoint();
     if (game.stressMode) { $('engine-panel').hidden = false; $('metrics-toggle').setAttribute('aria-expanded', 'true'); }
     notify(game.stressMode ? 'ТЕСТ: весь арсенал, неуязвимость, нарастающая нагрузка.' : 'Бесконечная арена · M — авто / ручной огонь.');
   }
   function restart() {
+    saveBest();
     game = new NightGame(Date.now(), selectedCharacter, options()); resetMetrics(); camera.x = game.player.x; camera.y = game.player.y;
     offersLevel = 0; previousStatus = ''; lastWave = 1; accumulator = 0; clearInput();
     resize(); start();
   }
   function returnToCharacters() {
+    if (saveCheckpoint()) savedRun = game;
     game = new NightGame(Date.now(), selectedCharacter, options()); resetMetrics(); camera = { x: game.player.x, y: game.player.y };
     offersLevel = 0; previousStatus = ''; lastWave = 1; accumulator = 0; clearInput(); resize(); updateCharacterDetails(); updateHUD();
     $('characters').querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
   }
   function choose(index) {
-    if (game.choose(index)) { if (game.status === 'running') canvas.focus({ preventScroll: true }); updateHUD(); }
+    if (game.choose(index)) { saveCheckpoint(); if (game.status === 'running') canvas.focus({ preventScroll: true }); updateHUD(); }
   }
-  function togglePause() { clearInput(); game.pause(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true }); }
+  function togglePause() { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true }); }
   function clearInput() { keys.clear(); mouseFiring = touchFiring = false; game.input.firing = false; game.queuedWeapon = null; pointer.x = pointer.y = 0; pointer.id = null; game.input.x = game.input.y = 0; $('stick').style.transform = ''; }
   function syncInput() {
     const x = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
@@ -194,6 +245,10 @@
     game.input.firing = mouseFiring || touchFiring || keys.has('KeyF');
   }
   $('start').addEventListener('click', start); $('pause').addEventListener('click', togglePause); $('resume').addEventListener('click', togglePause);
+  $('continue-run').addEventListener('click', resumeSavedRun);
+  $('bestiary-open').addEventListener('click', openBestiary);
+  $('bestiary-close').addEventListener('click', () => $('bestiary').close());
+  $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
   $('restart').addEventListener('click', restart); $('restart-pause').addEventListener('click', restart);
   $('change-character').addEventListener('click', returnToCharacters); $('change-character-pause').addEventListener('click', returnToCharacters);
   $('fire-mode').addEventListener('click', toggleFireMode);
@@ -205,6 +260,7 @@
   $('characters').addEventListener('click', e => { const card = e.target.closest('[data-character]'); if (card) selectCharacter(card.dataset.character); });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
+    if ($('bestiary').open) return;
     const movement = /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code);
     if (/^(INPUT|SELECT)$/.test(e.target.tagName)) return;
     if (movement) { e.preventDefault(); keys.add(e.code); syncInput(); }
@@ -218,8 +274,9 @@
     else if (e.code === 'KeyR' && game.status !== 'ready') restart();
   });
   document.addEventListener('keyup', e => { keys.delete(e.code); syncInput(); });
-  document.addEventListener('visibilitychange', () => { last = 0; fpsSince = fpsFrames = 0; if (document.hidden && game.status === 'running') { clearInput(); game.pause(); updateHUD(); } });
-  window.addEventListener('blur', () => { clearInput(); if (game.status === 'running') { game.pause(); updateHUD(); } });
+  document.addEventListener('visibilitychange', () => { last = 0; fpsSince = fpsFrames = 0; if (document.hidden) { clearInput(); if (game.status === 'running') game.pause(); saveCheckpoint(); updateHUD(); } });
+  window.addEventListener('blur', () => { clearInput(); if (game.status === 'running') { game.pause(); saveCheckpoint(); updateHUD(); } });
+  window.addEventListener('pagehide', saveCheckpoint);
   const joystick = $('joystick');
   function drag(e) {
     const rect = joystick.getBoundingClientRect(), x = e.clientX - rect.left - rect.width / 2, y = e.clientY - rect.top - rect.height / 2;
@@ -259,7 +316,7 @@
       if (game.wave !== lastWave) { lastWave = game.wave; notify('ВОЛНА ' + game.wave + ' — НЕ ОСТАНАВЛИВАЙСЯ'); }
     } else accumulator = 0;
     simulationMS += (performance.now() - simulationStart - simulationMS) * .1;
-    if (game.events.includes('boss')) notify('ЖНЕЦ ВЫШЕЛ НА ОХОТУ');
+    if (game.events.includes('boss')) notify('БОСС: ' + game.lastBoss.toUpperCase());
     game.events.length = 0;
     if (now - lastHUD > 85) { updateHUD(); lastHUD = now; }
     if (!document.hidden && (game.status === 'running' || dirty)) {
@@ -272,6 +329,7 @@
       if (rawDT > 0) { frameTimes[frameIndex] = rawDT * 1000; frameIndex = (frameIndex + 1) % frameTimes.length; sampleCount = Math.min(frameTimes.length, sampleCount + 1); }
       if (now - fpsSince >= 1000) { displayFPS = Math.round(fpsFrames * 1000 / (now - fpsSince)); fpsFrames = 0; fpsSince = now; }
       recordMetrics();
+      if (game.elapsed - lastSavedElapsed >= 10) saveCheckpoint();
     } else { fpsSince = fpsFrames = 0; }
     requestAnimationFrame(frame);
   }

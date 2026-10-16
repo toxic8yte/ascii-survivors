@@ -31,16 +31,19 @@ jobs:
           package-manager-cache: false
       - name: Check JavaScript syntax
         run: |
-          for file in core.js renderer.js game.js verify.cjs benchmark.cjs; do
+          for file in core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs benchmark.cjs; do
             node --check "$file"
           done
       - name: Test gameplay and rendering
-        run: node verify.cjs
+        run: |
+          node verify.cjs
+          node verify-enemies.cjs
+          node verify-progress.cjs
       - name: Package game files
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           mkdir -p _site
-          cp index.html style.css core.js renderer.js game.js _site/
+          cp index.html style.css core.js progress.js renderer.js game.js _site/
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
