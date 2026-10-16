@@ -1,6 +1,10 @@
 # Пока не рассвело · ASCII Survivors
 
+[![Test and deploy game](https://github.com/toxic8yte/ascii-survivors/actions/workflows/pages.yml/badge.svg)](https://github.com/toxic8yte/ascii-survivors/actions/workflows/pages.yml)
+
 Бесконечная браузерная арена на JavaScript и Canvas: шесть героев, восемь видов оружия и толпы нечисти, нарисованные ASCII-символами. Работает без сборки, библиотек и внешних ресурсов. Управление с клавиатуры, мыши и сенсорного экрана.
+
+**[Играть в браузере →](https://toxic8yte.github.io/ascii-survivors/)**
 
 ![Большая арена и светлые звёздочки опыта](docs/screenshots/gameplay.jpg)
 
@@ -18,7 +22,13 @@ python -m http.server 4173
 
 Откройте <http://127.0.0.1:4173/>. Node.js нужен только для проверок и измерений; самой игре он не требуется.
 
-Для размещения как статического сайта подходят файлы `index.html`, `style.css`, `core.js`, `renderer.js` и `game.js`. В GitHub Pages можно выбрать ветку `main` и папку `/ (root)` в **Settings → Pages → Deploy from a branch**.
+## GitHub Actions и публикация
+
+Workflow [Test and deploy game](.github/workflows/pages.yml) запускается при push в `main`, при pull request в `main` и вручную через **Actions → Test and deploy game → Run workflow**. Сначала проверяется синтаксис JavaScript и выполняется `node verify.cjs`; после успешных проверок `main` публикуется в GitHub Pages. Pull request запускает только проверки.
+
+В **Settings → Pages → Build and deployment → Source** выбран **GitHub Actions**. Для копии репозитория нужно включить тот же источник публикации. Порядок настройки описан в [документации GitHub](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+В артефакт сайта попадают только `index.html`, `style.css`, `core.js`, `renderer.js` и `game.js`. Браузер выполняет игру на устройстве игрока; Actions проверяет файлы и публикует статический сайт. Сервер сетевого кооператива в этой версии отсутствует.
 
 ## Что есть в игре
 
