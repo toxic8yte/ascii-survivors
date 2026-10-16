@@ -31,6 +31,7 @@
       <div class="arena-grain" aria-hidden="true"></div>
       <div class="field-note"><span id="map-label">ЗАБЫТОЕ КЛАДБИЩЕ · 12 800 × 9 600</span><span class="render-stats"><span id="coords">6400 : 4800</span><b id="fps">РЕНДЕР / AUTO</b></span></div>
       <div id="notice" class="notice" role="status"></div>
+      <div id="encounter-note" class="encounter-note" hidden role="status"></div>
       <aside class="engine-panel" id="engine-panel" hidden aria-label="Производительность движка"><div class="eyebrow">ЖИВЫЕ ЗАМЕРЫ</div><dl><dt>Враги / предел</dt><dd id="metric-enemies">0 / 6000</dd><dt>Пик врагов</dt><dd id="metric-peak">0</dd><dt>Видимые группы</dt><dd id="metric-rendered">0</dd><dt>Частота</dt><dd id="metric-fps">—</dd><dt>Кадр / P95</dt><dd id="metric-frame">—</dd><dt>Симуляция / рисунок</dt><dd id="metric-cpu">—</dd><dt>Обработано игрой</dt><dd id="metric-sim">00:00</dd><dt>Возраст волн</dt><dd id="metric-pressure">00:00</dd><dt>Снаряды / дроп</dt><dd id="metric-objects">0 / 0</dd></dl><div id="stress-controls" hidden><button id="pressure" type="button">Нагрузка +5 минут</button><small>Усиливает волны; таймер забега не перематывает.</small></div><button id="save-metrics" type="button">Сохранить замеры JSON</button></aside>
       <div class="dash-status" id="dash-status"><b>ПРОБЕЛ</b><span id="dash-label">РЫВОК ГОТОВ</span><div><i id="dash-bar"></i></div></div>
 
@@ -74,6 +75,14 @@ ___|_____|___|__|___|_____|___</pre>
 
       <div class="overlay" id="paused" hidden>
         <div class="small-modal"><div class="eyebrow">НОЧЬ ПОДОЖДЁТ</div><h2>Передышка</h2><p>Враги и таймер на паузе.</p><button id="resume" class="primary-button" type="button">ПРОДОЛЖИТЬ →</button><div class="modal-actions"><button id="restart-pause" class="text-button" type="button">Начать заново</button><button id="change-character-pause" class="text-button" type="button">Сменить героя</button></div></div>
+      </div>
+
+      <div class="overlay" id="chest-reward" hidden>
+        <div class="reward-content"><div class="eyebrow">ПОБЕДА ЗАСЛУЖИВАЕТ НАГРАДЫ</div><h2 id="reward-title">Сундук поверженного босса</h2><pre class="chest-art" aria-hidden="true">    .-----.
+   /  ***  \
+  /_________\
+  |   &lt;*&gt;   |
+  |_________|</pre><div class="reward-loot" id="reward-loot"></div><p id="reward-summary"></p><button id="claim-reward" class="primary-button" type="button">ЗАБРАТЬ НАГРАДУ →</button><div class="overlay-hint">ENTER / ПРОБЕЛ · БОЙ НА ПАУЗЕ</div></div>
       </div>
 
       <div class="overlay" id="ending" hidden>

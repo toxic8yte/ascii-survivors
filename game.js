@@ -28,7 +28,7 @@
   function text(id, value) { if (textCache.get(id) !== value) { $(id).textContent = value; textCache.set(id, value); } }
   function preferences() { progress.savePreferences(selectedCharacter, fireModePreference, Number($('enemy-limit').value)); }
   function saveCheckpoint() {
-    if (game.stressMode || !['running', 'paused', 'upgrading'].includes(game.status)) return false;
+    if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return false;
     const success = progress.checkpoint(game); lastSavedElapsed = game.elapsed;
     text('save-status', success ? 'ПРОГРЕСС СОХРАНЁН' : 'НЕ УДАЛОСЬ СОХРАНИТЬ: ХРАНИЛИЩЕ НЕДОСТУПНО');
     return success;
@@ -38,7 +38,7 @@
     if (savedRun) text('continue-summary', savedRun.character.name + ' · ' + formatTime(savedRun.elapsed) + ' · УР. ' + savedRun.level + ' · ' + Math.ceil(savedRun.player.hp) + ' HP');
     text('start', savedRun ? 'НОВЫЙ ЗАБЕГ →' : 'ВОЙТИ В НОЧЬ →');
     const p = progress.profile;
-    text('progress-summary', 'ЗАБЕГОВ: ' + p.runs + ' · ИЗГНАНО: ' + p.kills + ' · БОССОВ: ' + p.bossKills + (p.best ? ' · РЕКОРД: ' + formatTime(p.best.time) : ''));
+    text('progress-summary', 'ЗАБЕГОВ: ' + p.runs + ' · ИЗГНАНО: ' + p.kills + ' · БОССОВ: ' + p.bossKills + ' · СУНДУКОВ: ' + p.chestsOpened + (p.best ? ' · РЕКОРД: ' + formatTime(p.best.time) : ''));
   }
   function resumeSavedRun() {
     const restored = progress.loadRun();
@@ -56,7 +56,7 @@
     bestiaryWasRunning = game.status === 'running'; if (bestiaryWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
     const seen = new Set([...progress.profile.seen, ...game.encountered]), fragment = document.createDocumentFragment();
     for (const [kind, enemy] of Object.entries(NightEnemies)) {
-      const card = document.createElement('article'); card.className = 'enemy-card' + (enemy.boss ? ' boss' : '');
+      const card = document.createElement('article'); card.className = 'enemy-card' + (enemy.boss ? ' boss' : ''); card.dataset.kind = kind;
       const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
       const title = document.createElement('h3'); title.textContent = enemy.title;
       const description = document.createElement('p'); description.textContent = enemy.text;
@@ -67,6 +67,7 @@
   }
   function resize() {
     renderer.resize(arena.clientWidth, arena.clientHeight, devicePixelRatio || 1);
+    game.arenaRadius = Math.max(150, Math.min(240, Math.min(renderer.width / renderer.scaleX, renderer.height / renderer.scaleY) * .42));
     game.spawnRadius = Math.max(510, Math.min(920, Math.hypot(renderer.cols * 10, renderer.rows * 16) / 2 + 70));
     renderer.render(game, camera); dirty = true;
   }
@@ -102,7 +103,7 @@
     if (records.length > 3600) records.shift();
   }
   function selectWeapon(number) {
-    if (game.status === 'upgrading') return;
+    if (game.status === 'upgrading' || game.status === 'reward') return;
     if (!game.selectSlot(number)) { notify(number === 9 ? 'Слот 9 пока пуст.' : 'Оружие ещё не найдено — выбери его при повышении уровня.'); return; }
     updateHUD(); dirty = true;
   }
@@ -156,6 +157,25 @@
     $('upgrade-cards').querySelector('button')?.focus({ preventScroll: true });
     offersLevel = game.level;
   }
+  function showReward() {
+    const reward = game.reward; if (!reward) return;
+    text('reward-title', reward.items.length && reward.count > 1 ? 'Сундук: ' + reward.count + (reward.count === 5 ? ' наград!' : ' награды!') : 'Сундук поверженного босса');
+    const fragment = document.createDocumentFragment();
+    for (const item of reward.items) {
+      const upgrade = NightUpgrades.find(u => u.id === item.id), card = document.createElement('div'); card.className = 'reward-item';
+      const icon = document.createElement('b'); icon.textContent = upgrade.icon;
+      const title = document.createElement('span'); title.textContent = upgrade.title;
+      const rank = document.createElement('small'); rank.textContent = 'СТУПЕНЬ ' + item.rank + ' / ' + upgrade.max;
+      card.append(icon, title, rank); fragment.append(card);
+    }
+    $('reward-loot').replaceChildren(fragment);
+    text('reward-summary', NightEnemies[reward.source].title + ' · +' + reward.xp + ' ОПЫТА · +' + Math.round(reward.heal) + ' HP' + (!reward.items.length ? ' · ВСЕ ДАРЫ УЖЕ МАКСИМАЛЬНЫ' : ''));
+    $('claim-reward').focus({ preventScroll: true });
+  }
+  function claimReward() {
+    if (!game.claimReward()) return;
+    saveCheckpoint(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true });
+  }
   function updateHUD() {
     const p = game.player, status = game.status;
     const weapon = NightUpgrades.find(u => u.id === game.selectedWeapon), manual = game.fireMode === 'manual';
@@ -175,7 +195,10 @@
     text('coords', Math.round(p.x) + ' : ' + Math.round(p.y));
     text('map-label', 'КЛАДБИЩЕ · ' + game.width.toLocaleString('ru-RU') + ' × ' + game.height.toLocaleString('ru-RU'));
     const boss = game.enemies.find(e => e.alive && e.boss);
-    text('boss-name', boss ? boss.title + ' · ' + Math.ceil(boss.hp / boss.maxHp * 100) + '%' : '');
+    text('boss-name', boss ? boss.title + ' · ' + (boss.id === game.encounter?.bossId ? Math.ceil(boss.hp) + ' / ' + Math.ceil(boss.maxHp) + ' HP' : Math.ceil(boss.hp / boss.maxHp * 100) + '%') : '');
+    const encounter = game.encounter;
+    $('encounter-note').hidden = !encounter; arena.classList.toggle('has-encounter', Boolean(encounter));
+    if (encounter) text('encounter-note', encounter.phase === 'warning' ? 'ПЕЧАТЬ ЗАМКНЁТСЯ ЧЕРЕЗ ' + Math.ceil(encounter.warningLeft) + ' С' : 'СТЕНА ЗАКРЫТА · ПОБЕДИ БОССА: ' + NightEnemies[encounter.kind].title.toUpperCase());
     if (game.stressMode) text('save-status', 'ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ');
     else if (status === 'ready') text('save-status', progress.available ? 'АВТОСОХРАНЕНИЕ' : 'ХРАНИЛИЩЕ НЕДОСТУПНО');
     text('dash-label', p.dashReady <= 0 ? 'РЫВОК ГОТОВ' : 'РЫВОК ' + p.dashReady.toFixed(1) + ' С');
@@ -195,7 +218,7 @@
     text('metric-objects', (game.shots.length + game.boomerangs.length + game.enemyShots.length) + ' / ' + game.gems.length);
     if (status !== previousStatus) {
       dirty = true;
-      $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won';
+      $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won'; $('chest-reward').hidden = status !== 'reward';
       $('touch-controls').hidden = status !== 'running'; $('dash-status').hidden = status === 'ready';
       if (status === 'dead' || status === 'won') {
         saveBest(); const won = status === 'won';
@@ -207,6 +230,7 @@
         $('restart').focus({ preventScroll: true });
       }
       if (status === 'paused') $('resume').focus({ preventScroll: true });
+      if (status === 'reward') { clearInput(); showReward(); saveCheckpoint(); }
       if (status === 'ready') progressSummary();
       previousStatus = status;
     }
@@ -246,6 +270,7 @@
   }
   $('start').addEventListener('click', start); $('pause').addEventListener('click', togglePause); $('resume').addEventListener('click', togglePause);
   $('continue-run').addEventListener('click', resumeSavedRun);
+  $('claim-reward').addEventListener('click', claimReward);
   $('bestiary-open').addEventListener('click', openBestiary);
   $('bestiary-close').addEventListener('click', () => $('bestiary').close());
   $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
@@ -261,6 +286,7 @@
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
     if ($('bestiary').open) return;
+    if (game.status === 'reward' && ['Enter', 'Space'].includes(e.code)) { e.preventDefault(); if (!e.repeat) claimReward(); return; }
     const movement = /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code);
     if (/^(INPUT|SELECT)$/.test(e.target.tagName)) return;
     if (movement) { e.preventDefault(); keys.add(e.code); syncInput(); }
@@ -311,12 +337,16 @@
       while (accumulator >= 1 / 60 && game.status === 'running') { game.update(1 / 60); accumulator -= 1 / 60; }
       const factor = 1 - Math.exp(-dt * 9);
       const alpha = Math.min(1, accumulator * 60), p = game.player;
-      camera.x += (p.prevX + (p.x - p.prevX) * alpha - camera.x) * factor;
-      camera.y += (p.prevY + (p.y - p.prevY) * alpha - camera.y) * factor;
+      const room = game.encounter?.phase === 'locked' ? game.encounter : null;
+      camera.x += ((room ? room.x : p.prevX + (p.x - p.prevX) * alpha) - camera.x) * factor;
+      camera.y += ((room ? room.y : p.prevY + (p.y - p.prevY) * alpha) - camera.y) * factor;
       if (game.wave !== lastWave) { lastWave = game.wave; notify('ВОЛНА ' + game.wave + ' — НЕ ОСТАНАВЛИВАЙСЯ'); }
     } else accumulator = 0;
     simulationMS += (performance.now() - simulationStart - simulationMS) * .1;
     if (game.events.includes('boss')) notify('БОСС: ' + game.lastBoss.toUpperCase());
+    if (game.events.includes('arena-warning')) notify('ГОТОВЬСЯ: ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ СТЕНЫ');
+    if (game.events.includes('arena-clear')) notify('ПЕЧАТЬ СНЯТА · ЗАБЕРИ СУНДУК БОССА');
+    if (game.events.some(event => ['boss', 'arena-warning', 'arena-clear', 'chest-open'].includes(event))) saveCheckpoint();
     game.events.length = 0;
     if (now - lastHUD > 85) { updateHUD(); lastHUD = now; }
     if (!document.hidden && (game.status === 'running' || dirty)) {

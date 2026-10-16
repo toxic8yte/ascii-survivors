@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 require('./core.js');
 const tick = (g, seconds) => { for (let i = 0; i < Math.ceil(seconds * 60); i++) g.update(1 / 60); };
-const fixture = (seed = 77) => { const g = new NightGame(seed); g.start(); Object.assign(g.player, { x: 1600, y: 1200, prevX: 1600, prevY: 1200 }); g.aim = { x: 1600, y: 900, active: false }; g.enemies = []; g.spawnClock = 1e6; g.shootClock = 1e6; return g; };
+const fixture = (seed = 77) => { const g = new NightGame(seed, 'hunter', { terrain: false }); g.start(); Object.assign(g.player, { x: 1600, y: 1200, prevX: 1600, prevY: 1200 }); g.aim = { x: 1600, y: 900, active: false }; g.enemies = []; g.spawnClock = 1e6; g.shootClock = 1e6; return g; };
 const near = (actual, expected, tolerance = .01) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 const expanded = new NightGame(404);
 assert.equal(expanded.width, 12800); assert.equal(expanded.height, 9600);
@@ -75,7 +75,7 @@ assert.equal(close.alive, false); assert.equal(far.alive, true); assert.equal(pu
 const blades = fixture(); blades.levels.blades = 2;
 const orb = blades.bladePositions()[0], bladeEnemy = blades.spawn('ghoul', orb.x, orb.y); tick(blades, .02); assert.equal(bladeEnemy.alive, false);
 
-const boss = fixture(); boss.time = 59.99; tick(boss, .03); assert.equal(boss.enemies.filter(e => e.kind === 'lichLord').length, 1);
+const boss = fixture(); boss.time = 59.99; tick(boss, .03); assert.equal(boss.encounter.phase, 'warning'); tick(boss, 5.05); assert.equal(boss.enemies.filter(e => e.kind === 'lichLord').length, 1);
 tick(boss, 1); assert.equal(boss.enemies.filter(e => e.boss).length, 1, 'Only one boss spawns per interval');
 const endless = fixture(); endless.time = 179.99; tick(endless, .1); assert.equal(endless.status, 'running'); assert.ok(endless.time > 180);
 assert.ok(endless.dash()); endless.time = 1800; tick(endless, .1); assert.equal(endless.status, 'running'); assert.ok(endless.wave > 60);
@@ -85,6 +85,7 @@ assert.ok(endless.dash()); endless.time = 1800; tick(endless, .1); assert.equal(
 const longRun = new NightGame(2026); longRun.start();
 let maxEnemies = 0, maxParticles = 0, steps = 0;
 while ((longRun.time < 180 || longRun.status === 'upgrading') && steps++ < 14000) {
+  if (longRun.status === 'reward') longRun.claimReward();
   if (longRun.status === 'upgrading') { const preferred = ['blades', 'pulse', 'haste', 'power', 'fork', 'magnet', 'pierce', 'stride', 'vital', 'regen']; let choice = 0; for (const id of preferred) { const i = longRun.offers.findIndex(u => u.id === id); if (i >= 0) { choice = i; break; } } longRun.choose(choice); }
   longRun.player.invulnerable = 1;
   let destination = null, distance = Infinity;
@@ -146,7 +147,7 @@ let rasterized = 0, blits = 0;
 const mockDocument = { createElement: () => mockCanvas() };
 function mockCanvas() { return { ownerDocument: mockDocument, width: 0, height: 0, getContext: () => ({ setTransform() {}, fillRect() {}, fillText(ch) { assert.match(ch, /^[\x20-\x7e]$/); rasterized++; }, drawImage() { blits++; } }) }; }
 const renderer = new NightRenderer(mockCanvas()); renderer.resize(1100, 560, 1);
-assert.equal(rasterized, 1140, 'Only the ASCII atlas rasterizes text, including two pickup inks');
+assert.equal(rasterized, 1235, 'Only the ASCII atlas rasterizes text, including pickup inks and orange pumpkins');
 const renderGame = fixture(); renderGame.levels.lightning = renderGame.levels.poison = renderGame.levels.boomerang = renderGame.levels.frost = renderGame.levels.meteor = 1;
 renderGame.spawn('brute', 1800, 1200); tick(renderGame, .8);
 renderer.render(renderGame, { x: 1600, y: 1200 }, .5);

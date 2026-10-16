@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 require('./core.js');
 const tick = (game, seconds) => { for (let i = 0; i < Math.ceil(seconds * 60); i++) game.update(1 / 60); };
 function fixture(options = {}) {
-  const game = new NightGame(41, 'hunter', { fireMode: 'manual', ...options }); game.start();
+  const game = new NightGame(41, 'hunter', { fireMode: 'manual', terrain: false, ...options }); game.start();
   game.enemies = []; game.spawnClock = game.nextBossAt = 1e6; return game;
 }
 assert.equal(Object.keys(NightEnemies).length, 17);
@@ -49,10 +49,9 @@ const swept = fixture(); swept.enemyShots.push({ x: swept.player.x - 50, y: swep
 swept.update(.05); assert.equal(swept.player.hp, 85, 'Enemy missiles use swept collision'); assert.equal(swept.enemyShots.length, 0);
 
 const bosses = fixture(); bosses.nextBossAt = 60; const order = [];
-for (let i = 0; i < 12; i++) { bosses.enemies = []; bosses.time = bosses.nextBossAt; bosses.update(.01); order.push(bosses.enemies.find(e => e.boss).kind); }
+for (let i = 0; i < 12; i++) { bosses.enemies = []; bosses.time = bosses.nextBossAt; bosses.update(.01); tick(bosses, 5.05); const boss = bosses.enemies.find(e => e.boss); order.push(boss.kind); bosses.hurtEnemy(boss, boss.hp + 1); }
 assert.equal(new Set(order.slice(0, 6)).size, 6); assert.deepEqual(order.slice(0, 6), order.slice(6));
-const victim = bosses.enemies.find(e => e.boss); bosses.hurtEnemy(victim, victim.hp + 1);
-assert.equal(bosses.bossKills, 1); assert.equal(bosses.hearts[0].value, 60);
+assert.equal(bosses.bossKills, 12); assert.equal(bosses.hearts[0].value, 60);
 const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .442) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
 quicker.levels.haste = 1; assert.ok(quicker.cooldown < .442);
 console.log('PASS: 17 enemies, six rotating bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');

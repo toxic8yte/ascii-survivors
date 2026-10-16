@@ -1,6 +1,6 @@
 (function (root) {
   'use strict';
-  const PALETTE = ['#333a2c', '#64654c', '#82d2ad', '#acb77e', '#cfc7af', '#ac8db8', '#df7054', '#f4c77f', '#f0edd0', '#79bace', '#c6ffdc', '#ffd0b8'];
+  const PALETTE = ['#3d5840', '#82916b', '#82d2ad', '#acb77e', '#cfc7af', '#ac8db8', '#df7054', '#f4c77f', '#f0edd0', '#79bace', '#c6ffdc', '#ffd0b8', '#ff8b2b'];
   const TAU = Math.PI * 2;
   const hash = (x, y) => { let v = Math.imul(x ^ 0x64ab, 374761393) ^ Math.imul(y ^ 0xf8c, 668265263); v = Math.imul(v ^ v >>> 13, 1274126177); return (v ^ v >>> 16) >>> 0; };
   const mix = (previous, current, alpha) => (previous ?? current) + (current - (previous ?? current)) * alpha;
@@ -60,6 +60,16 @@
       const steps = Math.max(18, Math.ceil(radius / 4));
       for (let i = 0; i < steps; i++) { const a = i / steps * TAU; this.world(x + Math.cos(a) * radius, y + Math.sin(a) * radius, glyph, ink); }
     }
+    sealedWall(x, y, radius) {
+      const steps = Math.ceil(TAU * radius / 10), points = [];
+      this.ctx.fillStyle = '#15291c';
+      for (let i = 0; i < steps; i++) {
+        const a = i / steps * TAU, wx = x + Math.cos(a) * radius, wy = y + Math.sin(a) * radius, p = this.point(wx, wy);
+        points.push({ x: wx, y: wy });
+        this.ctx.fillRect(p.x - this.cellW * .8, p.y - this.cellH * .65, this.cellW * 1.6, this.cellH * 1.3);
+      }
+      for (const p of points) this.world(p.x, p.y, '#', 6);
+    }
     line(a, b, ink, glyph, zigzag = false) {
       const length = Math.hypot(b.x - a.x, b.y - a.y), steps = Math.ceil(length / 11);
       for (let i = 0; i <= steps; i++) {
@@ -72,7 +82,7 @@
       if (this.chunks.has(key)) return this.chunks.get(key);
       const tileW = 400, tileH = 320, left = xx * tileW, top = yy * tileH;
       const canvas = this.makeCanvas(tileW * this.scaleX * this.dpr, tileH * this.scaleY * this.dpr), ctx = canvas.getContext('2d', { alpha: false });
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); ctx.fillStyle = '#131510'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); ctx.fillStyle = '#15291c'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       const paint = (x, y, sprite, ink) => this.sprite(ctx, (x - left) * this.scaleX, (y - top) * this.scaleY, sprite, ink);
       for (let y = top; y < top + tileH; y += 16) for (let x = left; x < left + tileW; x += 10) {
         const v = hash(x / 10, y / 16);
@@ -83,11 +93,8 @@
       for (let y = Math.floor((top - 80) / 110); y <= Math.ceil((top + tileH + 80) / 110); y++) for (let x = Math.floor((left - 80) / 130); x <= Math.ceil((left + tileW + 80) / 130); x++) {
         const v = hash(x, y), wx = x * 130 + v % 59, wy = y * 110 + (v >>> 8) % 41, type = v % 11;
         if (wx < 45 || wy < 45 || wx > this.worldWidth - 45 || wy > this.worldHeight - 45) continue;
-        if (type < 2) paint(wx, wy, ' ._.\n |+|\n_|_|_', 1);
-        else if (type === 2) paint(wx, wy, ' \\|/\n--Y--\n  |\n /|\\', 0);
-        else if (type === 3) paint(wx, wy, '__\n/..\\', 0);
-        else if (type === 4) paint(wx, wy, ',,\n/|', 0);
-        else if (type === 5) paint(wx, wy, '-+-\n |', 1);
+        if (type < 3) paint(wx, wy, ',,\n/|', 0);
+        else if (type === 5) paint(wx, wy, '-+-', 0);
       }
       // Bounded cache: scrolling never keeps the entire cemetery in memory.
       if (this.chunks.size >= 36) this.chunks.delete(this.chunks.keys().next().value);
@@ -104,6 +111,8 @@
       if (this.worldWidth !== game.width || this.worldHeight !== game.height) { this.worldWidth = game.width; this.worldHeight = game.height; this.chunks.clear(); }
       this.camera = camera; this.alpha = Math.max(0, Math.min(1, alpha)); this.scenery();
       this.enemyCells.fill(0); this.renderedEnemies = 0;
+      const halfW = this.width / this.scaleX / 2, halfH = this.height / this.scaleY / 2;
+      for (const block of game.visibleObstacles(camera.x - halfW - 80, camera.y - halfH - 80, camera.x + halfW + 80, camera.y + halfH + 80)) this.world(block.x, block.y, block.sprite, block.ink);
       for (const pool of game.pools) {
         this.circle(pool.x, pool.y, pool.radius, 3, '~');
         for (let i = 0; i < 8; i++) { const a = i * 2.4; this.world(pool.x + Math.cos(a) * pool.radius * .55, pool.y + Math.sin(a) * pool.radius * .55, '.', 2); }
@@ -144,6 +153,13 @@
       // Pickups use their own brighter inks and remain readable over combat effects.
       for (const g of game.gems) this.world(g.x, g.y, g.value >= 6 ? '<*>' : '*', 10);
       for (const h of game.hearts) this.world(h.x, h.y, '[+]', 11);
+      for (const chest of game.chests) { this.world(chest.x, chest.y, ' ___\n[?*]\n|__|', 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
+      const arena = game.encounter;
+      if (arena) {
+        const warning = arena.phase === 'warning', radius = arena.radius * (warning ? .85 + .15 * (1 - arena.warningLeft / 5) : 1);
+        if (warning) this.circle(arena.x, arena.y, radius, 7, ':');
+        else this.sealedWall(arena.x, arena.y, radius);
+      }
       const p = game.player, position = this.position(p);
       const ink = p.invulnerable > 0 && Math.floor(game.time * 12) % 2 ? 9 : game.character.ink;
       this.world(position.x, position.y, game.character.sprite, ink);

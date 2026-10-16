@@ -9,7 +9,7 @@
     brute: { title: 'Громила', text: 'Большой запас здоровья и тяжёлый удар.', at: 65, weight: 8, hp: 125, speed: 35, radius: 23, damage: 22, xp: 6, ink: 6, glyph: 'O', sprite: ',_,\n[O]\n/ \\' },
     mummy: { title: 'Мумия', text: 'Проклятые бинты замедляют при попадании.', at: 18, weight: 15, hp: 58, speed: 43, radius: 15, damage: 12, slow: 1.8, xp: 3, ink: 4, glyph: '=', sprite: '[=]\n/=\\' },
     spider: { title: 'Могильный паук', text: 'Быстро обходит героя с фланга.', at: 32, weight: 12, ai: 'weave', hp: 23, speed: 92, radius: 12, damage: 9, xp: 2, ink: 3, glyph: 'm', sprite: '/\\o/\\' },
-    pumpkin: { title: 'Джек-о-Лантерн', text: 'Хэллоуинская тыква бросает веер огненных шаров.', at: 42, weight: 8, ai: 'ranged', skill: 3.5, hp: 75, speed: 46, radius: 19, damage: 15, xp: 4, ink: 7, glyph: 'o', sprite: ' _|_\n{o.o}\n \\_/' },
+    pumpkin: { title: 'Джек-о-Лантерн', text: 'Хэллоуинская тыква бросает веер огненных шаров.', at: 42, weight: 8, ai: 'ranged', skill: 3.5, hp: 75, speed: 46, radius: 19, damage: 15, xp: 4, ink: 12, glyph: 'o', sprite: ' _|_\n{o.o}\n \\_/' },
     lich: { title: 'Лич', text: 'Держит дистанцию и стреляет проклятиями.', at: 55, weight: 8, ai: 'ranged', skill: 3, hp: 85, speed: 58, radius: 16, damage: 15, xp: 5, ink: 5, glyph: 'L', sprite: ' /\\\n{L}\n /\\' },
     vampire: { title: 'Вампир', text: 'Стремительно кружит вокруг своей жертвы.', at: 75, weight: 10, ai: 'weave', hp: 72, speed: 118, radius: 14, damage: 17, xp: 4, ink: 5, glyph: 'V', sprite: '\\V/\n(V)\n/\\' },
     werewolf: { title: 'Оборотень', text: 'Замирает перед быстрым броском вперёд.', at: 90, weight: 9, ai: 'charge', skill: 4.5, hp: 130, speed: 74, radius: 20, damage: 20, xp: 6, ink: 4, glyph: 'w', sprite: '/^\\\n{w}\n/ \\' },
@@ -52,12 +52,35 @@
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
   const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
+  const TERRAIN_TYPES = [
+    { kind: 'grave', w: 46, h: 46, sprite: ' ._.\n |+|\n_|_|_', ink: 1 },
+    { kind: 'rock', w: 60, h: 42, sprite: ' .--.\n/####\\\n\\____/', ink: 1 },
+    { kind: 'tree', w: 46, h: 58, sprite: ' \\|/\n--Y--\n  |\n /|\\', ink: 3 },
+    { kind: 'crypt', w: 76, h: 54, sprite: ' _____\n|[_+_]|\n|_|||_|', ink: 1 },
+    { kind: 'wall', w: 84, h: 30, sprite: '[]===[]\n[]===[]', ink: 1 }
+  ];
+  function terrainHash(x, y) {
+    let value = Math.imul(x ^ 0x64ab, 374761393) ^ Math.imul(y ^ 0xf8c, 668265263);
+    value = Math.imul(value ^ value >>> 13, 1274126177); return (value ^ value >>> 16) >>> 0;
+  }
+  function makeTerrain(width, height) {
+    const cols = Math.ceil(width / 400), rows = Math.ceil(height / 320), cells = new Array(cols * rows);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const value = terrainHash(x, y); if (value % 4 === 0) continue;
+      const block = { ...TERRAIN_TYPES[value % TERRAIN_TYPES.length], x: x * 400 + 120 + value % 160, y: y * 320 + 100 + (value >>> 10) % 120 };
+      if (Math.hypot(block.x - width / 2, block.y - height / 2) < 300) continue;
+      cells[y * cols + x] = block;
+    }
+    return { cols, rows, cells };
+  }
 
   class NightGame {
     constructor(seed = Date.now(), characterId = 'hunter', options = {}) {
       this.seed = seed >>> 0 || 1;
       this.randomState = this.seed;
       this.width = WORLD.width; this.height = WORLD.height; this.duration = Infinity;
+      this.terrainEnabled = options.terrain !== false; this.terrain = makeTerrain(this.width, this.height);
+      this.encounter = null; this.arenaRadius = 205; this.chests = []; this.reward = null; this.chestsOpened = 0; this.nextChestId = 1;
       this.wallTime = 0; this.pressureOffset = 0; this.steps = 0;
       this.stressMode = Boolean(options.stressMode);
       this.enemyLimit = clamp(Math.floor(Number(options.enemyLimit) || 6000), 100, 24000);
@@ -112,6 +135,110 @@
     get elapsed() { return Math.max(this.time, this.wallTime); }
     get pressureTime() { return this.elapsed + this.pressureOffset; }
     get wave() { return Math.floor(this.pressureTime / 30) + 1; }
+    obstacleActive(block) {
+      const arena = this.encounter;
+      return !arena || arena.phase !== 'locked' || Math.hypot(block.x - arena.x, block.y - arena.y) > arena.radius + Math.hypot(block.w, block.h) / 2 + 35;
+    }
+    visibleObstacles(left, top, right, bottom) {
+      if (!this.terrainEnabled) return [];
+      const result = [], terrain = this.terrain;
+      for (let y = Math.max(0, Math.floor(top / 320)); y <= Math.min(terrain.rows - 1, Math.floor(bottom / 320)); y++) {
+        for (let x = Math.max(0, Math.floor(left / 400)); x <= Math.min(terrain.cols - 1, Math.floor(right / 400)); x++) {
+          const block = terrain.cells[y * terrain.cols + x]; if (block && this.obstacleActive(block)) result.push(block);
+        }
+      }
+      return result;
+    }
+    resolveTerrain(entity) {
+      if (!this.terrainEnabled) return false;
+      // Blocks stay more than 60 units from cell borders. Every actor's radius
+      // is below 50, so an overlapping block is always in the actor's own cell.
+      const col = Math.floor(entity.x / 400), row = Math.floor(entity.y / 320);
+      const block = this.terrain.cells[row * this.terrain.cols + col];
+      if (!block || !this.obstacleActive(block)) return false;
+      const left = block.x - block.w / 2, right = block.x + block.w / 2, top = block.y - block.h / 2, bottom = block.y + block.h / 2;
+      const dx = entity.x - clamp(entity.x, left, right), dy = entity.y - clamp(entity.y, top, bottom), r = entity.radius;
+      const distance = Math.hypot(dx, dy); if (distance >= r) return false;
+      if (distance > .0001) { entity.x += dx / distance * (r - distance); entity.y += dy / distance * (r - distance); }
+      else {
+        const distances = [entity.x - left, right - entity.x, entity.y - top, bottom - entity.y], side = distances.indexOf(Math.min(...distances));
+        if (side === 0) entity.x = left - r; else if (side === 1) entity.x = right + r;
+        else if (side === 2) entity.y = top - r; else entity.y = bottom + r;
+      }
+      return true;
+    }
+    resolveArena(entity) {
+      const arena = this.encounter; if (!arena || arena.phase !== 'locked') return;
+      const dx = entity.x - arena.x, dy = entity.y - arena.y, distance = Math.hypot(dx, dy);
+      const inside = entity === this.player || entity.arenaMember;
+      const boundary = inside ? arena.radius - entity.radius - 8 : arena.radius + entity.radius + 8;
+      if (inside ? distance <= boundary : distance >= boundary) return;
+      const angle = distance ? Math.atan2(dy, dx) : entity.phase || 0;
+      entity.x = arena.x + Math.cos(angle) * boundary; entity.y = arena.y + Math.sin(angle) * boundary;
+    }
+    moveEntity(entity, dx, dy, detour = false) {
+      const oldX = entity.x, oldY = entity.y, distance = Math.hypot(dx, dy), steps = Math.max(1, Math.ceil(distance / 8));
+      let blocked = false;
+      for (let i = 0; i < steps; i++) {
+        entity.x = clamp(entity.x + dx / steps, 28, this.width - 28); entity.y = clamp(entity.y + dy / steps, 28, this.height - 28);
+        blocked = this.resolveTerrain(entity) || blocked; this.resolveArena(entity);
+      }
+      if (blocked && detour && Math.hypot(entity.x - oldX, entity.y - oldY) < distance * .5) {
+        const direction = entity.id % 2 ? 1 : -1; this.moveEntity(entity, -dy * direction, dx * direction);
+      }
+    }
+    beginEncounter() {
+      this.encounter = { phase: 'warning', x: this.player.x, y: this.player.y, radius: this.arenaRadius, warningLeft: 5, bossId: 0, kind: BOSSES[this.bossIndex % BOSSES.length] };
+      this.events.push('arena-warning');
+    }
+    updateEncounter(dt) {
+      const arena = this.encounter; if (!arena || arena.phase !== 'warning') return;
+      arena.x = clamp(this.player.x, arena.radius + 90, this.width - arena.radius - 90);
+      arena.y = clamp(this.player.y, arena.radius + 90, this.height - arena.radius - 90);
+      arena.warningLeft = Math.max(0, arena.warningLeft - dt);
+      if (arena.warningLeft > 0) return;
+      arena.phase = 'locked'; this.resolveArena(this.player);
+      for (const enemy of this.enemies) { enemy.arenaMember = 0; this.resolveArena(enemy); }
+      const angle = this.random() * TAU, distance = arena.radius * .56;
+      const boss = this.spawn(arena.kind, arena.x + Math.cos(angle) * distance, arena.y + Math.sin(angle) * distance, 1);
+      boss.hp *= 2.5; boss.maxHp = boss.hp; boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
+      arena.bossId = boss.id; this.bossIndex++; this.bossSpawned = true; this.lastBoss = boss.title;
+      this.events.push('boss');
+    }
+    dropChest(enemy) {
+      const chest = { id: this.nextChestId++, x: enemy.x, y: enemy.y, source: enemy.kind, radius: 20 };
+      this.resolveTerrain(chest); this.chests.push(chest);
+      if (this.chests.length > 64) this.chests.shift(); this.events.push('chest-drop');
+    }
+    applyUpgrade(upgrade) {
+      if (!upgrade || this.levels[upgrade.id] >= upgrade.max) return false;
+      this.levels[upgrade.id]++;
+      if (upgrade.id === 'vital') { this.player.maxHp += 25; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 40); }
+      if (upgrade.id === 'pulse') this.pulseClock = Math.min(this.pulseClock, .4);
+      if (upgrade.id in this.weaponClocks) this.weaponClocks[upgrade.id] = Math.min(this.weaponClocks[upgrade.id], .2);
+      return true;
+    }
+    openChest(chest) {
+      if (this.status !== 'running' || !this.chests.includes(chest)) return false;
+      this.chests = this.chests.filter(c => c !== chest); this.chestsOpened++;
+      const roll = this.random(), count = roll < .05 ? 5 : roll < .3 ? 3 : 1, items = [];
+      for (let i = 0; i < count; i++) {
+        let candidates = UPGRADES.filter(u => u.weapon && this.levels[u.id] > 0 && this.levels[u.id] < u.max);
+        if (!candidates.length) candidates = UPGRADES.filter(u => !u.weapon && this.levels[u.id] < u.max);
+        if (!candidates.length) candidates = UPGRADES.filter(u => this.levels[u.id] < u.max);
+        if (!candidates.length) break;
+        const upgrade = candidates[Math.floor(this.random() * candidates.length)]; this.applyUpgrade(upgrade);
+        items.push({ id: upgrade.id, rank: this.levels[upgrade.id] });
+      }
+      const heal = Math.min(35, this.player.maxHp - this.player.hp), xp = count * 25;
+      this.player.hp += heal; this.player.invulnerable = Math.max(this.player.invulnerable, 1);
+      this.xp += xp; this.reward = { id: chest.id, source: chest.source, count, items, heal, xp };
+      this.status = 'reward'; this.events.push('chest-open'); return true;
+    }
+    claimReward() {
+      if (this.status !== 'reward') return false;
+      this.reward = null; this.status = 'running'; this.checkLevel(); return true;
+    }
     selectSlot(slot) {
       const id = SLOTS[slot - 1]; if (!id || !this.levels[id]) return false;
       this.selectedWeapon = id; this.queuedWeapon = null; return true;
@@ -145,7 +272,7 @@
       this.events.push('dash');
       return true;
     }
-    spawn(kind, x, y) {
+    spawn(kind, x, y, arenaMember = 0) {
       const def = ENEMIES[kind];
       if (!def) throw new Error('Unknown enemy: ' + kind);
       if (!Number.isFinite(x) || !Number.isFinite(y)) {
@@ -155,7 +282,8 @@
         y = clamp(this.player.y + Math.sin(angle) * distance, 28, this.height - 28);
       }
       const scale = 1 + this.pressureTime / 280;
-      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: 0, chargeY: 0, targetX: x, targetY: y };
+      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: 0, chargeY: 0, targetX: x, targetY: y, arenaMember };
+      this.resolveTerrain(enemy); this.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
       this.enemies.push(enemy);
       this.encountered.add(kind);
       return enemy;
@@ -165,7 +293,7 @@
       const candidates = Object.keys(ENEMIES).filter(kind => !ENEMIES[kind].boss && age >= ENEMIES[kind].at);
       let roll = this.random() * candidates.reduce((sum, kind) => sum + ENEMIES[kind].weight, 0);
       const kind = candidates.find(kind => (roll -= ENEMIES[kind].weight) < 0) || 'ghoul';
-      const count = Math.min(128, 2 + Math.floor(age / 45), this.enemyLimit - this.enemies.length);
+      const count = Math.min(128, 2 + Math.floor(age / 45), this.enemyLimit - this.enemies.length - (this.encounter?.phase === 'warning' ? 1 : 0));
       for (let i = 0; i < count; i++) this.spawn(kind);
       this.spawnClock += Math.max(.12, .86 - age * .0014);
     }
@@ -204,6 +332,7 @@
           if (budget <= 0) break;
         }
         e.x = clamp(e.x, 28, this.width - 28); e.y = clamp(e.y, 28, this.height - 28);
+        this.resolveTerrain(e); this.resolveArena(e);
       }
     }
     addGem(x, y, value) {
@@ -222,12 +351,17 @@
       e.hp -= damage; e.flash = .12;
       if (knockback) {
         const dx = e.x - this.player.x, dy = e.y - this.player.y, d = Math.hypot(dx, dy) || 1;
-        e.x = clamp(e.x + dx / d * knockback, 20, this.width - 20);
-        e.y = clamp(e.y + dy / d * knockback, 20, this.height - 20);
+        this.moveEntity(e, dx / d * knockback, dy / d * knockback);
       }
       if (e.hp > 0) return;
       e.alive = false; this.kills++;
       if (e.boss) this.bossKills++;
+      if (e.boss) {
+        if (this.encounter?.bossId === e.id) {
+          this.encounter = null; this.nextBossAt = this.pressureTime + 90; this.resolveTerrain(this.player); this.events.push('arena-clear');
+        }
+        this.dropChest(e);
+      }
       this.addGem(e.x, e.y, e.xp);
       if (!this.stressMode && (e.boss || this.random() < .035)) this.hearts.push({ x: e.x + 14, y: e.y, value: e.boss ? 60 : 20, expires: this.time + 120 });
       this.burst(e.x, e.y, e.ink, e.boss ? 28 : 6);
@@ -240,7 +374,7 @@
       this.damageFlash = .26; this.events.push('hurt'); this.burst(p.x, p.y, 6, 12);
       if (source) {
         const dx = source.x - p.x, dy = source.y - p.y, d = Math.hypot(dx, dy) || 1;
-        source.x = clamp(source.x + dx / d * 48, 28, this.width - 28); source.y = clamp(source.y + dy / d * 48, 28, this.height - 28);
+        this.moveEntity(source, dx / d * 48, dy / d * 48);
       }
       if (p.hp <= 0) this.status = 'dead';
     }
@@ -284,10 +418,7 @@
     }
     choose(index) {
       if (this.status !== 'upgrading' || !this.offers[index]) return false;
-      const u = this.offers[index]; this.levels[u.id]++;
-      if (u.id === 'vital') { this.player.maxHp += 25; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 40); }
-      if (u.id === 'pulse') this.pulseClock = Math.min(this.pulseClock, .4);
-      if (u.id in this.weaponClocks) this.weaponClocks[u.id] = Math.min(this.weaponClocks[u.id], .2);
+      const u = this.offers[index]; this.applyUpgrade(u);
       this.player.invulnerable = Math.max(this.player.invulnerable, .65);
       this.offers = []; this.status = 'running'; this.checkLevel();
       return true;
@@ -413,7 +544,7 @@
     queueSummons(e, kind, count) {
       for (let i = 0; i < count && this.summons.length < 24; i++) {
         const angle = this.random() * TAU, distance = 55 + this.random() * 40;
-        this.summons.push({ kind, x: clamp(e.x + Math.cos(angle) * distance, 28, this.width - 28), y: clamp(e.y + Math.sin(angle) * distance, 28, this.height - 28) });
+        this.summons.push({ kind, x: clamp(e.x + Math.cos(angle) * distance, 28, this.width - 28), y: clamp(e.y + Math.sin(angle) * distance, 28, this.height - 28), arenaMember: e.arenaMember });
       }
     }
     enemySkill(e) {
@@ -428,6 +559,7 @@
         this.queueSummons(e, 'ghoul', 3); this.queueSummons(e, 'mummy', 1);
       } else if (e.ai === 'blink') {
         this.burst(e.x, e.y, e.ink, 10); e.x = e.targetX; e.y = e.targetY; e.prevX = e.x; e.prevY = e.y;
+        this.resolveTerrain(e); this.resolveArena(e); e.prevX = e.x; e.prevY = e.y;
         this.burst(e.x, e.y, e.ink, 10);
       } else if (e.ai === 'charge') {
         e.chargeTime = e.boss ? .65 : .45;
@@ -454,8 +586,7 @@
         e.targetY = clamp(p.y + Math.sin(angle) * 150, 28, this.height - 28);
         speed = 0;
       }
-      e.x = clamp(e.x + vx * speed * dt, 28, this.width - 28);
-      e.y = clamp(e.y + vy * speed * dt, 28, this.height - 28);
+      this.moveEntity(e, vx * speed * dt, vy * speed * dt, e.chargeTime <= 0);
       e.flash = Math.max(0, e.flash - dt);
     }
     updateEnemyShots(dt) {
@@ -463,6 +594,8 @@
       for (const shot of this.enemyShots) {
         const x = shot.x, y = shot.y; shot.prevX = x; shot.prevY = y;
         shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.life -= dt;
+        const arena = this.encounter;
+        if (arena?.phase === 'locked' && (Math.hypot(x - arena.x, y - arena.y) < arena.radius) !== (Math.hypot(shot.x - arena.x, shot.y - arena.y) < arena.radius)) { shot.life = 0; continue; }
         const dx = shot.x - x, dy = shot.y - y, lengthSq = dx * dx + dy * dy;
         const t = lengthSq ? clamp(((p.x - x) * dx + (p.y - y) * dy) / lengthSq, 0, 1) : 0;
         if (Math.hypot(p.x - x - t * dx, p.y - y - t * dy) < p.radius + shot.radius) { this.hurtPlayer(shot.damage); shot.life = 0; }
@@ -486,21 +619,18 @@
       } else if (len > .05) {
         p.dirX = dx / Math.hypot(dx, dy); p.dirY = dy / Math.hypot(dx, dy);
       }
-      p.x = clamp(p.x + dx * this.speed * dt, 28, this.width - 28);
-      p.y = clamp(p.y + dy * this.speed * dt, 28, this.height - 28);
+      this.moveEntity(p, dx * this.speed * dt, dy * this.speed * dt);
 
       this.spawnClock -= dt;
       if (this.spawnClock <= 0) this.spawnWave();
-      if (this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit) {
-        const kind = BOSSES[this.bossIndex++ % BOSSES.length]; this.spawn(kind); this.lastBoss = ENEMIES[kind].title;
-        this.bossSpawned = true; this.nextBossAt = this.pressureTime + 90; this.events.push('boss');
-      }
+      if (!this.encounter && this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit) this.beginEncounter();
+      this.updateEncounter(dt);
       this.peakEnemies = Math.max(this.peakEnemies, this.enemies.length);
       for (const e of this.enemies) if (e.alive) {
         e.prevX = e.x; e.prevY = e.y;
         this.updateEnemy(e, dt);
       }
-      for (const summon of this.summons) { if (this.enemies.length >= this.enemyLimit) break; this.spawn(summon.kind, summon.x, summon.y); }
+      for (const summon of this.summons) { if (this.enemies.length >= this.enemyLimit - (this.encounter?.phase === 'warning' ? 1 : 0)) break; this.spawn(summon.kind, summon.x, summon.y, summon.arenaMember); }
       this.summons.length = 0;
       this.updateEnemyShots(dt);
       this.buildGrid();
@@ -551,6 +681,10 @@
         p.hp = Math.min(p.maxHp, p.hp + heart.value); heart.taken = true; this.burst(p.x, p.y, 3, 10);
       }
       this.hearts = this.hearts.filter(h => !h.taken && (!h.expires || h.expires > this.time)).slice(-128);
+      if (this.status === 'running') {
+        const chest = this.chests.find(c => Math.hypot(c.x - p.x, c.y - p.y) < 38);
+        if (chest) this.openChest(chest);
+      }
       for (const particle of this.particles) { particle.x += particle.vx * dt; particle.y += particle.vy * dt; particle.life -= dt; }
       this.particles = this.particles.filter(p => p.life > 0).slice(-450);
       for (const ring of this.rings) ring.life -= dt;

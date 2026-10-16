@@ -13,6 +13,7 @@ for (const count of [1000, 3000, 6000, 12000, 24000]) {
   for (let i = 0; i < 150; i++) {
     while (game.enemies.length < count) game.spawn(crowdKinds[game.enemies.length % crowdKinds.length]);
     const started = performance.now(); game.update(1 / 60); const cost = performance.now() - started;
+    if (game.status === 'reward') game.claimReward();
     if (i >= 30) costs.push(cost); game.events.length = 0;
     assert.equal(game.status, 'running'); assert.ok(Number.isFinite(game.player.x + game.player.y));
   }
@@ -25,7 +26,7 @@ const started = performance.now(); let peakDrops = 0;
 for (let i = 0; i < 36001; i++) {
   const angle = game.time * .08;
   game.input.x = Math.cos(angle); game.input.y = Math.sin(angle);
-  game.update(.05); game.events.length = 0;
+  game.update(.05); if (game.status === 'reward') game.claimReward(); game.events.length = 0;
   peakDrops = Math.max(peakDrops, game.gems.length);
   assert.equal(game.status, 'running'); assert.ok(game.enemies.length <= 1000);
   assert.ok(Number.isFinite(game.time + game.player.x + game.player.y));
