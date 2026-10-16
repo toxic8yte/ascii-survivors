@@ -6,7 +6,8 @@ button { font: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 5px; }
 button:disabled { opacity: .35; cursor: default; }
 button[hidden], [hidden] { display: none !important; }
-.game-shell { width: min(1500px, 100%); min-height: 100svh; height: 100svh; margin: 0 auto; display: flex; flex-direction: column; padding: 0 28px; }
+.game-shell { width: 100%; min-height: 100svh; height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; padding: 0 16px; }
+.view-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .topbar { height: 82px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #302a22; }
 .wordmark { color: #ded2be; text-decoration: none; display: flex; align-items: center; gap: 14px; font-size: 12px; letter-spacing: .1em; font-weight: bold; }
 .wordmark small { display: block; color: #786f60; font-size: 9px; margin-top: 7px; font-weight: normal; letter-spacing: .17em; }
@@ -29,7 +30,7 @@ kbd { font: inherit; display: inline-block; font-size: 10px; border: 1px solid #
 .xp-track { flex-shrink: 0; height: 15px; border-top: 1px solid #253830; position: relative; background: #15221c; overflow: hidden; }
 #xp-bar { background: #416c55; height: 100%; width: 0; transition: width .2s; }
 #xp-text { position: absolute; top: 2px; left: 9px; color: #aac9ae; letter-spacing: .1em; font-size: 8px; }
-.arena { position: relative; flex: 1; min-height: 310px; border: 1px solid #34482e; border-top: none; overflow: hidden; isolation: isolate; background: #15291c; }
+.arena { position: relative; flex: 1; min-height: 0; border: 1px solid #34482e; border-top: none; overflow: hidden; isolation: isolate; background: #15291c; }
 canvas { display: block; width: 100%; height: 100%; position: absolute; inset: 0; }
 .arena-grain { pointer-events: none; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 48%, transparent 30%, #090b08aa 100%); }
 .arena-grain:after { content: ''; position: absolute; inset: 0; opacity: .13; background: repeating-linear-gradient(0deg, #000 0, #000 1px, transparent 1px, transparent 4px); }
@@ -40,7 +41,7 @@ canvas { display: block; width: 100%; height: 100%; position: absolute; inset: 0
 .dash-status i { display: block; width: 100%; height: 100%; background: #d8bd6e; }
 .notice { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); color: #ebba7d; border: 1px solid #695439; background: #211a13ed; font-size: 11px; padding: 10px 15px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .notice.visible { opacity: 1; }
-.overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: #10100eda; padding: 24px; overflow: auto; backdrop-filter: blur(2px); }
+.overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; align-items: safe center; background: #10100eda; padding: 24px; overflow: auto; backdrop-filter: blur(2px); }
 #intro { background: radial-gradient(ellipse, #171510f0, #0c0e0ce8); }
 .intro-content { display: grid; grid-template-columns: 1fr 1.18fr; align-items: center; gap: 50px; text-align: center; width: min(950px, 100%); padding: 6px 0; }
 .intro-story .intro-keys { flex-wrap: wrap; gap: 10px; }
@@ -131,7 +132,7 @@ footer { flex-shrink: 0; padding: 16px 0 17px; }
   .night-clock { display: none; }.quiet-button { padding: 8px 10px; }.quiet-button kbd { display: none; }
   .hud { padding: 12px 0; gap: 18px; }.health-block { max-width: none; }.stat-label { font-size: 7px; }.stat-block { min-width: 35px; }.stat-block strong, .timer-block strong { font-size: 21px; }.level-block { display: none; }
   .hud { gap: 11px; }.health-block { min-width: 90px; }.combat-bar { gap: 8px; font-size: 7px; }.combat-bar button { font-size: 8px; padding: 5px 6px; }.combat-bar kbd { display: none; }#selected-weapon { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.run-options { font-size: 9px; gap: 7px; margin-top: 12px; padding-top: 10px; }
-  .arena { min-height: 340px; }.field-note { left: 10px; right: 10px; font-size: 7px; }.field-note #coords { display: none; }
+  .arena { min-height: 0; }.field-note { left: 10px; right: 10px; font-size: 7px; }.field-note #coords { display: none; }
   .overlay { padding: 20px 14px; }.eyebrow { font-size: 7px; letter-spacing: .12em; }.castle { font-size: 8px; margin-top: 17px; }h1 { font-size: 41px; }.intro-content p { font-size: 11px; margin: 16px 0; }.intro-keys { gap: 8px; font-size: 7px; }.intro-keys kbd { font-size: 7px; padding: 3px 4px; }.best { margin-top: 16px; }
   .upgrade-grid { grid-template-columns: 1fr; gap: 9px; }.upgrade-card { min-height: 0; padding: 13px 16px 13px 72px; }.upgrade-icon { position: absolute; left: 14px; top: 25px; font-size: 20px; margin: 0; }.upgrade-name { font-size: 14px; margin: 6px 0; }.upgrade-kind, .upgrade-rank { font-size: 7px; }.upgrade-description { font-size: 9px; }.upgrade-rank { margin-top: 8px; }.upgrade-key { top: 10px; right: 10px; font-size: 8px; padding: 2px 4px; }h2 { font-size: 28px; }.upgrade-content > p { margin-bottom: 16px; }.overlay-hint { margin-top: 16px; font-size: 7px; }
   footer { padding: 12px 0; }.loadout { gap: 15px; font-size: 7px; }.loadout > span { gap: 5px; }.loadout i { font-size: 11px; }.legend { font-size: 8px; margin-top: 9px; }.desktop-help { display: none; }.notice { font-size: 9px; padding: 9px; }
@@ -148,3 +149,40 @@ footer { flex-shrink: 0; padding: 16px 0 17px; }
   .intro-story .intro-keys, .intro-story .best { display: none; }.intro-story h1 { font-size: 42px; }.intro-story p { font-size: 10px; margin: 13px 0; }.intro-story .run-options { margin-top: 12px; padding-top: 10px; gap: 7px; font-size: 9px; }.intro-story .run-options small { font-size: 8px; }.character-details { min-height: 80px; }.characters { margin: 10px 0; }.character-picker .primary-button { padding-block: 11px; }.arsenal-note { margin-top: 9px; font-size: 7px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+body.expanded-view { overflow: hidden; }
+.game-shell.is-expanded { position: fixed; inset: 0; z-index: 100; width: 100%; height: 100dvh; min-height: 0; padding: 0; background: #15291c; }
+.is-expanded .arena { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; min-height: 0; }
+.is-expanded .topbar { position: absolute; top: 12px; right: 16px; z-index: 7; height: auto; border: 0; }
+.is-expanded .wordmark, .is-expanded .night-clock { display: none; }
+.is-expanded .quiet-button { background: #10170fe8; }
+.is-expanded .hud { position: absolute; top: 10px; left: 16px; width: calc(100% - 330px); max-width: 850px; z-index: 6; padding: 8px 12px; gap: 24px; background: #10170fe8; pointer-events: none; }
+.is-expanded .health-block { max-width: 260px; }
+.is-expanded .hud strong { font-size: 20px; }
+.is-expanded .xp-track { position: absolute; top: 68px; left: 16px; right: 16px; z-index: 6; height: 5px; pointer-events: none; }
+.is-expanded #xp-text { display: none; }
+.is-expanded .combat-bar { position: absolute; top: 80px; left: 16px; right: 16px; z-index: 6; background: #10170fe8; }
+.is-expanded footer { position: absolute; bottom: 8px; left: 16px; right: 16px; z-index: 6; padding: 6px 8px; background: #10170fe8; }
+.is-expanded .loadout { gap: 6px; padding-bottom: 0; }
+.is-expanded .legend { display: none; }
+.is-expanded .field-note { top: 122px; }
+.is-expanded .dash-status { bottom: 64px; }
+.is-expanded .engine-panel { top: 148px; }
+.is-expanded .notice, .is-expanded .encounter-note { top: 145px; }
+.is-expanded .has-encounter .notice { top: 184px; }
+.is-expanded .overlay { padding: 140px 24px 80px; }
+.is-expanded .touch-controls { bottom: 76px; }
+@media (max-width: 700px) {
+  .view-actions { gap: 5px; }.view-actions .quiet-button { font-size: 9px; padding: 8px; }
+  .is-expanded .topbar { top: 8px; right: 10px; }
+  .is-expanded .hud { top: 47px; left: 10px; width: calc(100% - 20px); gap: 10px; padding: 7px 8px; }
+  .is-expanded .xp-track { top: 104px; left: 10px; right: 10px; }
+  .is-expanded .combat-bar { top: 114px; left: 10px; right: 10px; gap: 6px; }
+  .is-expanded .field-note { top: 158px; }
+  .is-expanded .notice, .is-expanded .encounter-note { top: 184px; max-width: calc(100% - 20px); white-space: normal; }
+  .is-expanded .has-encounter .notice { top: 225px; }
+  .is-expanded .engine-panel { top: 184px; }
+  .is-expanded .overlay { padding: 160px 14px 80px; }
+  .is-expanded .dash-status { bottom: 180px; }
+  .is-expanded footer { left: 8px; right: 8px; }
+}

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const canvas = $('screen'), arena = $('arena');
+  const canvas = $('screen'), arena = $('arena'), shell = document.querySelector('.game-shell');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new NightRenderer(canvas, reducedMotion);
   let storage = null; try { storage = localStorage; } catch (_) {}
@@ -19,6 +19,7 @@
   const frameTimes = new Float32Array(180), records = [];
   let frameIndex = 0, sampleCount = 0, frameMean = 0, frameP95 = 0, simulationMS = 0, renderMS = 0, lastRecord = -1;
   let mouseFiring = false, touchFiring = false;
+  let expandedView = false, nativeFullscreen = false;
   const mouseAim = { x: .5, y: .2, active: false };
   const textCache = new Map(), equipment = new Map();
   if (best && Number.isFinite(best.time)) $('best').textContent = formatTime(best.time) + ' / ' + (best.kills || 0) + ' ИЗГНАНО';
@@ -70,6 +71,24 @@
     game.arenaRadius = Math.max(150, Math.min(240, Math.min(renderer.width / renderer.scaleX, renderer.height / renderer.scaleY) * .42));
     game.spawnRadius = Math.max(510, Math.min(920, Math.hypot(renderer.cols * 10, renderer.rows * 16) / 2 + 70));
     renderer.render(game, camera); dirty = true;
+  }
+  function setExpandedView(expanded) {
+    expandedView = expanded;
+    shell.classList.toggle('is-expanded', expanded); document.body.classList.toggle('expanded-view', expanded);
+    $('expand-view').setAttribute('aria-pressed', String(expanded));
+    $('expand-view').setAttribute('aria-label', expanded ? 'Вернуть обычный размер поля' : 'Развернуть игровое поле');
+    text('view-label', expanded ? 'Свернуть' : 'На весь экран');
+    resize();
+  }
+  function toggleExpandedView() {
+    clearInput(); setExpandedView(!expandedView);
+    if (expandedView && document.documentElement.requestFullscreen) {
+      // Keep the window-sized view usable even if an embedded browser delays or rejects fullscreen.
+      document.documentElement.requestFullscreen().catch(() => {
+        if (expandedView) notify('ПОЛЕ РАЗВЁРНУТО НА ВСЁ ОКНО · G ИЛИ ESC — ВЕРНУТЬ');
+      });
+    } else if (!expandedView && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (game.status === 'running') canvas.focus({ preventScroll: true });
   }
   function buildCharacters() {
     const fragment = document.createDocumentFragment();
@@ -269,6 +288,14 @@
     game.input.firing = mouseFiring || touchFiring || keys.has('KeyF');
   }
   $('start').addEventListener('click', start); $('pause').addEventListener('click', togglePause); $('resume').addEventListener('click', togglePause);
+  $('expand-view').addEventListener('click', toggleExpandedView);
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+      nativeFullscreen = true;
+      if (!expandedView) document.exitFullscreen().catch(() => {});
+    }
+    else if (nativeFullscreen) { nativeFullscreen = false; setExpandedView(false); }
+  });
   $('continue-run').addEventListener('click', resumeSavedRun);
   $('claim-reward').addEventListener('click', claimReward);
   $('bestiary-open').addEventListener('click', openBestiary);
@@ -286,6 +313,9 @@
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
     if ($('bestiary').open) return;
+    if (!/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && (e.code === 'KeyG' && !e.ctrlKey && !e.altKey && !e.metaKey || e.code === 'Escape' && expandedView)) {
+      e.preventDefault(); if (!e.repeat) toggleExpandedView(); return;
+    }
     if (game.status === 'reward' && ['Enter', 'Space'].includes(e.code)) { e.preventDefault(); if (!e.repeat) claimReward(); return; }
     const movement = /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code);
     if (/^(INPUT|SELECT)$/.test(e.target.tagName)) return;
