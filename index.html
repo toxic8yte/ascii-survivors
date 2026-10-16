@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11100f">
+  <meta name="description" content="Бесконечная ASCII-арена: волны нечисти, оружие на 1–9, ручной и автоматический огонь, нагрузочный тест движка.">
+  <title>Пока не рассвело · ASCII Survivors</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="wordmark" href="index.html" aria-label="На стартовый экран игры"><span class="sigil">[+]</span><span>ПОКА НЕ РАССВЕЛО<small>ASCII SURVIVORS / 001</small></span></a>
+      <div class="night-clock"><span class="status-dot"></span><span id="stage">НОЧЬ ТОЛЬКО НАЧИНАЕТСЯ</span></div>
+      <button class="quiet-button" id="pause" type="button" disabled aria-label="Пауза">Ⅱ <span>Пауза</span><kbd>P</kbd></button>
+    </header>
+
+    <section class="hud" aria-label="Параметры героя">
+      <div class="health-block"><div class="stat-label"><span id="hero-label">МАРА / ЖИЗНЬ</span><b id="hp-text">100 / 100</b></div><div class="health-track"><div id="hp-bar"></div></div></div>
+      <div class="timer-block"><span class="stat-label">ВРЕМЯ / ∞</span><strong id="timer">00:00</strong></div>
+      <div class="stat-block enemy-block"><span class="stat-label">ВРАГОВ</span><strong id="enemy-count">0</strong></div>
+      <div class="stat-block"><span class="stat-label">ИЗГНАНО</span><strong id="kills">000</strong></div>
+      <div class="stat-block level-block"><span class="stat-label">УРОВЕНЬ</span><strong id="level">01</strong></div>
+    </section>
+    <div class="xp-track" aria-label="Опыт до следующего уровня"><div id="xp-bar"></div><span id="xp-text">ОПЫТ 0 / 6</span></div>
+    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ОГНЕННАЯ ИГЛА</span><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
+
+    <section class="arena" id="arena" aria-label="Игровое поле">
+      <canvas id="screen" role="img" aria-label="Бесконечная ASCII-арена. WASD или стрелки — движение, пробел — рывок, 1–9 — оружие, M — авто или ручной огонь, ЛКМ или F — ручная атака.">Для игры нужен браузер с поддержкой Canvas и JavaScript.</canvas>
+      <div class="arena-grain" aria-hidden="true"></div>
+      <div class="field-note"><span id="map-label">ЗАБЫТОЕ КЛАДБИЩЕ · 12 800 × 9 600</span><span class="render-stats"><span id="coords">6400 : 4800</span><b id="fps">РЕНДЕР / AUTO</b></span></div>
+      <div id="notice" class="notice" role="status"></div>
+      <aside class="engine-panel" id="engine-panel" hidden aria-label="Производительность движка"><div class="eyebrow">ЖИВЫЕ ЗАМЕРЫ</div><dl><dt>Враги / предел</dt><dd id="metric-enemies">0 / 6000</dd><dt>Пик врагов</dt><dd id="metric-peak">0</dd><dt>Видимые группы</dt><dd id="metric-rendered">0</dd><dt>Частота</dt><dd id="metric-fps">—</dd><dt>Кадр / P95</dt><dd id="metric-frame">—</dd><dt>Симуляция / рисунок</dt><dd id="metric-cpu">—</dd><dt>Обработано игрой</dt><dd id="metric-sim">00:00</dd><dt>Возраст волн</dt><dd id="metric-pressure">00:00</dd><dt>Снаряды / дроп</dt><dd id="metric-objects">0 / 0</dd></dl><div id="stress-controls" hidden><button id="pressure" type="button">Нагрузка +5 минут</button><small>Усиливает волны; таймер забега не перематывает.</small></div><button id="save-metrics" type="button">Сохранить замеры JSON</button></aside>
+      <div class="dash-status" id="dash-status"><b>ПРОБЕЛ</b><span id="dash-label">РЫВОК ГОТОВ</span><div><i id="dash-bar"></i></div></div>
+
+      <div class="overlay" id="intro">
+        <div class="intro-content">
+          <div class="intro-story">
+          <div class="eyebrow"><span></span> ОДИН ГЕРОЙ. ОЧЕНЬ ДОЛГАЯ НОЧЬ.</div>
+          <pre class="castle" aria-hidden="true">          .     +     .
+      |&gt;       /\        &lt;|
+   ___|___    /++\    ___|___
+   |  _  |___|  |___|  _  |
+   | |_| |   |[]|   | |_| |
+___|_____|___|__|___|_____|___</pre>
+          <h1>ПОКА НЕ<br> <em>РАССВЕЛО</em><span>ASCII SURVIVORS</span></h1>
+          <p>Бесконечная ночь. Всё больше врагов.<br>Собирай души. Усиливай оружие. Двигайся.</p>
+          <div class="intro-keys"><span><kbd>1–9</kbd> оружие</span><span><kbd>M</kbd> авто / ручной</span><span><kbd>ЛКМ / F</kbd> атака</span></div>
+          <div class="best">ЛУЧШИЙ ЗАБЕГ <b id="best">—</b></div>
+          <div class="run-options"><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>В тесте: неуязвимость и весь арсенал. Выживание — без ограничения времени.</small></div>
+          </div>
+          <section class="character-picker" aria-label="Выбор персонажа">
+            <div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div>
+            <div class="characters" id="characters" role="group" aria-label="Персонажи"></div>
+            <div class="character-details"><h3 id="character-name">Мара / Охотница</h3><p id="character-description"></p><div id="character-stats"></div><b id="character-weapon"></b></div>
+            <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
+            <div class="arsenal-note">6 ГЕРОЕВ · 8 ВИДОВ ОРУЖИЯ · 16 ДАРОВ</div>
+          </section>
+        </div>
+      </div>
+
+      <div class="overlay" id="upgrade" hidden>
+        <div class="upgrade-content">
+          <div class="eyebrow">ДУШИ ДЕЛАЮТ ТЕБЯ СИЛЬНЕЕ</div>
+          <h2>Новый уровень<span id="upgrade-level">02</span></h2>
+          <p>Выбери дар. Время остановлено.</p>
+          <div class="upgrade-grid" id="upgrade-cards"></div>
+          <div class="overlay-hint">ВЫБОР МЫШЬЮ ИЛИ КЛАВИШАМИ 1 / 2 / 3</div>
+        </div>
+      </div>
+
+      <div class="overlay" id="paused" hidden>
+        <div class="small-modal"><div class="eyebrow">НОЧЬ ПОДОЖДЁТ</div><h2>Передышка</h2><p>Враги и таймер на паузе.</p><button id="resume" class="primary-button" type="button">ПРОДОЛЖИТЬ →</button><div class="modal-actions"><button id="restart-pause" class="text-button" type="button">Начать заново</button><button id="change-character-pause" class="text-button" type="button">Сменить героя</button></div></div>
+      </div>
+
+      <div class="overlay" id="ending" hidden>
+        <div class="small-modal"><pre class="ending-art" id="ending-art" aria-hidden="true"> .-.
+ (x x)
+  |=|
+ _|_|_</pre><div class="eyebrow" id="ending-caption">КЛАДБИЩЕ ПОЛУЧИЛО ЕЩЁ ОДНУ ДУШУ</div><h2 id="ending-title">Ночь победила</h2><p id="ending-text"></p><div class="result-stats"><span>ВРЕМЯ<b id="result-time"></b></span><span>ИЗГНАНО<b id="result-kills"></b></span><span>УРОВЕНЬ<b id="result-level"></b></span></div><button id="restart" class="primary-button" type="button">ЕЩЁ ОДНА НОЧЬ →</button><button id="change-character" class="text-button" type="button">Сменить героя</button></div>
+      </div>
+
+      <div class="touch-controls" id="touch-controls" aria-label="Сенсорное управление">
+        <div id="joystick" role="group" aria-label="Виртуальный джойстик: потяни для движения"><div id="stick"></div><span>ДВИЖЕНИЕ</span></div>
+        <div class="touch-actions"><button id="fire-touch" type="button" aria-label="Ручная атака" hidden>F<small>АТАКА</small></button><button id="dash-touch" type="button" aria-label="Рывок">↯<small>РЫВОК</small></button></div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="loadout" id="loadout" aria-label="Оружие"></div>
+      <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · 1–9 оружие · M режим · ЛКМ / F атака · P пауза</span></div>
+    </footer>
+  </main>
+  <script src="core.js"></script>
+  <script src="renderer.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
