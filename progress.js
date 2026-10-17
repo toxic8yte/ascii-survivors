@@ -30,7 +30,7 @@
     const save = {
       version: 7, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
       weaponOrder: game.inventory(true), passiveOrder: game.inventory(false), legacyInventory: game.legacyInventory || game.inventory(true).length > 5 || game.inventory(false).length > 5,
-      treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex,
+      treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       evolutions: Array.from(game.evolutions), enemyBirths: game.enemies.filter(e => e.alive).map(e => [e.id, e.bornAt]),
       meta: { ...game.meta }, freezes: Array.from(game.freezes), bibleHits: Array.from(game.bibleHits),
       characterId: game.character.id, enemyLimit: game.enemyLimit, status: game.status,
@@ -219,6 +219,7 @@
       if (game.status === 'upgrading' && !game.offers.length) { game.status = 'paused'; game.player.hp = Math.min(game.player.maxHp, game.player.hp + 30); }
       if (save.version === 1) { game.resolveTerrain(game.player); game.player.prevX = game.player.x; game.player.prevY = game.player.y; }
       game.aim = { x: game.player.x, y: game.player.y - 300, active: false };
+      game.combat = NightCombat.restore(save.combat, game.time);
       game.bossSpawned = game.bossIndex > 0; game.buildGrid();
       return game;
     } catch (_) { return null; }

@@ -24,7 +24,7 @@
       <div class="stat-block level-block"><span class="stat-label">УРОВЕНЬ</span><strong id="level">01</strong></div>
     </section>
     <div class="xp-track" aria-label="Опыт до следующего уровня"><div id="xp-bar"></div><span id="xp-text">ОПЫТ 0 / 6</span></div>
-    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ИГЛА ПРЕСТОЛОВ</span><span id="boss-name"></span><button id="map-open" type="button">КАРТА · 350</button><button id="grimoire-open" type="button">НЕКРОНОМИКОН</button><button id="bestiary-open" type="button">БЕСТИАРИЙ</button><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
+    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ИГЛА ПРЕСТОЛОВ</span><span id="boss-name"></span><span id="wave-status" class="wave-status"></span><button id="map-open" type="button">КАРТА · 350</button><button id="grimoire-open" type="button">НЕКРОНОМИКОН</button><button id="bestiary-open" type="button">БЕСТИАРИЙ</button><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
 
     <section class="arena" id="arena" aria-label="Игровое поле">
       <canvas id="screen" role="img" aria-label="Бесконечная ASCII-арена. WASD или стрелки — движение, пробел — рывок, 1–5 — оружие, M — авто или ручной огонь, ЛКМ или F — ручная атака.">Для игры нужен браузер с поддержкой Canvas и JavaScript.</canvas>
@@ -32,7 +32,7 @@
       <div class="field-note"><span id="map-label">ЗАБЫТОЕ КЛАДБИЩЕ · 12 800 × 9 600</span><span class="render-stats"><span id="coords">6400 : 4800</span><b id="fps">РЕНДЕР / AUTO</b></span></div>
       <div id="notice" class="notice" role="status"></div>
       <div id="encounter-note" class="encounter-note" hidden role="status"></div>
-      <aside class="engine-panel" id="engine-panel" hidden aria-label="Производительность движка"><div class="eyebrow">ЖИВЫЕ ЗАМЕРЫ</div><dl><dt>Враги / предел</dt><dd id="metric-enemies">0 / 6000</dd><dt>Пик врагов</dt><dd id="metric-peak">0</dd><dt>Видимые группы</dt><dd id="metric-rendered">0</dd><dt>Частота</dt><dd id="metric-fps">—</dd><dt>Кадр / P95</dt><dd id="metric-frame">—</dd><dt>Симуляция / рисунок</dt><dd id="metric-cpu">—</dd><dt>Обработано игрой</dt><dd id="metric-sim">00:00</dd><dt>Возраст волн</dt><dd id="metric-pressure">00:00</dd><dt>Снаряды / дроп</dt><dd id="metric-objects">0 / 0</dd></dl><div id="stress-controls" hidden><button id="pressure" type="button">Нагрузка +5 минут</button><small>Усиливает волны; таймер забега не перематывает.</small></div><button id="save-metrics" type="button">Сохранить замеры JSON</button></aside>
+      <aside class="engine-panel" id="engine-panel" hidden aria-label="Производительность движка"><div class="eyebrow">ЖИВЫЕ ЗАМЕРЫ</div><dl><dt>Враги / предел</dt><dd id="metric-enemies">0 / 6000</dd><dt>Пик врагов</dt><dd id="metric-peak">0</dd><dt>Видимые группы</dt><dd id="metric-rendered">0</dd><dt>Частота</dt><dd id="metric-fps">—</dd><dt>Кадр / P95</dt><dd id="metric-frame">—</dd><dt>Симуляция / рисунок</dt><dd id="metric-cpu">—</dd><dt>Обработано игрой</dt><dd id="metric-sim">00:00</dd><dt>Возраст волн</dt><dd id="metric-pressure">00:00</dd><dt>Снаряды / дроп</dt><dd id="metric-objects">0 / 0</dd></dl><section class="combat-metrics" aria-label="Разбор боя"><div class="eyebrow">БОЙ · СРЕЗЫ ПО 10 СЕКУНД</div><p id="combat-since">Замеры с 00:00</p><dl><dt>Этап / фаза</dt><dd id="metric-wave">—</dd><dt>Враги рядом / цель</dt><dd id="metric-nearby">0 / 24</dd><dt>Урон / сек</dt><dd id="metric-dps">0</dd><dt>Убийства / сек</dt><dd id="metric-kps">0</dd><dt>Опыт / золото</dt><dd id="metric-rewards">0 / 0</dd><dt>Лечение / урон герою</dt><dd id="metric-health">0 / 0</dd><dt>Лишний урон</dt><dd id="metric-overkill">0</dd><dt>Аптечки: выпало / взято</dt><dd id="metric-hearts">0 / 0</dd></dl><div class="eyebrow">ВКЛАД ОРУЖИЯ ЗА ЗАБЕГ</div><div id="combat-weapons" class="combat-weapons"></div></section><div id="stress-controls" hidden><button id="pressure" type="button">Нагрузка +5 минут</button><small>Усиливает волны; таймер забега не перематывает.</small></div><button id="save-metrics" type="button">Сохранить замеры JSON</button></aside>
       <div class="dash-status" id="dash-status"><b>ПРОБЕЛ</b><span id="dash-label">РЫВОК ГОТОВ</span><div><i id="dash-bar"></i></div></div>
 
       <div class="overlay" id="intro">
@@ -113,6 +113,7 @@ ___|_____|___|__|___|_____|___</pre>
   <script src="enemy-roster.js"></script>
   <script src="catalog.js"></script>
   <script src="enemy-system.js"></script>
+  <script src="combat.js"></script>
   <script src="core.js"></script>
   <script src="progress.js"></script>
   <script src="renderer.js"></script>

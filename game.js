@@ -211,9 +211,32 @@
     preferences();
   }
   function exportMetrics() {
-    const payload = { version: 1, mode: game.stressMode ? 'stress' : 'survival', enemyLimit: game.enemyLimit, elapsed: game.elapsed, simulationSeconds: game.time, pressureSeconds: game.pressureTime, peakEnemies: game.peakEnemies, kills: game.kills, sampleWindow: 'last 3600 active seconds', samples: records };
+    const payload = { version: 2, mode: game.stressMode ? 'stress' : 'survival', character: game.character.id, levels: { ...game.levels }, meta: { ...game.meta }, evolutions: [...game.evolutions], enemyLimit: game.enemyLimit, elapsed: game.elapsed, simulationSeconds: game.time, pressureSeconds: game.pressureTime, peakEnemies: game.peakEnemies, kills: game.kills, sampleWindow: 'Performance: last 3600 session seconds. Combat: 180 windows of 10 simulated seconds and persistent totals.', combat: game.combat.snapshot(), samples: records };
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = 'ascii-survivors-metrics.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  function updateCombatMetrics(plan) {
+    const c = game.combat, sample = c.history[c.history.length - 1] || c.current, seconds = Math.max(sample.seconds, 1 / 60);
+    const round = value => Math.round(value).toLocaleString('ru-RU');
+    const from = sample.from ?? c.since + c.total.seconds - c.current.seconds, to = sample.to ?? c.since + c.total.seconds;
+    text('combat-since', 'Замеры с ' + formatTime(c.since) + ' · срез ' + formatTime(from) + '–' + formatTime(to));
+    text('metric-wave', plan.title + ' / ' + plan.phaseTitle); text('metric-nearby', c.near + ' / ' + plan.target);
+    text('metric-dps', round(sample.damage / seconds)); text('metric-kps', (sample.kills / seconds).toFixed(1));
+    text('metric-rewards', round(sample.xp) + ' / ' + round(sample.gold)); text('metric-health', round(sample.healing) + ' / ' + round(sample.hurt));
+    text('metric-overkill', round(sample.overkill)); text('metric-hearts', sample.heartsSpawned + ' / ' + sample.heartsTaken);
+    const rows = Object.entries(c.weapons).sort((a, b) => b[1].damage - a[1].damage);
+    const key = rows.map(([id, row]) => id + ':' + Math.round(row.damage) + ':' + row.kills).join('|') + ':' + Math.floor(c.total.seconds);
+    if ($('combat-weapons').dataset.content === key) return;
+    const fragment = document.createDocumentFragment();
+    for (const [id, row] of rows) {
+      const item = document.createElement('div'), label = document.createElement('span'), value = document.createElement('b');
+      label.textContent = id === 'other' ? 'Прочий урон' : game.weaponInfo(id)?.title || id;
+      value.textContent = round(row.damage / Math.max(c.total.seconds, 1 / 60)) + ' DPS · ' + Math.round(row.damage / Math.max(c.total.damage, 1) * 100) + '%';
+      item.title = 'Урон ' + round(row.damage) + ' · лишний ' + round(row.overkill) + ' · убийств ' + row.kills;
+      item.append(label, value); fragment.append(item);
+    }
+    if (!rows.length) { const empty = document.createElement('p'); empty.textContent = 'Урон появится после первого попадания.'; fragment.append(empty); }
+    $('combat-weapons').replaceChildren(fragment); $('combat-weapons').dataset.content = key;
   }
   function configureRun(persist = true) {
     if (game.status !== 'ready') return;
@@ -363,6 +386,9 @@
     text('metric-fps', displayFPS || '—'); text('metric-frame', frameMean.toFixed(1) + ' / ' + frameP95.toFixed(1) + ' мс');
     text('metric-cpu', simulationMS.toFixed(1) + ' / ' + renderMS.toFixed(1) + ' мс'); text('metric-sim', formatTime(game.time)); text('metric-pressure', formatTime(game.pressureTime));
     text('metric-objects', (game.shots.length + game.boomerangs.length + game.relics.length + game.enemyShots.length) + ' / ' + game.gems.length);
+    const plan = game.wavePlan;
+    text('wave-status', plan.title + ' · ' + plan.phaseTitle);
+    if (!$('engine-panel').hidden) updateCombatMetrics(plan);
     if (status !== previousStatus) {
       dirty = true;
       $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won'; $('chest-reward').hidden = status !== 'reward';
