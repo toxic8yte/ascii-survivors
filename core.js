@@ -7,7 +7,7 @@
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
   const SLOTS = ['needle', 'blades', 'pulse', 'lightning', 'boomerang', 'frost', 'meteor', 'poison', ...EXTRA_WEAPONS.map(w => w.id)];
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
-  const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
+  const BALANCE = Object.freeze({ xpDropChance: .5, goldMultiplier: .45, weaponCooldown: .65, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
   const EnemySystem = root.NightEnemySystem || require('./enemy-system.js');
   const Combat = root.NightCombat || require('./combat.js');
@@ -142,7 +142,7 @@
     }
     awardGold(value) {
       if (this.stressMode) return;
-      const total = value * .75 * this.greed + this.goldCarry, whole = Math.floor(total + 1e-8);
+      const total = value * BALANCE.goldMultiplier * this.greed + this.goldCarry, whole = Math.floor(total + 1e-8);
       this.goldEarned += whole; this.goldCarry = Math.max(0, total - whole);
       this.combat.record('gold', whole);
     }
@@ -325,7 +325,8 @@
         x = clamp(this.player.x + Math.cos(angle) * distance, 28, this.width - 28);
         y = clamp(this.player.y + Math.sin(angle) * distance, 28, this.height - 28);
       }
-      const scale = def.mega ? 1 + Math.max(0, this.elapsed - 600) / 1200 : 1 + this.waveAge / 340;
+      const latePressure = !def.boss && !this.stressMode ? 1 + Math.max(0, this.pressureTime - 360) / 300 : 1;
+      const scale = (def.mega ? 1 + Math.max(0, this.elapsed - 600) / 1200 : 1 + this.waveAge / 340) * latePressure;
       const dx = this.player.x - x, dy = this.player.y - y, d = Math.hypot(dx, dy) || 1;
       const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: def.ai === 'direct' ? dx / d : 0, chargeY: def.ai === 'direct' ? dy / d : 0, targetX: x, targetY: y, arenaMember };
       this.resolveTerrain(enemy); this.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
@@ -423,8 +424,10 @@
         this.nextBossAt = this.pressureTime + 90;
         this.dropChest(e);
       }
-      this.addGem(e.x, e.y, e.xp);
-      this.combat.record('xpDropped', e.xp);
+      if (e.xp > 0 && (e.boss || this.stressMode || this.random() < BALANCE.xpDropChance)) {
+        this.addGem(e.x, e.y, e.xp);
+        this.combat.record('xpDropped', e.xp);
+      }
       if (!this.stressMode && this.random() < (e.boss ? .5 : .0175 * this.luck)) { this.hearts.push({ x: e.x + 14, y: e.y, value: e.boss ? 60 : 20, expires: this.time + 120 }); this.combat.record('heartsSpawned', 1); }
       this.burst(e.x, e.y, e.ink, e.boss ? 28 : 6);
     }
@@ -750,8 +753,8 @@
       } else if (e.ai === 'ranged') {
         const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x), count = e.kind === 'lich' ? 1 : 3;
         for (let i = 0; i < count && this.enemyShots.length < 256; i++) {
-          const a = angle + (i - (count - 1) / 2) * .22, speed = e.kind === 'pumpkin' ? 205 : 175;
-          this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * (e.kind === 'pumpkin' ? .64 : .8), radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
+          const a = angle + (i - (count - 1) / 2) * .22, speed = e.projectileSpeed || 175;
+          this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * (e.projectileDamageScale ?? .8), radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
         }
         if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', 3);
       } else if (e.ai === 'summoner') {
@@ -771,10 +774,11 @@
       if (!e.boss && d > this.spawnRadius * (e.ai === 'direct' ? 2.8 : 4)) { e.alive = false; return; }
       if (e.boss && !e.arenaMember && d > this.spawnRadius * 3) { const angle = this.random() * TAU; e.x = clamp(p.x + Math.cos(angle) * (this.spawnRadius + 100), 28, this.width - 28); e.y = clamp(p.y + Math.sin(angle) * (this.spawnRadius + 100), 28, this.height - 28); this.resolveTerrain(e); e.prevX = e.x; e.prevY = e.y; return; }
       const slow = e.chilledTill > this.time ? .4 : 1;
-      let vx = ex / d, vy = ey / d, speed = e.speed * Math.min(1.85, 1 + this.waveAge / 750) * slow;
+      const lateSpeed = e.boss || this.stressMode ? 1 : 1 + Math.min(.15, Math.max(0, this.pressureTime - 360) / 1200);
+      let vx = ex / d, vy = ey / d, speed = e.speed * Math.min(1.85, 1 + this.waveAge / 750) * lateSpeed * slow;
       if (e.roster) {
         EnemySystem.movement[e.movement.type](e, ex, ey, d, this.time); vx = e.moveX; vy = e.moveY;
-        speed = e.speed * Math.min(1.5, 1 + this.pressureTime / 6000) * slow;
+        speed = e.speed * Math.min(1.5, 1 + this.pressureTime / 6000) * lateSpeed * slow;
       } else if (e.ai === 'weave') { const weave = Math.sin(this.time * 5 + e.phase) * .7; vx -= ey / d * weave; vy += ex / d * weave; }
       if (e.ai === 'ranged') speed *= d > 380 ? 1 : d < 230 ? -.65 : 0;
       e.skillClock = Math.max(0, e.skillClock - dt);

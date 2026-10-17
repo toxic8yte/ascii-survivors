@@ -173,7 +173,7 @@
     "role": "heavy",
     "firstSecond": 300,
     "stats": {
-      "maxHealth": 280,
+      "maxHealth": 560,
       "damage": 12,
       "moveSpeed": 0.7,
       "experience": 25,
@@ -366,7 +366,7 @@
     "role": "heavy",
     "firstSecond": 600,
     "stats": {
-      "maxHealth": 650,
+      "maxHealth": 1300,
       "damage": 15,
       "moveSpeed": 0.8,
       "experience": 40,
@@ -592,7 +592,7 @@
     "role": "heavy",
     "firstSecond": 900,
     "stats": {
-      "maxHealth": 1200,
+      "maxHealth": 2400,
       "damage": 18,
       "moveSpeed": 0.45,
       "experience": 65,
@@ -752,7 +752,7 @@
     "role": "special",
     "firstSecond": 1200,
     "stats": {
-      "maxHealth": 1800,
+      "maxHealth": 3600,
       "damage": 20,
       "moveSpeed": 1,
       "experience": 90,
@@ -910,7 +910,7 @@
     "role": "heavy",
     "firstSecond": 1500,
     "stats": {
-      "maxHealth": 2600,
+      "maxHealth": 5200,
       "damage": 25,
       "moveSpeed": 1.05,
       "experience": 120,
@@ -1101,7 +1101,7 @@
     "role": "heavy",
     "firstSecond": 1800,
     "stats": {
-      "maxHealth": 9000,
+      "maxHealth": 16200,
       "damage": 40,
       "moveSpeed": 1.3,
       "experience": 0,

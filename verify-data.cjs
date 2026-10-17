@@ -30,6 +30,8 @@ for (const mutate of [
   d => d.evolutions[0].passives = { haste: 999 },
   d => d.legacyEnemies[0].id = enemies[0].id,
   d => d.legacyEnemies[0].description = ' ',
+  d => d.legacyEnemies[0].projectileSpeed = -1,
+  d => d.legacyEnemies[0].projectileDamageScale = 0,
   d => d.upgradeOrder.push('missing')
 ]) { const bad = clone(data); mutate(bad); assert.throws(() => validateContent(bad, enemies), /Content data:/); }
 

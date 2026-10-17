@@ -41,7 +41,7 @@ const legacyGold = legacyReward.goldEarned; assert.ok(legacyReward.claimReward()
 const full = fixture(); full.stressMode = true; for (const u of NightUpgrades) while (full.levels[u.id] < u.max) full.applyUpgrade(u);
 full.stressMode = false; open(full, 'lichLord', 0); assert.deepEqual(full.reward.options.map(o => o.type), ['gold', 'xp', 'shield']);
 assert.equal(full.goldEarned, 0); const fullReloaded = NightSave.restore(clone(NightSave.capture(full))); assert.ok(fullReloaded);
-fullReloaded.claimReward(0); assert.equal(fullReloaded.goldEarned, Math.floor(60 * .75 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
+fullReloaded.claimReward(0); assert.equal(fullReloaded.goldEarned, Math.floor(60 * .45 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
 const afterGold = fullReloaded.goldEarned; assert.equal(fullReloaded.claimReward(1), false); assert.equal(fullReloaded.goldEarned, afterGold);
 assert.equal(fullReloaded.shieldCharges, 0); assert.equal(fullReloaded.xp, 0);
 
@@ -62,8 +62,8 @@ roll = .01; e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.
 roll = .6; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1, 'Boss healing is now a 50% drop');
 roll = .4; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 2);
 const waves = fixture(); waves.time = 480; waves.spawnClock = 0; waves.spawnWave();
-assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 29); assert.ok(Math.abs(waves.spawnClock - .216) < 1e-9);
-assert.ok(waves.enemies.every(e => e.maxHp / NightEnemies[e.kind].hp < 2));
+assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 17); assert.ok(Math.abs(waves.spawnClock - (5 / 12 * .8)) < 1e-9);
+assert.ok(waves.enemies.every(e => e.maxHp / NightEnemies[e.kind].hp > 2 && e.maxHp / NightEnemies[e.kind].hp < 3));
 waves.time = 600; assert.equal(waves.waveAge, 390); waves.time = 1800; assert.equal(waves.waveAge, 1410, 'Endless difficulty continues after the gentler opening');
 
 const data = new Map(), storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };

@@ -36,7 +36,7 @@ for (const row of data) {
   assert.ok(Number.isFinite(e.x+e.y+e.hp)); assert.equal(JSON.stringify(NightEnemies[row.id]),definition);
   assert.ok(NightSave.restore(clone(NightSave.capture(sim))),row.id+' runtime saves');
 }
-for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=5); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=999); if(age>=300)assert.ok(plan.target>=666); }
+for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=5); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=2000); assert.ok(plan.target>=24); }
 const opening = system.wave(NightEnemies, 0, false); assert.equal(opening.target, 24); assert.equal(opening.surge, false);
 for (const age of [150, 330, 510, 930, 1830]) {
   const plan = system.wave(NightEnemies, age, false), oldTarget = Math.round(18 + Math.min(age, 1800) * .12 + Math.max(0, age - 1800) * .1);
@@ -45,9 +45,14 @@ for (const age of [150, 330, 510, 930, 1830]) {
 }
 const surge = system.wave(NightEnemies, 480, false), normal = system.wave(NightEnemies, 490, false);
 assert.equal(surge.surge, true); assert.equal(normal.surge, false); assert.ok(surge.target > normal.target); assert.ok(surge.group / surge.interval > normal.group / normal.interval);
-assert.equal(system.wave(NightEnemies, 300, false).target, 999, 'The five-minute surge can reach 999 enemies');
-assert.equal(system.wave(NightEnemies, 310, false).target, 670, 'Normal pressure stays above 666 after five minutes');
-assert.equal(system.wave(NightEnemies, 1200, false).target, 999, 'Endless population remains capped at 999');
+assert.equal(system.wave(NightEnemies, 300, false).target, 144, 'No compulsory 666-enemy rush at five minutes');
+assert.equal(system.wave(NightEnemies, 370, false).target, 173);
+assert.equal(system.wave(NightEnemies, 490, false).target, 443);
+assert.equal(system.wave(NightEnemies, 10000, false).target, 2000, 'Endless safety budget remains bounded');
+assert.equal(system.wave(NightEnemies, 359, false).id, 'pack');
+assert.equal(system.wave(NightEnemies, 360, false).id, 'beast');
+assert.ok(system.wave(NightEnemies, 370, false).entries.some(e => e.role === 'special'), 'Special roles join the pressure pool after six minutes');
+assert.ok(system.wave(NightEnemies, 490, false).group / system.wave(NightEnemies, 490, false).interval > system.wave(NightEnemies, 350, false).group / system.wave(NightEnemies, 350, false).interval * 2);
 const specials = new Set(); for (let minute = 15; minute < 18; minute++) for (const entry of system.wave(NightEnemies, minute * 60, false).entries) specials.add(NightEnemies[entry.id].role);
 assert.ok(specials.has('special'), 'Special roles participate in the rotation alongside fast and heavy enemies');
 for (const age of [480, 490, 1800, 10000]) {
@@ -61,8 +66,8 @@ for (let i = 0; i < 100; i++) cappedWave.spawnWave(); assert.equal(cappedWave.en
 const stressPlan = system.wave(NightEnemies, 480, true); assert.equal(stressPlan.target, 76); assert.equal(stressPlan.group, 4); assert.equal(stressPlan.surge, false);
 const refill = fixture(); refill.time = 300; refill.spawnClock = 0;
 for (let i = 0; i < 30 * 60; i++) { refill.player.invulnerable = 1; refill.update(1 / 60); }
-assert.ok(refill.enemies.length >= 666, 'Actual timed spawning reaches the requested crowd after five minutes');
-assert.ok(refill.enemies.length <= 999); assert.equal(refill.status, 'running');
+assert.ok(refill.enemies.length >= 100, 'Actual spawning fills the gentler five-minute wave');
+assert.ok(refill.enemies.length <= 160); assert.equal(refill.status, 'running');
 const direction=fixture(), drifter=direction.spawn('crooked_angel',direction.player.x-400,direction.player.y);
 const directionX=drifter.chargeX; direction.player.y+=250; direction.updateEnemy(drifter,.1); assert.equal(drifter.chargeX,directionX); assert.equal(drifter.y,direction.player.y-250,'Direct movement keeps its original path');
 const orbit=direction.spawn('black_halo',direction.player.x+180,direction.player.y), before=orbit.y; direction.updateEnemy(orbit,.1); assert.notEqual(orbit.y,before);
@@ -77,14 +82,14 @@ const treasures=fixture(); assert.equal(treasures.treasures.length,12);assert.de
 const cache=treasures.treasures[0];treasures.player.x=cache.x;treasures.player.y=cache.y;treasures.update(.01);
 assert.ok(treasures.treasuresTaken.has(0));assert.equal(treasures.status,'reward');assert.equal(treasures.reward.treasure,true);
 const cacheSaved=NightSave.restore(clone(NightSave.capture(treasures)));assert.ok(cacheSaved);cacheSaved.claimReward(0);cacheSaved.update(.01);assert.equal(cacheSaved.chestsOpened,1,'A collected cache never respawns');
-const wallet=fixture();wallet.awardGold(100);assert.equal(wallet.goldEarned,75);for(let i=0;i<100;i++)wallet.awardGold(1);assert.equal(wallet.goldEarned,150,'Fractional reduced gold accumulates');
+const wallet=fixture();wallet.awardGold(100);assert.equal(wallet.goldEarned,45);for(let i=0;i<100;i++)wallet.awardGold(1);assert.equal(wallet.goldEarned,90,'Fractional reduced gold accumulates');
 const store=new Map(),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
 const p=new NightProgress(storage);assert.deepEqual(p.profile.unlocks,[]);assert.equal(p.purchaseFeature('bestiary'),false);
-wallet.awardGold(1000);p.checkpoint(wallet);const balance=p.profile.meta.gold;
+wallet.awardGold(2000);p.checkpoint(wallet);const balance=p.profile.meta.gold;
 const featureQuota=new NightProgress({...storage,setItem(){throw Error('quota');}});assert.equal(featureQuota.purchaseFeature('bestiary'),false);
 assert.equal(new NightProgress(storage).profile.meta.gold,balance);assert.equal(new NightProgress(storage).isFeatureUnlocked('bestiary'),false,'A failed feature purchase spends nothing and unlocks nothing');
 for(const feature of NightCatalog.features)assert.ok(p.purchaseFeature(feature.id));
 assert.equal(p.profile.meta.gold,balance-650);assert.equal(p.purchaseFeature('bestiary'),false);assert.ok(new NightProgress(storage).isFeatureUnlocked('treasureMap'));
 p.savePreferences('hunter','manual',6000);assert.ok(new NightProgress(storage).isFeatureUnlocked('necronomicon'));
 const failed=new NightProgress({...storage,setItem(){throw Error('quota');}}); const initial=failed.profile.meta.gold;assert.equal(failed.purchaseHero('scout'),false);assert.equal(new NightProgress(storage).profile.meta.gold,initial);
-console.log('PASS: strict 5+5 builds, upgrade/chest limits, legacy migration, 40 data-driven enemies, five movements, readable waves, scheduled bosses, treasure caches, 25% less gold and permanent feature unlocks.');
+console.log('PASS: strict 5+5 builds, upgrade/chest limits, legacy migration, 40 data-driven enemies, five movements, readable waves, scheduled bosses, treasure caches, reduced gold and permanent feature unlocks.');

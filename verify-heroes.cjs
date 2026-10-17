@@ -31,5 +31,5 @@ const shop = new NightProgress(storage); assert.ok(shop.isHeroUnlocked('ripley')
 assert.ok(shop.purchaseHero('root')); assert.equal(shop.profile.meta.gold, 5000); assert.equal(shop.purchaseHero('root'), false);
 assert.ok(shop.purchaseHero('cryptoscam')); shop.savePreferences('cryptoscam', 'auto', 6000);
 const loaded = new NightProgress(storage); assert.ok(loaded.isHeroUnlocked('root')); assert.ok(loaded.isHeroUnlocked('cryptoscam')); assert.equal(loaded.profile.character, 'cryptoscam');
-const investor = new NightGame(427, 'cryptoscam'); investor.awardGold(100); assert.equal(investor.goldEarned, 90, 'The investor adds 20% base gold while the global 25% reduction still applies');
+const investor = new NightGame(427, 'cryptoscam'); investor.awardGold(100); assert.equal(investor.goldEarned, 54, 'The investor keeps its 20% gold bonus with the lower global income');
 console.log('PASS: exact 30-hero roster, viable starting weapons, ASCII portraits, old character IDs, checkpoint migration, retained purchases, new unlocks and Cryptoscam gold bonus.');

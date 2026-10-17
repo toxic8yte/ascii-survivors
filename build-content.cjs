@@ -45,6 +45,7 @@ function validateContent(data, roster = []) {
   const enemyIds = new Set(roster.map(row => row.id));
   for (const row of data.legacyEnemies) {
     if (enemyIds.has(row.id) || !['hp', 'speed', 'radius', 'damage', 'xp'].every(key => positive(row[key])) || !ascii(row.sprite) || !ascii(row.glyph) || !uint(row.ink) || row.ink > 14 || !row.boss && (!Number.isFinite(row.at) || row.at < 0)) fail('legacyEnemies/' + row.id + ': invalid enemy or ID collision');
+    for (const key of ['projectileSpeed', 'projectileDamageScale']) if (row[key] !== undefined && !positive(row[key])) fail('legacyEnemies/' + row.id + ': invalid ' + key);
     enemyIds.add(row.id);
   }
   if (!Array.isArray(data.upgradeOrder) || new Set(data.upgradeOrder).size !== data.upgradeOrder.length || data.upgradeOrder.some(id => !upgradeIds.has(id))) fail('catalog-order: invalid or duplicate upgrade ID');

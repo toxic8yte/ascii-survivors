@@ -1,0 +1,221 @@
+{
+  "baselineCommit": "e50e2c09cb166cf1f6ce7ae2c74ef468e6b4d623",
+  "before": {
+    "scope": "Eight simulated minutes; invulnerable bot collecting XP with fixed upgrade preferences, not a survival or browser FPS result",
+    "results": [
+      {
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 30,
+        "kills": 17177,
+        "bossKills": 4,
+        "gold": 3724,
+        "xpCollected": 26100,
+        "xpDropped": 40788,
+        "weapons": [
+          "needle",
+          "blades",
+          "garlic",
+          "ebony",
+          "hammer"
+        ],
+        "passives": [
+          "haste",
+          "silverRing",
+          "curse",
+          "vital",
+          "regen"
+        ],
+        "peak": 999
+      },
+      {
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 29,
+        "kills": 15349,
+        "bossKills": 5,
+        "gold": 2455,
+        "xpCollected": 21652,
+        "xpDropped": 30281,
+        "weapons": [
+          "needle",
+          "hammer",
+          "pentagram",
+          "dagger",
+          "poison"
+        ],
+        "passives": [
+          "revive",
+          "magnet",
+          "stride",
+          "haste",
+          "regen"
+        ],
+        "peak": 724
+      },
+      {
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 31,
+        "kills": 19043,
+        "bossKills": 6,
+        "gold": 4701,
+        "xpCollected": 30650,
+        "xpDropped": 43170,
+        "weapons": [
+          "needle",
+          "laurel",
+          "blades",
+          "pentagram",
+          "meteor"
+        ],
+        "passives": [
+          "greed",
+          "haste",
+          "goldRing",
+          "fork",
+          "magnet"
+        ],
+        "peak": 1000
+      },
+      {
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 30,
+        "kills": 15776,
+        "bossKills": 5,
+        "gold": 2520,
+        "xpCollected": 23967,
+        "xpDropped": 31076,
+        "weapons": [
+          "needle",
+          "laurel",
+          "pulse",
+          "blades",
+          "poison"
+        ],
+        "passives": [
+          "silverRing",
+          "pierce",
+          "fork",
+          "area",
+          "power"
+        ],
+        "peak": 701
+      }
+    ]
+  },
+  "after": {
+    "scope": "Eight simulated minutes; invulnerable bot collecting XP with fixed upgrade preferences, not a survival or browser FPS result",
+    "results": [
+      {
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 22,
+        "kills": 5400,
+        "bossKills": 2,
+        "gold": 535,
+        "xpCollected": 4943,
+        "xpDropped": 5369,
+        "weapons": [
+          "needle",
+          "blades",
+          "lightning",
+          "pulse",
+          "poison"
+        ],
+        "passives": [
+          "fork",
+          "luck",
+          "growth",
+          "silverRing",
+          "velocity"
+        ],
+        "peak": 368
+      },
+      {
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 23,
+        "kills": 5877,
+        "bossKills": 2,
+        "gold": 736,
+        "xpCollected": 7016,
+        "xpDropped": 7224,
+        "weapons": [
+          "needle",
+          "pulse",
+          "pistol",
+          "sling",
+          "clock"
+        ],
+        "passives": [
+          "goldRing",
+          "luck",
+          "fork",
+          "velocity",
+          "vital"
+        ],
+        "peak": 892
+      },
+      {
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 25,
+        "kills": 7889,
+        "bossKills": 5,
+        "gold": 1121,
+        "xpCollected": 10139,
+        "xpDropped": 10938,
+        "weapons": [
+          "needle",
+          "axe",
+          "laurel",
+          "pulse",
+          "water"
+        ],
+        "passives": [
+          "curse",
+          "regen",
+          "vital",
+          "silverRing",
+          "fork"
+        ],
+        "peak": 1059
+      },
+      {
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 21,
+        "kills": 5669,
+        "bossKills": 4,
+        "gold": 668,
+        "xpCollected": 4762,
+        "xpDropped": 6350,
+        "weapons": [
+          "needle",
+          "water",
+          "sling",
+          "birds",
+          "axe"
+        ],
+        "passives": [
+          "pierce",
+          "fork",
+          "regen",
+          "power",
+          "greed"
+        ],
+        "peak": 187
+      }
+    ]
+  }
+}

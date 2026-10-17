@@ -29,7 +29,7 @@ const dash = fixture(); dash.input.y = -1; assert.ok(dash.dash()); tick(dash, .2
 assert.ok(dash.player.y < 1200 - 100, 'Dash moves faster than running');
 assert.ok(dash.player.invulnerable > 0); const hp = dash.player.hp; dash.hurtPlayer(40); assert.equal(dash.player.hp, hp);
 
-const shooting = fixture(); const target = shooting.spawn('ghoul', 1720, 1200); shooting.shootClock = 0;
+const shooting = fixture(); shooting.random = () => .25; const target = shooting.spawn('ghoul', 1720, 1200); shooting.shootClock = 0;
 tick(shooting, .4); assert.equal(target.alive, false, 'Automatic aim kills a nearby enemy'); assert.equal(shooting.kills, 1); assert.equal(shooting.gems.length, 1);
 const pierce = fixture(); pierce.levels.pierce = 1;
 const a = pierce.spawn('ghoul', 1720, 1200), b = pierce.spawn('ghoul', 1755, 1200); a.speed = b.speed = 0;
