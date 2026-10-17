@@ -426,10 +426,10 @@
       if (old && !old.taken && !old.magnetized) { old.value += value; return; }
       const gem = { x, y, value, bin: key, magnetized: false }; this.gems.push(gem); this.gemBins.set(key, gem);
     }
-    burst(x, y, ink, count = 7) {
+    burst(x, y, ink, count = 7, weapon = null) {
       for (let i = 0; i < count; i++) {
         const a = this.random() * TAU, speed = 20 + this.random() * 95;
-        this.particles.push({ x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: .3 + this.random() * .3, ink });
+        this.particles.push({ x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: .3 + this.random() * .3, ink, weapon });
       }
     }
     hurtEnemy(e, damage, knockback = 0, weapon = 'other') {
@@ -459,7 +459,7 @@
         this.combat.record('xpDropped', e.xp);
       }
       if (!this.stressMode && this.random() < (e.boss ? BALANCE.bossHeartDropChance : BALANCE.heartDropChance * this.luck)) { this.hearts.push({ x: e.x + 14, y: e.y, value: e.boss ? 60 : 20, expires: this.time + 120 }); this.combat.record('heartsSpawned', 1); }
-      this.burst(e.x, e.y, e.ink, e.boss ? 28 : 6);
+      this.burst(e.x, e.y, e.ink, e.boss ? 28 : 6, weapon);
     }
     hurtPlayer(damage, source) {
       const p = this.player;
@@ -551,7 +551,7 @@
     }
     get bladeRadius() { return (this.isEvolved('blades') ? 118 : 88) * this.area; }
     explode(x, y, radius, damage, ink = 7, knockback = 18, weapon = 'other') {
-      this.rings.push({ x, y, radius, life: .45, maxLife: .45, ink, glyph: '*' });
+      this.rings.push({ x, y, radius, life: .45, maxLife: .45, ink, glyph: '*', weapon });
       for (const e of this.nearby(x, y, radius + 50)) if (e.alive && Math.hypot(e.x - x, e.y - y) < radius + e.radius) this.hurtEnemy(e, damage, knockback, weapon);
     }
     targets(x = this.player.x, y = this.player.y, radius = 620, count = 2) {
@@ -567,13 +567,13 @@
     }
     castPulse() {
       const p = this.player, radius = (145 + this.levels.pulse * 18) * this.area * (this.isEvolved('pulse') ? 1.5 : 1);
-      this.rings.push({ x: p.x, y: p.y, radius, life: .55, maxLife: .55 });
+      this.rings.push({ x: p.x, y: p.y, radius, life: .55, maxLife: .55, weapon: 'pulse' });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) { this.hurtEnemy(e, (36 + this.levels.pulse * 20) * this.power * (this.isEvolved('pulse') ? 1.8 : 1), 75, 'pulse'); if (this.isEvolved('pulse')) e.chilledTill = this.time + 7; }
     }
     castSlash() {
       const p = this.player, aim = this.aimPoint(130), angle = Math.atan2(aim.y - p.y, aim.x - p.x), radius = (110 + this.levels.blades * 10) * this.area;
       const count = 1 + this.levels.fork + (this.isEvolved('blades') ? 2 : 0);
-      for (let i = 0; i < count; i++) this.slashes.push({ x: p.x, y: p.y, angle: angle + (i - (count - 1) / 2) * .25, radius: radius + i * 9, life: .22 });
+      for (let i = 0; i < count; i++) this.slashes.push({ x: p.x, y: p.y, angle: angle + (i - (count - 1) / 2) * .25, radius: radius + i * 9, life: .22, weapon: 'blades' });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) {
         const difference = Math.atan2(Math.sin(Math.atan2(e.y - p.y, e.x - p.x) - angle), Math.cos(Math.atan2(e.y - p.y, e.x - p.x) - angle));
         if (Math.abs(difference) < 1.25) this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power * count * (this.isEvolved('blades') ? 1.5 : 1), 18, 'blades');
@@ -594,7 +594,7 @@
         if (this.isEvolved('lightning') && this.meteors.length < 100) this.meteors.push({ x, y, wait: .4, radius: 55 * this.area, damage: (24 + 8 * this.levels.lightning) * this.power, kind: 'echo' });
       }
       if (points.length === 1 && this.fireMode === 'manual') points.push(this.aimPoint());
-      if (points.length > 1) this.arcs.push({ points, life: .24, maxLife: .24 });
+      if (points.length > 1) this.arcs.push({ points, life: .24, maxLife: .24, weapon: 'lightning' });
     }
     castBoomerang() {
       if (this.isEvolved('boomerang')) { this.castMikolenin(); return; }
@@ -613,7 +613,7 @@
     }
     castFrost() {
       const p = this.player, level = this.levels.frost, radius = (170 + level * 20) * this.area * (this.isEvolved('frost') ? 1.4 : 1);
-      this.rings.push({ x: p.x, y: p.y, radius, life: .65, maxLife: .65, ink: 9, glyph: '*' });
+      this.rings.push({ x: p.x, y: p.y, radius, life: .65, maxLife: .65, ink: 9, glyph: '*', weapon: 'frost' });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) {
         e.chilledTill = this.time + (.8 + level * .2) * this.effectDuration;
         if (this.isEvolved('frost')) this.freezes.set(e.id, this.time + (e.mega ? .35 : e.boss ? .6 : 1.5 * this.effectDuration));
@@ -644,7 +644,7 @@
       }
       if (id === 'lightStaff') {
         const radius = (240 + level * 20) * this.area;
-        this.rings.push({ x:p.x, y:p.y, radius, life:.7, maxLife:.7, ink:7, glyph:'+' });
+        this.rings.push({ x:p.x, y:p.y, radius, life:.7, maxLife:.7, ink:7, glyph:'+', weapon:id });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive && Math.hypot(e.x-p.x, e.y-p.y) < radius + e.radius) {
           this.hurtEnemy(e, (20 + level * 10) * this.power, 5, id);
           if (e.alive) this.holyMarks.set(e.id, { expires:this.time + 4 * this.effectDuration, next:this.time + .5, damage:(5 + level * 3) * this.power });
@@ -653,7 +653,7 @@
       }
       if (id === 'crowbar') {
         const radius = (105 + level * 12) * this.area, count = 1 + this.levels.fork;
-        for (let i=0;i<count;i++) this.slashes.push({x:p.x,y:p.y,angle:angle+(i-(count-1)/2)*.25,radius,life:.25,ink:12,glyph:'J'});
+        for (let i=0;i<count;i++) this.slashes.push({x:p.x,y:p.y,angle:angle+(i-(count-1)/2)*.25,radius,life:.25,ink:12,glyph:'J',weapon:id});
         for (const e of this.nearby(p.x,p.y,radius+50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y)<radius+e.radius) {
           const delta = Math.atan2(e.y-p.y,e.x-p.x)-angle;
           if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < 1.2) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
@@ -662,7 +662,7 @@
       }
       if (id === 'gauntlets') {
         const radius = (90 + level * 10) * this.area, count = 2 + this.levels.fork;
-        for (let i = 0; i < count; i++) this.slashes.push({ x:p.x, y:p.y, angle:angle + (i - (count - 1) / 2) * .14, radius:radius + i % 2 * 10, life:.28, ink:8, glyph:'[=]' });
+        for (let i = 0; i < count; i++) this.slashes.push({ x:p.x, y:p.y, angle:angle + (i - (count - 1) / 2) * .14, radius:radius + i % 2 * 10, life:.28, ink:8, glyph:'[=]', weapon:id });
         for (const e of this.nearby(p.x,p.y,radius + 50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y) < radius + e.radius) {
           const delta = Math.atan2(e.y-p.y,e.x-p.x) - angle;
           if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < .85) this.hurtEnemy(e,(12 + level * 8) * this.power * count,55,id);
@@ -694,11 +694,11 @@
         const facing = id === 'clock' && this.fireMode === 'auto' ? this.clockStep * Math.PI / 6 : angle;
         const whipAngles = id === 'whip' ? [facing, facing + Math.PI, ...Array.from({ length: this.levels.fork }, (_, i) => facing + (i + 1) * .35)] : [];
         let healing = 0;
-        this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' || id === 'whip' ? 9 : 7, kind: id === 'pentagram' ? 'pentagram' : '', glyph: id === 'pentagram' ? '*' : '.' });
+        this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' || id === 'whip' ? 9 : 7, kind: id === 'pentagram' ? 'pentagram' : '', glyph: id === 'pentagram' ? '*' : '.', weapon:id });
         if (id === 'whip') {
-          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25, ink:9, glyph:'~' });
+          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25, ink:9, glyph:'~', weapon:id });
         }
-        if (id === 'clock') this.arcs.push({ points: [{ x: p.x, y: p.y }, { x: p.x + Math.cos(facing) * radius, y: p.y + Math.sin(facing) * radius }], life: .3, maxLife: .3 });
+        if (id === 'clock') this.arcs.push({ points: [{ x: p.x, y: p.y }, { x: p.x + Math.cos(facing) * radius, y: p.y + Math.sin(facing) * radius }], life: .3, maxLife: .3, weapon:id });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive) {
           const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy);
           const hits = id === 'whip' ? whipAngles.filter(a => Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - a), Math.cos(Math.atan2(dy, dx) - a))) < 1.2).length : 1;
@@ -714,7 +714,7 @@
         this.healPlayer(Math.min(healing, id === 'whip' ? 3 : .5));
         if (id === 'pentagram' && evolved) for (const gem of this.gems) gem.magnetized = true;
         if (id === 'clock' && ++this.clockStep % 12 === 0 && evolved) {
-          this.rings.push({ x: p.x, y: p.y, radius: 650 * this.area, life: .8, maxLife: .8, ink: 9, glyph: '0' });
+          this.rings.push({ x: p.x, y: p.y, radius: 650 * this.area, life: .8, maxLife: .8, ink: 9, glyph: '0', weapon:id });
           for (const e of this.nearby(p.x, p.y, 650 * this.area + 50)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < 650 * this.area + e.radius) this.hurtEnemy(e, e.boss ? Math.min(450, e.hp * .05) : e.hp * .5, 0, 'clock');
         }
         return;
@@ -804,9 +804,10 @@
       for (const m of this.meteors) {
         m.wait -= dt;
         if (m.wait <= 0) {
-          for (const e of this.nearby(m.x, m.y, m.radius + 35)) if (e.alive && Math.hypot(e.x - m.x, e.y - m.y) < m.radius + e.radius) this.hurtEnemy(e, m.damage, m.kind === 'hammer' ? 48 : 24, m.kind === 'hammer' ? 'hammer' : m.kind === 'echo' ? 'lightning' : m.kind === 'bird' ? 'birds' : m.kind === 'ebony' ? 'ebony' : 'meteor');
-          this.rings.push({ x: m.x, y: m.y, radius: m.radius, life: .5, maxLife: .5, ink: 6, glyph: '#' });
-          this.burst(m.x, m.y, 7, 16);
+          const weapon = m.kind === 'hammer' ? 'hammer' : m.kind === 'echo' ? 'lightning' : m.kind === 'bird' ? 'birds' : m.kind === 'ebony' ? 'ebony' : 'meteor';
+          for (const e of this.nearby(m.x, m.y, m.radius + 35)) if (e.alive && Math.hypot(e.x - m.x, e.y - m.y) < m.radius + e.radius) this.hurtEnemy(e, m.damage, m.kind === 'hammer' ? 48 : 24, weapon);
+          this.rings.push({ x: m.x, y: m.y, radius: m.radius, life: .5, maxLife: .5, ink: 6, glyph: '#', weapon });
+          this.burst(m.x, m.y, 7, 16, weapon);
         }
       }
       this.meteors = this.meteors.filter(m => m.wait > 0);
@@ -955,7 +956,7 @@
           const t = lengthSq ? clamp(((e.x - oldX) * sx + (e.y - oldY) * sy) / lengthSq, 0, 1) : 0;
           if (Math.hypot(e.x - oldX - t * sx, e.y - oldY - t * sy) < e.radius + 5) {
             s.hits.add(e.id); s.remaining--; this.hurtEnemy(e, s.damage, 9, 'needle');
-            this.burst(e.x, e.y, 7, 3);
+            this.burst(e.x, e.y, 7, 3, 'needle');
           }
         }
       }

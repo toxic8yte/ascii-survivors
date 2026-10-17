@@ -12,10 +12,16 @@
   $('enemy-limit').value = progress.profile.enemyLimit;
   function options() { return { fireMode: fireModePreference, stressMode: $('stress-mode').checked, enemyLimit: Number($('enemy-limit').value), meta: progress.profile.meta.ranks }; }
   let game = new NightGame(Date.now(), selectedCharacter, options()), keys = new Set();
-  const equipmentTooltip = document.createElement('div'); equipmentTooltip.id = 'equipment-tooltip'; equipmentTooltip.className = 'equipment-tooltip'; equipmentTooltip.setAttribute('role', 'tooltip'); equipmentTooltip.hidden = true; document.body.append(equipmentTooltip);
-  let tooltipAnchor = null;
+  const equipmentTooltip = document.createElement('div'); equipmentTooltip.id = 'equipment-tooltip'; equipmentTooltip.className = 'equipment-tooltip'; equipmentTooltip.setAttribute('role', 'tooltip'); equipmentTooltip.hidden = true; shell.append(equipmentTooltip);
+  let tooltipAnchor = null, previewWeapon = null;
+  function syncWeaponHighlight() {
+    const id = previewWeapon || game.selectedWeapon;
+    if (renderer.highlightWeapon !== id) { renderer.highlightWeapon = id; dirty = true; }
+    for (const slot of $('loadout').querySelectorAll('[data-item]')) slot.classList.toggle('weapon-highlighted', slot.dataset.item === id);
+  }
   function hideEquipmentTooltip() {
     tooltipAnchor?.removeAttribute('aria-describedby'); tooltipAnchor = null; equipmentTooltip.hidden = true;
+    previewWeapon = null; syncWeaponHighlight();
   }
   function positionEquipmentTooltip() {
     if (!tooltipAnchor || equipmentTooltip.hidden) return;
@@ -31,10 +37,11 @@
     const title = document.createElement('strong'), detail = document.createElement('small'), description = document.createElement('p');
     title.textContent = info ? info.icon + ' ' + info.title : 'Режим огня';
     detail.textContent = u ? (u.weapon ? 'ОРУЖИЕ · ' + NightCatalog.rarities[u.rarity].title : 'ПАССИВКА') + (u.kind !== 'ОРУЖИЕ' ? ' · ' + u.kind : '') + ' · ' + game.levels[u.id] + '/' + u.max : game.fireMode === 'manual' ? 'РУЧНОЙ · ВЫБРАНО ОРУЖИЕ КРАСНЫМ' : 'АВТО · ВСЁ ОРУЖИЕ АТАКУЕТ САМО';
-    description.textContent = info ? info.description + (u.weapon && game.fireMode === 'manual' ? '\n1–5 — выбор оружия; F или ЛКМ — атака.' : '') : 'M переключает режим. В ручном режиме выбери слот 1–5 и атакуй кнопкой F или ЛКМ. Курсор задаёт направление.';
+    description.textContent = info ? u.description + (info !== u && info.description !== u.description ? '\n\nЭВОЛЮЦИЯ: ' + info.description : '') + (u.weapon && game.fireMode === 'manual' ? '\n1–5 — выбор оружия; F или ЛКМ — атака.' : '') : 'M переключает режим. В ручном режиме выбери слот 1–5 и атакуй кнопкой F или ЛКМ. Курсор задаёт направление.';
     equipmentTooltip.replaceChildren(title, detail, description);
     equipmentTooltip.dataset.rarity = u?.rarity || 'common'; equipmentTooltip.hidden = false;
     tooltipAnchor = anchor; anchor.setAttribute('aria-describedby', equipmentTooltip.id);
+    previewWeapon = u?.weapon ? u.id : null; syncWeaponHighlight();
     positionEquipmentTooltip();
   }
   for (const region of [$('loadout'), $('passive-loadout'), $('fire-mode')]) {
@@ -255,12 +262,11 @@
   function selectWeapon(number) {
     if (game.status === 'upgrading' || game.status === 'reward') return;
     if (!game.selectSlot(number)) { notify('В этом слоте пока нет оружия — найди его при повышении уровня.'); return; }
-    hideEquipmentTooltip(); updateHUD(); dirty = true;
+    updateHUD(); if (tooltipAnchor) showEquipmentTooltip(tooltipAnchor); dirty = true;
   }
   function toggleFireMode() {
-    hideEquipmentTooltip();
     fireModePreference = game.fireMode === 'auto' ? 'manual' : 'auto'; game.setFireMode(fireModePreference); mouseFiring = touchFiring = false; keys.delete('KeyF');
-    updateHUD(); dirty = true;
+    updateHUD(); if (tooltipAnchor) showEquipmentTooltip(tooltipAnchor); dirty = true;
     notify(game.fireMode === 'manual' ? 'РУЧНОЙ: 1–5 оружие · ЛКМ / F атака · курсор — прицел.' : 'АВТО: всё найденное оружие атакует само.');
     preferences();
   }
@@ -372,8 +378,8 @@
   function changeOffer(action) {
     if (!action()) return;
     if (game.status === 'upgrading') showOffers();
-    else canvas.focus({ preventScroll: true });
     saveCheckpoint(); updateHUD();
+    if (game.status === 'running') canvas.focus({ preventScroll: true });
   }
   function showReward() {
     const reward = game.reward; if (!reward) return;
@@ -460,6 +466,7 @@
       slot.setAttribute('aria-label', info.title + ' · ' + level + '/' + NightUpgrades.find(u => u.id === id).max + (id === game.selectedWeapon ? ' · Выбрано' : ''));
       const value = consumed ? 'ОБЪЕД.' : evolved ? 'EVO' : level ? 'I'.repeat(level) : '—'; if (rank.textContent !== value) rank.textContent = value;
     }
+    syncWeaponHighlight();
     const passiveKey = passives.map(id => id + ':' + game.levels[id]).join('|');
     if ($('passive-loadout').dataset.content !== passiveKey) {
       const fragment = document.createDocumentFragment();
@@ -479,6 +486,9 @@
       hideEquipmentTooltip();
       dirty = true;
       $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won'; $('chest-reward').hidden = status !== 'reward';
+      document.body.classList.toggle('upgrade-open', status === 'upgrading');
+      if (status === 'upgrading' && !$('upgrade').open) $('upgrade').showModal();
+      else if (status !== 'upgrading' && $('upgrade').open) $('upgrade').close();
       $('touch-controls').hidden = status !== 'running'; $('dash-status').hidden = status === 'ready';
       if (status === 'dead' || status === 'won') {
         saveBest(); const won = status === 'won';
@@ -520,7 +530,7 @@
     $('characters').querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
   }
   function choose(index) {
-    if (game.choose(index)) { saveCheckpoint(); if (game.status === 'running') canvas.focus({ preventScroll: true }); updateHUD(); }
+    if (game.choose(index)) { saveCheckpoint(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true }); }
   }
   function togglePause() { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true }); }
   function clearInput() { keys.clear(); mouseFiring = touchFiring = false; game.input.firing = false; game.queuedWeapon = null; pointer.x = pointer.y = 0; pointer.id = null; game.input.x = game.input.y = 0; $('stick').style.transform = ''; }
@@ -601,6 +611,7 @@
   });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) selectOffer(Number(card.dataset.choice)); });
   $('upgrade-confirm').addEventListener('click', () => choose(game.offerSelection));
+  $('upgrade').addEventListener('cancel', e => e.preventDefault());
   $('upgrade-banish').addEventListener('click', () => changeOffer(() => game.banishOffer()));
   $('upgrade-skip').addEventListener('click', () => changeOffer(() => game.skipUpgrade()));
   document.addEventListener('keydown', e => {

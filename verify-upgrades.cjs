@@ -65,4 +65,24 @@ assert.ok(drawn.some(p=>p.ink===12&&[')}','{~'].includes(p.glyph)),'Flame has an
 assert.ok(drawn.some(p=>p.ink===7&&p.glyph==='~'),'Flame has a contrasting multicolor trail');
 drawn.length=0;fists.time=.15;for(const s of fists.slashes)s.life=.14;renderer.render(fists,{x:fists.player.x,y:fists.player.y});
 assert.equal(drawn.filter(p=>p.glyph==='[=]').length,6,'Each punch renders one moving fist, rather than an arc of repeated fists');
+// Preview only changes the owning weapon's ink, including delayed effects.
+const paints=[];
+Object.assign(renderer,{world(x,y,glyph,ink){paints.push({kind:'glyph',glyph,ink});},circle(x,y,radius,ink,glyph){paints.push({kind:'circle',glyph,ink});},line(a,b,ink,glyph){paints.push({kind:'line',glyph,ink});}});
+for(const weapon of NightUpgrades.filter(u=>u.weapon)) {
+  const sim=fixture();sim.levels=Object.fromEntries(NightUpgrades.map(u=>[u.id,0]));sim.levels[weapon.id]=1;
+  sim.selectedWeapon=weapon.id;sim.aim={x:sim.player.x+300,y:sim.player.y,active:true};
+  const enemy=sim.spawn('brute',sim.player.x+60,sim.player.y);enemy.hp=enemy.maxHp=10000;enemy.speed=0;sim.buildGrid();
+  if(weapon.id==='needle')sim.fire();else if(weapon.id==='blades')sim.castSlash();else if(weapon.id==='pulse')sim.castPulse();
+  else if(['lightning','boomerang','frost','meteor','poison'].includes(weapon.id))sim['cast'+weapon.id[0].toUpperCase()+weapon.id.slice(1)]();else sim.castRelic(weapon.id);
+  renderer.highlightWeapon=null;paints.length=0;renderer.render(sim,{x:sim.player.x,y:sim.player.y});const normal=clone(paints);
+  renderer.highlightWeapon=weapon.id;paints.length=0;renderer.render(sim,{x:sim.player.x,y:sim.player.y});
+  assert.equal(paints.length,normal.length,weapon.id+' preview preserves geometry');
+  assert.ok(paints.some(p=>p.ink===13&&p.glyph!=='[+]'),weapon.id+' has a red attack preview, not merely a red aiming cursor');
+  for(let i=0;i<paints.length;i++)if(paints[i].ink!==normal[i].ink)assert.equal(paints[i].ink,13,'Only the preview color changes');
+  renderer.highlightWeapon=null;paints.length=0;renderer.render(sim,{x:sim.player.x,y:sim.player.y});assert.deepEqual(paints,normal,'Leaving preview restores original colors');
+}
+const mixed=fixture();mixed.levels.blades=1;mixed.setFireMode('auto');mixed.spawn('brute',mixed.player.x+200,mixed.player.y);mixed.fire();renderer.highlightWeapon='needle';paints.length=0;renderer.render(mixed,{x:mixed.player.x,y:mixed.player.y});
+assert.ok(paints.some(p=>p.glyph==='*'&&p.ink===13));assert.ok(paints.some(p=>['/','\\'].includes(p.glyph)&&p.ink===8),'Other equipped weapons keep their own ink');
+const blast=fixture();blast.levels.hammer=1;const marked=blast.spawn('brute',blast.player.x+60,blast.player.y);marked.hp=marked.maxHp=10000;blast.buildGrid();blast.castRelic('hammer');blast.updateWeapons(.4);
+assert.ok(blast.rings.some(r=>r.weapon==='hammer'));assert.ok(blast.particles.some(p=>p.weapon==='hammer'),'Explosion debris keeps its source after the warning expires');
 console.log('PASS: five weighted rarity tiers, luck, distinct ASCII icons, two-step selection, banish/skip budgets and overflow, excluded chest offers, v9 migration, saved pending selection, Freeman/Ripley loadouts and directional gauntlet combos.');
