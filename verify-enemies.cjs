@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 require('./core.js');
+require('./progress.js');
 const tick = (game, seconds) => { for (let i = 0; i < Math.ceil(seconds * 60); i++) game.update(1 / 60); };
 function fixture(options = {}) {
   const game = new NightGame(41, 'hunter', { fireMode: 'manual', terrain: false, ...options }); game.start();
@@ -23,7 +24,25 @@ for (const [kind, projectiles] of [['lich', 1], ['pumpkin', 3], ['lichLord', 3]]
   const g = fixture(), e = g.spawn(kind, g.player.x + 320, g.player.y); e.skillClock = 0;
   tick(g, .02); assert.ok(e.windup > 0); assert.equal(g.enemyShots.length, 0, 'Ranged attacks have a warning');
   tick(g, .9); assert.equal(g.enemyShots.length, projectiles);
+  assert.ok(g.enemyShots.every(shot => Math.abs(shot.damage - e.damage * (kind === 'pumpkin' ? .64 : .8)) < 1e-9), kind + ' projectile damage');
   if (kind === 'lichLord') assert.equal(g.enemies.filter(e => e.kind === 'skeleton').length, 3);
+}
+for (const time of [0, 600]) {
+  const g = fixture(); g.time = time;
+  const pumpkin = g.spawn('pumpkin', g.player.x - 40, g.player.y);
+  const resumed = NightSave.restore(JSON.parse(JSON.stringify(NightSave.capture(g))));
+  assert.ok(resumed, 'Pumpkin encounters can resume');
+  resumed.enemySkill(resumed.enemies[0]);
+  const previousDamage = pumpkin.damage * .8;
+  assert.ok(resumed.enemyShots.every(shot => Math.abs(shot.damage - previousDamage * .8) < 1e-9), 'Pumpkin projectiles deal 20% less damage at every difficulty');
+  resumed.enemyShots = [resumed.enemyShots[1]];
+  const loadedShot = NightSave.restore(JSON.parse(JSON.stringify(NightSave.capture(resumed))));
+  assert.ok(loadedShot, 'Weakened projectiles survive a checkpoint');
+  loadedShot.pause();
+  const hp = loadedShot.player.hp;
+  loadedShot.updateEnemyShots(.2);
+  assert.ok(Math.abs(loadedShot.player.hp - (hp - previousDamage * .8)) < 1e-9, 'A restored pumpkin projectile applies its reduced damage on impact');
+  assert.equal(loadedShot.enemyShots.length, 0);
 }
 const british = fixture(); const lord = british.spawn('british', british.player.x + 300, british.player.y); lord.skillClock = 0; tick(british, 1);
 assert.equal(british.enemies.filter(e => e.kind === 'ghoul').length, 3); assert.equal(british.enemies.filter(e => e.kind === 'mummy').length, 1);

@@ -727,7 +727,7 @@
         const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x), count = e.kind === 'lich' ? 1 : 3;
         for (let i = 0; i < count && this.enemyShots.length < 256; i++) {
           const a = angle + (i - (count - 1) / 2) * .22, speed = e.kind === 'pumpkin' ? 205 : 175;
-          this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * .8, radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
+          this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * (e.kind === 'pumpkin' ? .64 : .8), radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
         }
         if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', 3);
       } else if (e.ai === 'summoner') {
