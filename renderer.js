@@ -118,9 +118,9 @@
         for (let i = 0; i < 8; i++) { const a = i * 2.4; this.world(pool.x + Math.cos(a) * pool.radius * .55, pool.y + Math.sin(a) * pool.radius * .55, '.', 2); }
         this.world(pool.x, pool.y, pool.kind === 'water' ? '{~}' : 'x', pool.kind === 'water' ? 9 : 3);
       }
-      for (const m of game.meteors) { this.circle(m.x, m.y, m.radius, 6, ':'); this.world(m.x, m.y, '[X]', 7); }
+      for (const m of game.meteors) { const bird = ['bird', 'ebony'].includes(m.kind); this.circle(m.x, m.y, m.radius, bird ? 9 : 6, ':'); this.world(m.x, m.y, m.kind === 'echo' ? '[Z]' : bird ? '<v>' : '[X]', m.kind === 'ebony' ? 5 : 7); }
       for (const r of game.rings) { const t = 1 - r.life / r.maxLife; this.circle(r.x, r.y, r.radius * Math.sqrt(t), t < .7 ? (r.ink ?? 7) : 1, r.glyph || (t < .45 ? '+' : '.')); }
-      if (game.levels.blades && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, 88 * game.area, 0);
+      if (game.levels.blades && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, game.bladeRadius, game.isEvolved('blades') ? 9 : 0);
       if (game.levels.garlic && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, (75 + game.levels.garlic * 15) * game.area, 3, '.');
       for (const s of game.slashes) for (let a = -.95; a <= .95; a += .13) this.world(s.x + Math.cos(s.angle + a) * s.radius, s.y + Math.sin(s.angle + a) * s.radius, '/', 8);
       const megaBodies = [];
@@ -157,17 +157,17 @@
       }
       for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
       for (const s of game.relics) { const p = this.position(s); this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
-      for (const b of game.biblePositions()) this.world(b.x, b.y, '[B]', 7);
+      for (const b of game.biblePositions()) this.world(b.x, b.y, game.isEvolved('bible') ? '[B!]' : '[B]', game.isEvolved('bible') ? 5 : 7);
       for (const whip of game.bossWhips) this.line(whip, { x: whip.x + Math.cos(whip.angle) * whip.radius, y: whip.y + Math.sin(whip.angle) * whip.radius }, 13, '~', true);
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', 6); this.world(p.x, p.y, '*', 7); }
       for (const b of game.boomerangs) { const p = this.position(b); this.world(p.x, p.y, ['<)>', '/|\\', '<(>', '\\|/'][Math.floor(b.age * 16) % 4], 7); }
       for (const arc of game.arcs) for (let i = 1; i < arc.points.length; i++) this.line(arc.points[i - 1], arc.points[i], arc.life > .12 ? 8 : 5, i % 2 ? '~' : '/', true);
       for (const p of game.particles) this.world(p.x, p.y, p.life > .25 ? '+' : '.', p.ink);
-      for (const b of game.bladePositions()) this.world(b.x, b.y, Math.sin(b.angle * 2) > 0 ? '/' : '\\', 8);
+      for (const b of game.bladePositions()) this.world(b.x, b.y, game.isEvolved('blades') ? '/+' : Math.sin(b.angle * 2) > 0 ? '/' : '\\', game.isEvolved('blades') ? 9 : 8);
       // Pickups use their own brighter inks and remain readable over combat effects.
       for (const g of game.gems) this.world(g.x, g.y, g.value >= 6 ? '<*>' : '*', 10);
       for (const h of game.hearts) this.world(h.x, h.y, '[+]', 11);
-      for (const chest of game.chests) { this.world(chest.x, chest.y, ' ___\n[?*]\n|__|', 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
+      for (const chest of game.chests) { this.world(chest.x, chest.y, chest.canEvolve ? ' ___\n[E*]\n|__|' : ' ___\n[?*]\n|__|', chest.canEvolve ? 5 : 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
       const arena = game.encounter;
       if (arena) {
         const warning = arena.phase === 'warning', radius = arena.radius * (warning ? .85 + .15 * (1 - arena.warningLeft / 5) : 1);

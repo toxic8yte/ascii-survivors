@@ -32,14 +32,15 @@
     { id: 'clock', title: 'Часовой ланцет', icon: '-o-', cooldown: 2.4, behavior: 'clock', text: 'Замораживает врагов вдоль луча. Автоматически поворачивается по кругу.' },
     { id: 'laurel', title: 'Лавр', icon: '[o]', cooldown: 7, behavior: 'laurel', text: 'Даёт защитные заряды, поглощающие попадания. В ручном режиме активируется атакой.' },
     { id: 'bible', title: 'Королевская Библия', icon: '[B]', cooldown: 3.8, behavior: 'bible', text: 'Книги вращаются на широкой орбите и удерживают врагов на расстоянии.' },
-    { id: 'birds', title: 'Белая и чёрная птицы', icon: 'v^v', cooldown: 1.9, behavior: 'birds', text: 'Две птицы обстреливают вращающиеся области вокруг героя.' }
+    { id: 'birds', title: 'Белая птица', icon: 'v^v', cooldown: 1.9, behavior: 'birds', text: 'Белая птица бомбит вращающийся сектор. Соединяется с чёрной птицей на максимуме.' },
+    { id: 'ebony', title: 'Чёрная птица', icon: '\\v/', cooldown: 1.9, behavior: 'birds', text: 'Чёрная птица бомбит встречный сектор. Для объединения обе птицы должны быть на максимуме.' }
   ];
   const UPGRADES = [
     ...EXTRA_WEAPONS.map(w => ({ ...w, kind: 'ОРУЖИЕ', weapon: true, max: 4 })),
     { id: 'needle', title: 'Огненная игла', icon: '*', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Огненные снаряды летят в ближайшую цель. Ступени усиливают урон и скорость стрельбы.' },
     { id: 'power', title: 'Сила проклятия', icon: '*', kind: 'УРОН', max: 5, text: 'Всё оружие наносит на 35% больше урона.' },
     { id: 'haste', title: 'Быстрый ритуал', icon: '>>', kind: 'СКОРОСТЬ ОГНЯ', max: 5, text: 'Всё оружие срабатывает на 22% чаще.' },
-    { id: 'fork', title: 'Раздвоение', icon: '\\|/', kind: 'СНАРЯДЫ', max: 3, text: 'Ещё один огненный снаряд при каждом выстреле.' },
+    { id: 'fork', title: 'Дупликатор', icon: '\\|/', kind: 'КОЛИЧЕСТВО', max: 3, text: '+1 снаряд, вращающийся клинок, книга или удар совместимого оружия за ступень. Один клинок становится двумя.' },
     { id: 'blades', title: 'Лунные клинки', icon: '/@/', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Клинок вращается вокруг тебя и режет врагов. Повторный выбор добавляет клинок.' },
     { id: 'pulse', title: 'Мёртвый колокол', icon: '((+))', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Волна наносит урон и отбрасывает врагов. Ступени усиливают урон и радиус.' },
     { id: 'lightning', title: 'Цепная молния', icon: '/Z/', kind: 'ОРУЖИЕ', weapon: true, max: 4, text: 'Молния перескакивает между врагами. Ступени добавляют цели и урон.' },
@@ -60,7 +61,41 @@
     { id: 'luck', title: 'Клевер', icon: '+o+', kind: 'УДАЧА', max: 5, text: 'Повышает шанс тройных и пятерных сундуков и выпадения лечения.' },
     { id: 'greed', title: 'Каменная маска', icon: '[$]', kind: 'ЗОЛОТО', max: 5, text: 'Заработок золота +15% за ступень. Оно остаётся между забегами.' },
     { id: 'curse', title: 'Проклятый череп', icon: '(x)', kind: 'РИСК', max: 5, text: 'Волны на 10% сильнее, а заработок золота на 20% выше за ступень.' },
-    { id: 'revive', title: 'Тирагису', icon: '[+!]', kind: 'ВОЗРОЖДЕНИЕ', max: 2, text: 'Ещё одно возрождение с половиной здоровья и тремя секундами защиты.' }
+    { id: 'revive', title: 'Тирагису', icon: '[+!]', kind: 'ВОЗРОЖДЕНИЕ', max: 2, text: 'Ещё одно возрождение с половиной здоровья и тремя секундами защиты.' },
+    { id: 'silverRing', title: 'Серебряное кольцо', icon: '(s)', kind: 'ОБЛАСТЬ / ВРЕМЯ', max: 5, text: '+10% области и +5% длительности за ступень. Максимум нужен для эволюции ланцета.' },
+    { id: 'goldRing', title: 'Золотое кольцо', icon: '(G)', kind: 'ПРОКЛЯТИЕ', max: 5, text: 'Волны на 8% сильнее, золота на 10% больше за ступень. Максимум нужен для эволюции ланцета.' },
+    { id: 'leftSign', title: 'Метаглио Левое', icon: '[<]', kind: 'ЖИЗНЬ / РЕГЕНЕРАЦИЯ', max: 5, text: '+10 здоровья и +0,2 HP/с за ступень. Максимум нужен для эволюции лавра.' },
+    { id: 'rightSign', title: 'Метаглио Правое', icon: '[>]', kind: 'ПРОКЛЯТИЕ', max: 5, text: 'Волны на 8% сильнее, золота на 10% больше за ступень. Максимум нужен для эволюции лавра.' }
+  ];
+  const WEAPON_NAMES = {
+    needle: 'Игла престолов', blades: 'Оби-Ван Клиноби', pulse: 'Звонок Самаре', lightning: 'Пикачу, разрядись!', boomerang: 'Бумерангутан', frost: 'Лёд тронулся, Джон Сноу', meteor: 'Звёздные вбросы', poison: 'Чужой желудок',
+    whip: 'Кнут Skywalker', axe: 'Топорный аргумент', water: 'Святая водичка, Бэтмен!', rune: 'Рунный побег', pentagram: 'Пентаграмма понарошку', garlic: 'Чеснок Носферату', dagger: 'Ножи наголо, Нео', fireball: 'Фаерболл Балрога', clock: 'Доктор Кто-когда', laurel: 'Лавр и Харди', bible: 'Библия Джона Вика', birds: 'Голубь Терминатора', ebony: 'Ворон Морфеуса'
+  };
+  for (const u of UPGRADES.filter(u => u.weapon)) { u.baseTitle = u.title; u.title = WEAPON_NAMES[u.id]; }
+  for (const w of EXTRA_WEAPONS) w.title = WEAPON_NAMES[w.id];
+  const PASSIVE_NAMES = { power: 'Шпинат силы', haste: 'Пустой том', stride: 'Крылья', magnet: 'Аттрактор', vital: 'Полое сердце', regen: 'Пуммарола' };
+  for (const u of UPGRADES) if (PASSIVE_NAMES[u.id]) u.title = PASSIVE_NAMES[u.id];
+  const EVOLUTIONS = [
+    { id: 'holyNeedle', weapon: 'needle', passives: { haste: 1 }, title: 'Игла престолов: пламя и кровь', icon: '*=>', text: 'Непрерывный поток пробивающих игл с удвоенным уроном.' },
+    { id: 'jediBlades', weapon: 'blades', passives: { fork: 1 }, title: 'Клиноби: высокая орбита', icon: '/+/', text: 'Два дополнительных клинка, более широкая орбита и усиленные удары.' },
+    { id: 'manaBell', weapon: 'pulse', passives: { curse: 1 }, title: 'Звонок 2: семь секунд тишины', icon: '((!))', text: 'Широкая волна усиленного урона надолго замедляет толпу.' },
+    { id: 'thunderLoop', weapon: 'lightning', passives: { fork: 1 }, title: 'Пикачу: двойная бухгалтерия', icon: '/ZZ/', text: 'Каждая молния получает повторный удар через 0,4 секунды.' },
+    { id: 'heavenSickle', weapon: 'boomerang', passives: { luck: 1 }, title: 'Серп и молот Тора', icon: '<+>', text: 'Усиленные серпы наносят тройной критический урон с учётом удачи.' },
+    { id: 'winterSeal', weapon: 'frost', passives: { duration: 1 }, title: 'Зима близко. Очень.', icon: '{##}', text: 'Большая ледяная печать полностью замораживает врагов и наносит больше урона.' },
+    { id: 'armageddon', weapon: 'meteor', passives: { area: 1 }, title: 'Армагеддон по расписанию', icon: '[XX]', text: 'Дополнительные метеоры взрываются на большей площади.' },
+    { id: 'alienTrail', weapon: 'poison', passives: { greed: 1 }, title: 'Чужой: заветный след', icon: '~X~', text: 'Кислотные лужи сильнее, дольше существуют и замедляют врагов.' },
+    { id: 'bloodyWhip', weapon: 'whip', passives: { vital: 1 }, title: 'Кнут Skywalker: кровь пробуждается', icon: '~!~', text: 'Критические удары кнутом восстанавливают до 5 HP за атаку.' },
+    { id: 'deathSpiral', weapon: 'axe', passives: { area: 1 }, title: 'Топор: игра окончена', icon: '(P)', text: 'Кольцо пробивающих кос летит во все стороны вместо дуги топора.' },
+    { id: 'holyPuddle', weapon: 'water', passives: { magnet: 1 }, title: 'Лужа справедливости', icon: '{W}', text: 'Святые лужи растут и медленно сходятся к герою.' },
+    { id: 'noFuture', weapon: 'rune', passives: { armor: 1 }, title: 'Рунный побег: будущего нет', icon: '<!>', text: 'Рикошеты руны вызывают взрывы, поражающие толпу.' },
+    { id: 'gorgeousMoon', weapon: 'pentagram', passives: { growth: 1 }, title: 'Луна, дай XP!', icon: '<O>', text: 'Более частая очистка даёт дополнительный опыт и притягивает все осколки.' },
+    { id: 'soulEater', weapon: 'garlic', passives: { regen: 1 }, title: 'Ганнибал Лектор: на гарнир', icon: '(G)', text: 'Широкая аура поглощает здоровье задетых врагов и лечит героя.' },
+    { id: 'thousandEdge', weapon: 'dagger', passives: { velocity: 1 }, title: 'Тысяча причин для Матрицы', icon: '==>', text: 'Непрерывный поток более сильных пробивающих ножей.' },
+    { id: 'hellfire', weapon: 'fireball', passives: { power: 1 }, title: 'Балрог: проходите, не задерживайтесь', icon: '(@!)', text: 'Мощные огненные шары пробивают толпу и взрываются при попадании.' },
+    { id: 'corridor', weapon: 'clock', passives: { silverRing: 5, goldRing: 5 }, title: 'Доктор Кто: коридор бесконечности', icon: '(12)', text: 'Каждый полный оборот луча уменьшает текущее здоровье ближайших врагов вдвое; боссам наносит ограниченный урон.' },
+    { id: 'shroud', weapon: 'laurel', passives: { leftSign: 5, rightSign: 5 }, title: 'Алый плащ Доктора Стрэнджа', icon: '[S]', text: 'Ограничивает входящий удар до 10 урона перед бронёй. Заряд защиты отвечает ударной волной.' },
+    { id: 'vespers', weapon: 'bible', passives: { duration: 1 }, title: 'Святые угодники Джона Вика', icon: '[B!]', text: 'Усиленные книги вращаются постоянно в авто-режиме; ручной режим требует активации.' },
+    { id: 'vandalier', weapon: 'birds', weapons: ['ebony'], passives: {}, title: 'Голубь мира: перезагрузка', icon: 'vWv', text: 'Объединяет обеих птиц в одну: широкая двойная бомбардировка. Слот ворона поглощается.' }
   ];
   const META = [
     { id: 'vital', title: 'Запас жизни', icon: '[+]', max: 5, cost: 25, text: '+10 максимального здоровья за ранг.' },
@@ -84,7 +119,7 @@
     { id: 'scout', name: 'Руна', role: 'Следопыт', weapon: 'boomerang', hp: 90, speed: 200, magnet: 95, dash: 3, ink: 7, sprite: ' v\n(%>\n/ \\', text: 'Самый быстрый герой. Серп бьёт по пути туда и обратно.' },
     { id: 'plague', name: 'Мор', role: 'Алхимик', weapon: 'poison', hp: 110, speed: 168, magnet: 147, dash: 3.4, ink: 3, sprite: ' _\n(x)\n/ \\', text: 'Веди толпу по ядовитому следу. Собирает души издалека.' }
   ];
-  const catalog = { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS };
+  const catalog = { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS, evolutions: EVOLUTIONS };
   root.NightCatalog = catalog;
   if (typeof module !== 'undefined' && module.exports) module.exports = catalog;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

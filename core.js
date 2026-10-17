@@ -2,7 +2,8 @@
   'use strict';
   const TAU = Math.PI * 2;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-  const { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS } = root.NightCatalog || require('./catalog.js');
+  const { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS, evolutions: EVOLUTIONS } = root.NightCatalog || require('./catalog.js');
+  const EVOLUTION_BY_WEAPON = Object.fromEntries(EVOLUTIONS.map(e => [e.weapon, e]));
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
   const SLOTS = ['needle', 'blades', 'pulse', 'lightning', 'boomerang', 'frost', 'meteor', 'poison', ...EXTRA_WEAPONS.map(w => w.id)];
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
@@ -41,6 +42,7 @@
       this.stressMode = Boolean(options.stressMode);
       this.meta = Object.fromEntries(META.map(u => [u.id, clamp(Math.floor(Number(options.meta?.[u.id]) || 0), 0, u.max)]));
       this.goldEarned = 0; this.goldCarry = 0; this.xpCarry = 0; this.revivesUsed = 0;
+      this.evolutions = new Set(); this.clockStep = 0;
       this.enemyLimit = clamp(Math.floor(Number(options.enemyLimit) || 6000), 100, 24000);
       this.peakEnemies = 0; this.nextBossAt = 60; this.bossIndex = 0; this.bossKills = 0; this.lastBoss = '';
       this.nextMegaAt = 600; this.bossWhips = [];
@@ -88,20 +90,38 @@
     }
     get power() { return Math.pow(1.35, this.levels.power) * (1 + this.meta.power * .05 + (this.character.traits?.power || 0)); }
     get haste() { return Math.pow(1.22, this.levels.haste) * (1 + this.meta.haste * .04); }
-    get area() { return 1 + this.levels.area * .12 + (this.character.traits?.area || 0); }
-    get effectDuration() { return 1 + this.levels.duration * .15; }
+    get area() { return 1 + this.levels.area * .12 + this.levels.silverRing * .1 + (this.character.traits?.area || 0); }
+    get effectDuration() { return 1 + this.levels.duration * .15 + this.levels.silverRing * .05; }
     get projectileSpeed() { return 1 + this.levels.velocity * .12; }
     get armor() { return this.levels.armor * 2 + this.meta.armor + (this.character.traits?.armor || 0); }
     get growth() { return 1 + this.levels.growth * .1 + this.meta.growth * .03; }
     get luck() { return 1 + this.levels.luck * .1; }
-    get greed() { return 1 + this.levels.greed * .15 + this.levels.curse * .2; }
+    get greed() { return 1 + this.levels.greed * .15 + this.levels.curse * .2 + (this.levels.goldRing + this.levels.rightSign) * .1; }
     get damage() { return 20 * (1 + .25 * Math.max(0, this.levels.needle - 1)) * this.power; }
-    get cooldown() { return .68 * BALANCE.weaponCooldown / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)); }
+    get cooldown() { return .68 * BALANCE.weaponCooldown / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)) * (this.isEvolved('needle') ? .4 : 1); }
     get speed() { return this.character.speed * (1 + .15 * this.levels.stride + .03 * this.meta.stride) * (this.player.slowTill > this.time ? .65 : 1); }
     get dashCooldown() { return this.character.dash * BALANCE.dashCooldown * Math.pow(.9, this.levels.stride); }
     get magnet() { return this.character.magnet + this.levels.magnet * 65 + this.meta.magnet * 15; }
     get elapsed() { return Math.max(this.time, this.wallTime); }
-    get pressureTime() { return (this.elapsed + this.pressureOffset) * (1 + this.levels.curse * .1); }
+    get pressureTime() { return (this.elapsed + this.pressureOffset) * (1 + this.levels.curse * .1 + (this.levels.goldRing + this.levels.rightSign) * .08); }
+    isEvolved(id) { return this.evolutions.has(EVOLUTION_BY_WEAPON[id]?.id); }
+    isConsumed(id) { return EVOLUTIONS.some(e => this.evolutions.has(e.id) && e.weapons?.includes(id)); }
+    weaponInfo(id) { return this.isEvolved(id) ? EVOLUTION_BY_WEAPON[id] : UPGRADES.find(u => u.id === id); }
+    canEvolve(recipe) {
+      return !this.evolutions.has(recipe.id) && [recipe.weapon, ...(recipe.weapons || [])].every(id => !this.isConsumed(id) && this.levels[id] === UPGRADES.find(u => u.id === id).max) && Object.entries(recipe.passives).every(([id, rank]) => this.levels[id] >= rank);
+    }
+    readyEvolutions() { return EVOLUTIONS.filter(e => this.canEvolve(e)); }
+    evolve(recipe) {
+      if (!recipe || !this.canEvolve(recipe)) return false;
+      this.evolutions.add(recipe.id);
+      for (const id of recipe.weapons || []) {
+        this.levels[id] = 0;
+        if (this.selectedWeapon === id) this.selectedWeapon = recipe.weapon;
+        if (this.queuedWeapon === id) this.queuedWeapon = null;
+      }
+      if (recipe.weapon in this.weaponClocks) this.weaponClocks[recipe.weapon] = 0;
+      this.events.push('evolution'); return true;
+    }
     awardGold(value) {
       if (this.stressMode) return;
       const total = value * this.greed + this.goldCarry, whole = Math.floor(total + 1e-8);
@@ -194,14 +214,15 @@
       this.events.push(event);
     }
     dropChest(enemy) {
-      const chest = { id: this.nextChestId++, x: enemy.x, y: enemy.y, source: enemy.kind, radius: 20 };
+      const chest = { id: this.nextChestId++, x: enemy.x, y: enemy.y, source: enemy.kind, radius: 20, canEvolve: Boolean(enemy.mega || enemy.bornAt >= 600) };
       this.resolveTerrain(chest); this.chests.push(chest);
       if (this.chests.length > 64) this.chests.shift(); this.events.push('chest-drop');
     }
     applyUpgrade(upgrade) {
-      if (!upgrade || this.levels[upgrade.id] >= upgrade.max) return false;
+      if (!upgrade || this.isConsumed(upgrade.id) || this.levels[upgrade.id] >= upgrade.max) return false;
       this.levels[upgrade.id]++;
       if (upgrade.id === 'vital') { this.player.maxHp += 25; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 40); }
+      if (upgrade.id === 'leftSign') { this.player.maxHp += 10; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 10); }
       if (upgrade.id === 'pulse') this.pulseClock = Math.min(this.pulseClock, .4);
       if (upgrade.id in this.weaponClocks) this.weaponClocks[upgrade.id] = Math.min(this.weaponClocks[upgrade.id], .2);
       return true;
@@ -210,10 +231,15 @@
       if (this.status !== 'running' || !this.chests.includes(chest)) return false;
       this.chests = this.chests.filter(c => c !== chest); this.chestsOpened++;
       const roll = this.random() / this.luck, count = ENEMIES[chest.source].mega ? 5 : roll < .05 ? 5 : roll < .3 ? 3 : 1, items = [];
+      const ready = chest.canEvolve ? this.readyEvolutions() : [], evolutionLimit = ENEMIES[chest.source].mega ? count : 1;
       for (let i = 0; i < count; i++) {
+        if (i < evolutionLimit && ready.length) {
+          const recipe = ready.splice(Math.floor(this.random() * ready.length), 1)[0];
+          if (this.evolve(recipe)) { items.push({ id: recipe.weapon, rank: this.levels[recipe.weapon], evolution: recipe.id }); continue; }
+        }
         let candidates = UPGRADES.filter(u => u.weapon && this.levels[u.id] > 0 && this.levels[u.id] < u.max);
         if (!candidates.length) candidates = UPGRADES.filter(u => !u.weapon && this.levels[u.id] < u.max);
-        if (!candidates.length) candidates = UPGRADES.filter(u => this.levels[u.id] < u.max);
+        if (!candidates.length) candidates = UPGRADES.filter(u => !this.isConsumed(u.id) && this.levels[u.id] < u.max);
         if (!candidates.length) break;
         const upgrade = candidates[Math.floor(this.random() * candidates.length)]; this.applyUpgrade(upgrade);
         items.push({ id: upgrade.id, rank: this.levels[upgrade.id] });
@@ -274,6 +300,7 @@
       const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: 0, chargeY: 0, targetX: x, targetY: y, arenaMember };
       this.resolveTerrain(enemy); this.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
       this.enemies.push(enemy);
+      enemy.bornAt = this.elapsed;
       this.encountered.add(kind);
       return enemy;
     }
@@ -361,7 +388,12 @@
     hurtPlayer(damage, source) {
       const p = this.player;
       if (this.stressMode || p.invulnerable > 0 || this.status !== 'running') return;
-      if (this.shieldCharges > 0 && this.shieldUntil > this.time) { this.shieldCharges--; p.invulnerable = .4; this.events.push('shield'); return; }
+      if (this.isEvolved('laurel')) damage = Math.min(10, damage);
+      if (this.shieldCharges > 0 && this.shieldUntil > this.time) {
+        this.shieldCharges--; p.invulnerable = .4; this.events.push('shield');
+        if (this.isEvolved('laurel')) this.explode(p.x, p.y, 180 * this.area, 70 * this.power, 13);
+        return;
+      }
       p.hp = Math.max(0, p.hp - Math.max(1, damage - this.armor)); p.invulnerable = .85;
       if (source?.slow) p.slowTill = this.time + source.slow;
       this.damageFlash = .26; this.events.push('hurt'); this.burst(p.x, p.y, 6, 12);
@@ -385,7 +417,7 @@
       for (let i = 0; i < count; i++) {
         const spread = i === 0 ? 0 : Math.ceil(i / 2) * .11 * (i % 2 ? -1 : 1);
         const a = angle + spread;
-        this.shots.push({ x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * 490 * this.projectileSpeed, vy: Math.sin(a) * 490 * this.projectileSpeed, angle: a, life: 1.5, hits: new Set(), remaining: 1 + this.levels.pierce, damage: this.damage });
+        this.shots.push({ x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * 490 * this.projectileSpeed, vy: Math.sin(a) * 490 * this.projectileSpeed, angle: a, life: 1.5, hits: new Set(), remaining: 1 + this.levels.pierce + (this.isEvolved('needle') ? 3 : 0), damage: this.damage * (this.isEvolved('needle') ? 2 : 1) });
       }
       this.events.push('shot');
     }
@@ -395,7 +427,7 @@
       if (this.status !== 'running' || this.xp < this.xpNeed) return;
       this.xp -= this.xpNeed; this.level++;
       this.xpNeed = Math.min(5000, Math.ceil(this.xpNeed * 1.2 + 3));
-      const candidates = UPGRADES.filter(u => this.levels[u.id] < u.max);
+      const candidates = UPGRADES.filter(u => !this.isConsumed(u.id) && this.levels[u.id] < u.max);
       if (!candidates.length) { this.player.hp = Math.min(this.player.maxHp, this.player.hp + 30); return; }
       for (let i = candidates.length - 1; i > 0; i--) {
         const j = Math.floor(this.random() * (i + 1));
@@ -417,12 +449,17 @@
       return true;
     }
     bladePositions() {
-      const n = this.fireMode === 'auto' ? this.levels.blades : 0, result = [];
+      const n = this.fireMode === 'auto' && this.levels.blades ? this.levels.blades + this.levels.fork + (this.isEvolved('blades') ? 2 : 0) : 0, result = [];
       for (let i = 0; i < n; i++) {
         const a = this.time * 3.2 * this.haste / BALANCE.weaponCooldown + i / n * TAU;
-        result.push({ x: this.player.x + Math.cos(a) * 88 * this.area, y: this.player.y + Math.sin(a) * 88 * this.area, angle: a });
+        result.push({ x: this.player.x + Math.cos(a) * this.bladeRadius, y: this.player.y + Math.sin(a) * this.bladeRadius, angle: a });
       }
       return result;
+    }
+    get bladeRadius() { return (this.isEvolved('blades') ? 118 : 88) * this.area; }
+    explode(x, y, radius, damage, ink = 7) {
+      this.rings.push({ x, y, radius, life: .45, maxLife: .45, ink, glyph: '*' });
+      for (const e of this.nearby(x, y, radius + 50)) if (e.alive && Math.hypot(e.x - x, e.y - y) < radius + e.radius) this.hurtEnemy(e, damage, 18);
     }
     targets(x = this.player.x, y = this.player.y, radius = 620, count = 2) {
       const best = [], distances = [], arena = this.encounter?.phase === 'locked' ? this.encounter : null;
@@ -436,30 +473,32 @@
       return best;
     }
     castPulse() {
-      const p = this.player, radius = (145 + this.levels.pulse * 18) * this.area;
+      const p = this.player, radius = (145 + this.levels.pulse * 18) * this.area * (this.isEvolved('pulse') ? 1.5 : 1);
       this.rings.push({ x: p.x, y: p.y, radius, life: .55, maxLife: .55 });
-      for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) this.hurtEnemy(e, (36 + this.levels.pulse * 20) * this.power, 75);
+      for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) { this.hurtEnemy(e, (36 + this.levels.pulse * 20) * this.power * (this.isEvolved('pulse') ? 1.8 : 1), 75); if (this.isEvolved('pulse')) e.chilledTill = this.time + 7; }
     }
     castSlash() {
       const p = this.player, aim = this.aimPoint(130), angle = Math.atan2(aim.y - p.y, aim.x - p.x), radius = (110 + this.levels.blades * 10) * this.area;
-      this.slashes.push({ x: p.x, y: p.y, angle, radius, life: .22 });
+      const count = 1 + this.levels.fork + (this.isEvolved('blades') ? 2 : 0);
+      for (let i = 0; i < count; i++) this.slashes.push({ x: p.x, y: p.y, angle: angle + (i - (count - 1) / 2) * .25, radius: radius + i * 9, life: .22 });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) {
         const difference = Math.atan2(Math.sin(Math.atan2(e.y - p.y, e.x - p.x) - angle), Math.cos(Math.atan2(e.y - p.y, e.x - p.x) - angle));
-        if (Math.abs(difference) < 1.25) this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power, 18);
+        if (Math.abs(difference) < 1.25) this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power * count * (this.isEvolved('blades') ? 1.5 : 1), 18);
       }
     }
     castPoison() {
       const p = this.fireMode === 'manual' ? this.aimPoint(360) : this.player;
-      this.pools.push({ x: p.x, y: p.y, radius: (58 + this.levels.poison * 5) * this.area, life: (4 + this.levels.poison * .5) * this.effectDuration });
+      this.pools.push({ x: p.x, y: p.y, radius: (58 + this.levels.poison * 5) * this.area, life: (4 + this.levels.poison * .5) * this.effectDuration * (this.isEvolved('poison') ? 1.8 : 1), acid: this.isEvolved('poison') });
     }
     castLightning() {
       let x = this.player.x, y = this.player.y;
       const visited = new Set(), points = [{ x, y }];
-      for (let i = 0; i < 2 + this.levels.lightning; i++) {
+      for (let i = 0; i < 2 + this.levels.lightning + this.levels.fork; i++) {
         const enemy = i === 0 && this.fireMode === 'manual' ? this.aimedTarget() : this.targets(x, y, i ? 260 : 620, 7).find(e => !visited.has(e.id));
         if (!enemy) break;
         visited.add(enemy.id); x = enemy.x; y = enemy.y; points.push({ x, y });
         this.hurtEnemy(enemy, (24 + 8 * this.levels.lightning) * this.power);
+        if (this.isEvolved('lightning') && this.meteors.length < 100) this.meteors.push({ x, y, wait: .4, radius: 55 * this.area, damage: (24 + 8 * this.levels.lightning) * this.power, kind: 'echo' });
       }
       if (points.length === 1 && this.fireMode === 'manual') points.push(this.aimPoint());
       if (points.length > 1) this.arcs.push({ points, life: .24, maxLife: .24 });
@@ -470,83 +509,105 @@
       const count = 1 + Math.floor(this.levels.boomerang / 3) + this.levels.fork;
       for (let i = 0; i < count; i++) {
         const angle = Math.atan2(target.y - this.player.y, target.x - this.player.x) + (i - (count - 1) / 2) * .22;
-        this.boomerangs.push({ x: this.player.x, y: this.player.y, prevX: this.player.x, prevY: this.player.y, vx: Math.cos(angle) * 370 * this.projectileSpeed, vy: Math.sin(angle) * 370 * this.projectileSpeed, age: 0, hits: new Map(), damage: (14 + 7 * this.levels.boomerang) * this.power });
+        const critical = this.isEvolved('boomerang') && this.random() < Math.min(.8, .3 * this.luck);
+        this.boomerangs.push({ x: this.player.x, y: this.player.y, prevX: this.player.x, prevY: this.player.y, vx: Math.cos(angle) * 370 * this.projectileSpeed, vy: Math.sin(angle) * 370 * this.projectileSpeed, age: 0, hits: new Map(), damage: (14 + 7 * this.levels.boomerang) * this.power * (this.isEvolved('boomerang') ? 1.6 : 1) * (critical ? 3 : 1) });
       }
     }
     castFrost() {
-      const p = this.player, level = this.levels.frost, radius = (170 + level * 20) * this.area;
+      const p = this.player, level = this.levels.frost, radius = (170 + level * 20) * this.area * (this.isEvolved('frost') ? 1.4 : 1);
       this.rings.push({ x: p.x, y: p.y, radius, life: .65, maxLife: .65, ink: 9, glyph: '*' });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) {
         e.chilledTill = this.time + (2.5 + level * .4) * this.effectDuration;
-        this.hurtEnemy(e, (8 + level * 6) * this.power);
+        if (this.isEvolved('frost')) this.freezes.set(e.id, this.time + (e.mega ? .6 : 3 * this.effectDuration));
+        this.hurtEnemy(e, (8 + level * 6) * this.power * (this.isEvolved('frost') ? 2 : 1));
       }
     }
     castMeteor() {
-      const count = this.levels.meteor >= 3 ? 2 : 1;
-      const targets = this.fireMode === 'manual' ? Array.from({ length: count }, (_, i) => { const aim = this.aimPoint(); return { x: aim.x + (i - (count - 1) / 2) * 55, y: aim.y }; }) : this.targets();
-      for (const e of targets.slice(0, count)) this.meteors.push({ x: e.x, y: e.y, wait: .65, radius: (90 + this.levels.meteor * 12) * this.area, damage: (48 + 22 * this.levels.meteor) * this.power });
+      const count = (this.levels.meteor >= 3 ? 2 : 1) + this.levels.fork + (this.isEvolved('meteor') ? 2 : 0);
+      const targets = this.fireMode === 'manual' ? Array.from({ length: count }, (_, i) => { const aim = this.aimPoint(); return { x: aim.x + (i - (count - 1) / 2) * 55, y: aim.y }; }) : this.targets(this.player.x, this.player.y, 620, count);
+      for (const e of targets.slice(0, count)) if (this.meteors.length < 100) this.meteors.push({ x: clamp(e.x, 28, this.width - 28), y: clamp(e.y, 28, this.height - 28), wait: .65, radius: (90 + this.levels.meteor * 12) * this.area * (this.isEvolved('meteor') ? 1.4 : 1), damage: (48 + 22 * this.levels.meteor) * this.power });
     }
     biblePositions() {
-      if (this.bibleUntil <= this.time) return [];
-      return Array.from({ length: 1 + this.levels.bible }, (_, i) => { const a = this.time * 2.7 * this.projectileSpeed + i * TAU / (1 + this.levels.bible); return { x: this.player.x + Math.cos(a) * 135 * this.area, y: this.player.y + Math.sin(a) * 135 * this.area }; });
+      if (!this.levels.bible || this.bibleUntil <= this.time && !(this.fireMode === 'auto' && this.isEvolved('bible'))) return [];
+      const count = 1 + this.levels.bible + this.levels.fork + (this.isEvolved('bible') ? 2 : 0), radius = (this.isEvolved('bible') ? 170 : 135) * this.area;
+      return Array.from({ length: count }, (_, i) => { const a = this.time * 2.7 * this.projectileSpeed + i * TAU / count; return { x: this.player.x + Math.cos(a) * radius, y: this.player.y + Math.sin(a) * radius }; });
     }
     castRelic(id) {
-      const level = this.levels[id], p = this.player, target = this.fireMode === 'manual' ? this.aimPoint() : this.targets()[0];
+      const level = this.levels[id], evolved = this.isEvolved(id), p = this.player, target = this.fireMode === 'manual' ? this.aimPoint() : this.targets()[0];
       const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : Math.atan2(p.dirY, p.dirX);
       if (id === 'laurel') { this.shieldCharges = 1 + Math.floor(level / 2); this.shieldUntil = this.time + (3 + level) * this.effectDuration; return; }
       if (id === 'bible') { this.bibleUntil = this.time + (2 + level * .4) * this.effectDuration; return; }
       if (id === 'water') {
-        for (let i = 0; i < 1 + Math.floor(level / 2); i++) { const a = angle + i * .6, d = target ? Math.min(330, Math.hypot(target.x - p.x, target.y - p.y)) : 180;
-          this.pools.push({ x: clamp(p.x + Math.cos(a) * d, 28, this.width - 28), y: clamp(p.y + Math.sin(a) * d, 28, this.height - 28), radius: (60 + level * 9) * this.area, life: (3 + level * .4) * this.effectDuration, kind: 'water', damage: (9 + level * 6) * this.power }); }
+        for (let i = 0; i < 1 + Math.floor(level / 2) + this.levels.fork && this.pools.length < 500; i++) { const a = angle + i * .6, d = target ? Math.min(330, Math.hypot(target.x - p.x, target.y - p.y)) : 180;
+          this.pools.push({ x: clamp(p.x + Math.cos(a) * d, 28, this.width - 28), y: clamp(p.y + Math.sin(a) * d, 28, this.height - 28), radius: (60 + level * 9) * this.area, life: (3 + level * .4) * this.effectDuration * (evolved ? 1.4 : 1), kind: 'water', damage: (9 + level * 6) * this.power, home: evolved }); }
         return;
       }
-      if (id === 'birds') {
-        for (let i = 0; i < 2; i++) { const a = this.time * .8 + i * Math.PI, x = this.fireMode === 'manual' && target ? target.x : p.x + Math.cos(a) * 220, y = this.fireMode === 'manual' && target ? target.y : p.y + Math.sin(a) * 220;
-          this.meteors.push({ x: clamp(x + i * 30, 28, this.width - 28), y: clamp(y, 28, this.height - 28), wait: .6, radius: (65 + level * 8) * this.area, damage: (20 + level * 10) * this.power }); }
+      if (id === 'birds' || id === 'ebony') {
+        const count = (evolved ? 4 : 1) + this.levels.fork;
+        for (let i = 0; i < count && this.meteors.length < 100; i++) { const a = this.time * (id === 'ebony' ? -.8 : .8) + (id === 'ebony' ? Math.PI : 0) + i * .32, x = this.fireMode === 'manual' && target ? target.x : p.x + Math.cos(a) * 220, y = this.fireMode === 'manual' && target ? target.y : p.y + Math.sin(a) * 220;
+          this.meteors.push({ x: clamp(x + i * 30, 28, this.width - 28), y: clamp(y, 28, this.height - 28), wait: .6, radius: (65 + level * 8) * this.area * (evolved ? 1.35 : 1), damage: (20 + level * 10) * this.power * (evolved ? 1.6 : 1), kind: id === 'ebony' ? 'ebony' : 'bird' }); }
         return;
       }
       if (['whip', 'garlic', 'pentagram', 'clock'].includes(id)) {
-        const radius = (id === 'pentagram' ? 650 : id === 'clock' ? 480 : id === 'garlic' ? 75 + level * 15 : 155 + level * 20) * this.area;
-        const facing = id === 'clock' && this.fireMode === 'auto' ? Math.floor(this.time / 2.4) * Math.PI / 6 : angle;
+        const radius = (id === 'pentagram' ? 650 : id === 'clock' ? 480 : id === 'garlic' ? 75 + level * 15 : 155 + level * 20) * this.area * (evolved && id === 'garlic' ? 1.4 : 1);
+        const facing = id === 'clock' && this.fireMode === 'auto' ? this.clockStep * Math.PI / 6 : angle;
+        const whipAngles = id === 'whip' ? [facing, ...(level >= 3 ? [facing + Math.PI] : []), ...Array.from({ length: this.levels.fork }, (_, i) => facing + (i + 1) * .35)] : [];
+        let healing = 0;
         this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' ? 9 : 7, glyph: id === 'pentagram' ? '*' : '.' });
         if (id === 'whip') {
-          this.slashes.push({ x: p.x, y: p.y, angle: facing, radius, life: .25 });
-          if (level >= 3) this.slashes.push({ x: p.x, y: p.y, angle: facing + Math.PI, radius, life: .25 });
+          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25 });
         }
         if (id === 'clock') this.arcs.push({ points: [{ x: p.x, y: p.y }, { x: p.x + Math.cos(facing) * radius, y: p.y + Math.sin(facing) * radius }], life: .3, maxLife: .3 });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive) {
-          const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy), difference = Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - facing), Math.cos(Math.atan2(dy, dx) - facing)));
-          if (d > radius + e.radius || id === 'whip' && difference > 1.2 && !(level >= 3 && difference > Math.PI - 1.2)) continue;
+          const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy);
+          const hits = id === 'whip' ? whipAngles.filter(a => Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - a), Math.cos(Math.atan2(dy, dx) - a))) < 1.2).length : 1;
+          if (d > radius + e.radius || !hits) continue;
           if (id === 'clock') { if (Math.abs(dx * Math.sin(facing) - dy * Math.cos(facing)) < e.radius + 22 && dx * Math.cos(facing) + dy * Math.sin(facing) > 0) this.freezes.set(e.id, this.time + (e.mega ? .6 : (2 + level * .5) * this.effectDuration)); }
-          else this.hurtEnemy(e, id === 'pentagram' ? (e.boss ? 180 + 100 * level : e.hp + 1) * this.power : (id === 'garlic' ? 4 + 4 * level : 25 + 15 * level) * this.power, id === 'garlic' ? 14 : 25);
+          else {
+            const critical = evolved && id === 'whip' && this.random() < Math.min(.8, .3 * this.luck);
+            this.hurtEnemy(e, id === 'pentagram' ? (e.boss ? 180 + 100 * level : e.hp + 1) * this.power : (id === 'garlic' ? 4 + 4 * level : 25 + 15 * level) * this.power * (evolved ? 1.5 : 1) * (critical ? 2.5 : 1) * hits, id === 'garlic' ? 14 : 25);
+            if (critical) healing += 5;
+            if (evolved && id === 'garlic') healing += 1;
+          }
+        }
+        p.hp = Math.min(p.maxHp, p.hp + Math.min(healing, id === 'whip' ? 5 : 2));
+        if (id === 'pentagram' && evolved) { for (const gem of this.gems) gem.magnetized = true; this.gainXP(25); }
+        if (id === 'clock' && ++this.clockStep % 12 === 0 && evolved) {
+          this.rings.push({ x: p.x, y: p.y, radius: 650 * this.area, life: .8, maxLife: .8, ink: 9, glyph: '0' });
+          for (const e of this.nearby(p.x, p.y, 650 * this.area + 50)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < 650 * this.area + e.radius) this.hurtEnemy(e, e.boss ? Math.min(450, e.hp * .05) : e.hp * .5);
         }
         return;
       }
-      const count = Math.min(8, 1 + Math.floor(level / 2) + this.levels.fork);
+      const count = Math.min(12, 1 + Math.floor(level / 2) + this.levels.fork + (evolved && id === 'axe' ? 5 : evolved ? 2 : 0));
       for (let i = 0; i < count && this.relics.length < 512; i++) {
-        const a = (id === 'dagger' && this.fireMode === 'auto' ? Math.atan2(p.dirY, p.dirX) : angle) + (i - (count - 1) / 2) * .16;
+        const a = evolved && id === 'axe' ? angle + i * TAU / count : (id === 'dagger' && this.fireMode === 'auto' ? Math.atan2(p.dirY, p.dirX) : angle) + (i - (count - 1) / 2) * .16;
         const speed = (id === 'dagger' ? 700 : id === 'axe' ? 240 : id === 'fireball' ? 220 : 330) * this.projectileSpeed;
-        this.relics.push({ kind: id, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed - (id === 'axe' ? 260 : 0), life: (id === 'rune' ? 4 * this.effectDuration : 2.5), damage: (id === 'fireball' ? 45 + 20 * level : id === 'axe' ? 30 + 18 * level : 12 + 8 * level) * this.power, radius: (id === 'fireball' ? 15 : 8) * this.area, remaining: id === 'rune' || id === 'axe' ? 100000 : 1 + this.levels.pierce + Math.floor(level / 2), hits: new Map(), minX: Math.max(28, p.x - 500), maxX: Math.min(this.width - 28, p.x + 500), minY: Math.max(28, p.y - 300), maxY: Math.min(this.height - 28, p.y + 300) });
+        this.relics.push({ kind: id, evolved, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed - (id === 'axe' && !evolved ? 260 : 0), life: (id === 'rune' ? 4 * this.effectDuration : 2.5), damage: (id === 'fireball' ? 45 + 20 * level : id === 'axe' ? 30 + 18 * level : 12 + 8 * level) * this.power * (evolved ? 1.8 : 1), radius: (id === 'fireball' ? 15 : 8) * this.area, remaining: id === 'rune' || id === 'axe' || evolved && id === 'fireball' ? 100000 : 1 + this.levels.pierce + Math.floor(level / 2), hits: new Map(), minX: Math.max(28, p.x - 500), maxX: Math.min(this.width - 28, p.x + 500), minY: Math.max(28, p.y - 300), maxY: Math.min(this.height - 28, p.y + 300) });
       }
     }
     updateRelics(dt) {
       for (const w of EXTRA_WEAPONS) if (this.levels[w.id]) {
         this.weaponClocks[w.id] = Math.max(0, this.weaponClocks[w.id] - dt);
-        if (this.weaponClocks[w.id] <= 0 && this.wantsFire(w.id)) { this.castRelic(w.id); this.consumeAttack(w.id); this.weaponClocks[w.id] = w.cooldown * BALANCE.weaponCooldown / this.haste / (1 + (this.levels[w.id] - 1) * .12); }
+        if (this.weaponClocks[w.id] <= 0 && this.wantsFire(w.id)) { this.castRelic(w.id); this.consumeAttack(w.id); const rapid = this.isEvolved(w.id) && ['dagger', 'pentagram'].includes(w.id) ? .4 : 1; this.weaponClocks[w.id] = w.cooldown * rapid * BALANCE.weaponCooldown / this.haste / (1 + (this.levels[w.id] - 1) * .12); }
       }
       for (const s of this.relics) {
         const x = s.x, y = s.y; s.prevX = x; s.prevY = y; s.life -= dt;
-        if (s.kind === 'axe') s.vy += 360 * dt;
+        if (s.kind === 'axe' && !s.evolved) s.vy += 360 * dt;
         s.x += s.vx * dt; s.y += s.vy * dt;
-        if (s.kind === 'rune') { if (s.x < s.minX || s.x > s.maxX) { s.vx *= -1; s.x = clamp(s.x, s.minX, s.maxX); } if (s.y < s.minY || s.y > s.maxY) { s.vy *= -1; s.y = clamp(s.y, s.minY, s.maxY); } }
+        if (s.kind === 'rune') {
+          let bounced = false;
+          if (s.x < s.minX || s.x > s.maxX) { s.vx *= -1; s.x = clamp(s.x, s.minX, s.maxX); bounced = true; }
+          if (s.y < s.minY || s.y > s.maxY) { s.vy *= -1; s.y = clamp(s.y, s.minY, s.maxY); bounced = true; }
+          if (bounced && s.evolved) this.explode(s.x, s.y, 80 * this.area, s.damage * .6, 9);
+        }
         const dx = s.x - x, dy = s.y - y, length = dx * dx + dy * dy;
         for (const e of this.nearby((x + s.x) / 2, (y + s.y) / 2, Math.sqrt(length) / 2 + s.radius + 50)) if (e.alive && s.remaining > 0 && this.time >= (s.hits.get(e.id) || 0)) {
           const t = length ? clamp(((e.x - x) * dx + (e.y - y) * dy) / length, 0, 1) : 0;
-          if (Math.hypot(e.x - x - t * dx, e.y - y - t * dy) < e.radius + s.radius) { s.hits.set(e.id, this.time + (s.kind === 'rune' ? .35 : 100)); s.remaining--; this.hurtEnemy(e, s.damage, 7); }
+          if (Math.hypot(e.x - x - t * dx, e.y - y - t * dy) < e.radius + s.radius) { s.hits.set(e.id, this.time + (s.kind === 'rune' ? .35 : 100)); s.remaining--; this.hurtEnemy(e, s.damage, 7); if (s.evolved && s.kind === 'fireball') this.explode(e.x, e.y, 80 * this.area, s.damage * .4, 12); }
         }
       }
       this.relics = this.relics.filter(s => s.life > 0 && s.remaining > 0 && s.x >= 0 && s.y >= 0 && s.x <= this.width && s.y <= this.height);
-      for (const b of this.biblePositions()) for (const e of this.nearby(b.x, b.y, 60)) if (e.alive && this.time >= (this.bibleHits.get(e.id) || 0) && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 20) { this.bibleHits.set(e.id, this.time + .35); this.hurtEnemy(e, (15 + this.levels.bible * 8) * this.power, 22); }
+      for (const b of this.biblePositions()) for (const e of this.nearby(b.x, b.y, 60)) if (e.alive && this.time >= (this.bibleHits.get(e.id) || 0) && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 20) { this.bibleHits.set(e.id, this.time + .35); this.hurtEnemy(e, (15 + this.levels.bible * 8) * this.power * (this.isEvolved('bible') ? 1.6 : 1), 22); }
       if (this.steps % 60 === 0) { for (const [id, until] of this.freezes) if (until <= this.time) this.freezes.delete(id); for (const [id, until] of this.bibleHits) if (until <= this.time) this.bibleHits.delete(id); }
     }
     updateWeapons(dt) {
@@ -580,8 +641,9 @@
       this.boomerangs = this.boomerangs.filter(b => !b.done && b.age < 2.5);
       for (const pool of this.pools) {
         pool.life -= dt;
+        if (pool.home) { const dx = p.x - pool.x, dy = p.y - pool.y, d = Math.hypot(dx, dy) || 1, step = Math.min(d, 35 * dt); pool.x += dx / d * step; pool.y += dy / d * step; pool.radius = Math.min(180 * this.area, pool.radius + dt * 8); }
         for (const e of this.nearby(pool.x, pool.y, pool.radius + 35)) if (e.alive && this.time >= e.poisonAt && Math.hypot(e.x - pool.x, e.y - pool.y) < pool.radius + e.radius) {
-          e.poisonAt = this.time + .4; this.hurtEnemy(e, pool.kind === 'water' ? pool.damage : (5 + this.levels.poison * 3) * this.power);
+          e.poisonAt = this.time + .4; this.hurtEnemy(e, pool.kind === 'water' ? pool.damage : (5 + this.levels.poison * 3) * this.power * (pool.acid ? 2 : 1)); if (pool.acid) e.chilledTill = this.time + 1;
         }
       }
       this.pools = this.pools.filter(pool => pool.life > 0);
@@ -683,7 +745,7 @@
       p.prevX = p.x; p.prevY = p.y;
       p.invulnerable = Math.max(0, p.invulnerable - dt); p.dashReady = Math.max(0, p.dashReady - dt);
       this.damageFlash = Math.max(0, this.damageFlash - dt);
-      p.hp = Math.min(p.maxHp, p.hp + this.levels.regen * .7 * dt);
+      p.hp = Math.min(p.maxHp, p.hp + (this.levels.regen * .7 + this.levels.leftSign * .2) * dt);
       let dx = this.input.x, dy = this.input.y, len = Math.hypot(dx, dy);
       if (len > 1) { dx /= len; dy /= len; }
       if (p.dash > 0) {
@@ -733,7 +795,7 @@
 
       for (const b of this.bladePositions()) for (const e of this.nearby(b.x, b.y, 48)) {
         if (e.alive && this.time - e.bladeAt > .35 * BALANCE.weaponCooldown && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 19) {
-          e.bladeAt = this.time; this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power, 13);
+          e.bladeAt = this.time; this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power * (this.isEvolved('blades') ? 1.8 : 1), 13);
         }
       }
       if (this.levels.pulse) {
@@ -753,6 +815,7 @@
         if (d < 18 && this.status === 'running') { gem.taken = true; if (this.gemBins.get(gem.bin) === gem) this.gemBins.delete(gem.bin); this.grantXP(gem.value); }
       }
       this.gems = this.gems.filter(g => !g.taken);
+      this.checkLevel();
       for (const heart of this.hearts) if (p.hp < p.maxHp && Math.hypot(p.x - heart.x, p.y - heart.y) < 27 && this.status === 'running') {
         p.hp = Math.min(p.maxHp, p.hp + heart.value); heart.taken = true; this.burst(p.x, p.y, 3, 10);
       }
@@ -764,7 +827,7 @@
       for (const particle of this.particles) { particle.x += particle.vx * dt; particle.y += particle.vy * dt; particle.life -= dt; }
       this.particles = this.particles.filter(p => p.life > 0).slice(-450);
       for (const ring of this.rings) ring.life -= dt;
-      this.rings = this.rings.filter(r => r.life > 0);
+      this.rings = this.rings.filter(r => r.life > 0).slice(-256);
       for (const whip of this.bossWhips) whip.life -= dt; this.bossWhips = this.bossWhips.filter(w => w.life > 0);
     }
   }

@@ -6,7 +6,7 @@
   const renderer = new NightRenderer(canvas, reducedMotion);
   let storage = null; try { storage = localStorage; } catch (_) {}
   const progress = new NightProgress(storage);
-  let savedRun = progress.loadRun(), lastSavedElapsed = 0, bestiaryWasRunning = false;
+  let savedRun = progress.loadRun(), lastSavedElapsed = 0, bestiaryWasRunning = false, grimoireWasRunning = false;
   let selectedCharacter = progress.profile.character;
   let fireModePreference = progress.profile.fireMode;
   $('enemy-limit').value = progress.profile.enemyLimit;
@@ -81,6 +81,29 @@
     }
     $('meta-grid').replaceChildren(fragment);
   }
+  function openGrimoire() {
+    grimoireWasRunning = game.status === 'running';
+    if (grimoireWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
+    const fragment = document.createDocumentFragment();
+    for (const recipe of NightCatalog.evolutions) {
+      const done = game.evolutions.has(recipe.id), ready = game.canEvolve(recipe), card = document.createElement('article');
+      card.className = 'recipe-card' + (done ? ' complete' : ready ? ' ready' : '');
+      const title = document.createElement('h3'); title.textContent = recipe.icon + ' ' + recipe.title;
+      const requirements = [recipe.weapon, ...(recipe.weapons || [])].map(id => [id, NightUpgrades.find(u => u.id === id).max]).concat(Object.entries(recipe.passives));
+      const ingredients = document.createElement('ul');
+      for (const [id, required] of requirements) {
+        const u = NightUpgrades.find(u => u.id === id), row = document.createElement('li'), rank = game.levels[id];
+        row.className = done || rank >= required ? 'has-ingredient' : '';
+        row.textContent = u.icon + ' ' + u.title + ' · ' + (done && game.isConsumed(id) ? 'ОБЪЕДИНЕНО' : rank + '/' + u.max + (required === u.max ? ' МАКС.' : ' · НУЖНО ' + required + '+'));
+        if (u.baseTitle) row.title = u.baseTitle;
+        ingredients.append(row);
+      }
+      const description = document.createElement('p'); description.textContent = recipe.text;
+      const state = document.createElement('small'); state.textContent = done ? 'ПОЛУЧЕНО В ЭТОМ ЗАБЕГЕ' : ready ? 'КОМПЛЕКТ ГОТОВ · НАЙДИ СУНДУК ЭВОЛЮЦИИ' : 'СОБЕРИ КОМПЛЕКТ';
+      card.append(title, ingredients, description, state); fragment.append(card);
+    }
+    $('recipe-list').replaceChildren(fragment); $('grimoire').showModal();
+  }
   function resize() {
     renderer.resize(arena.clientWidth, arena.clientHeight, devicePixelRatio || 1);
     game.arenaRadius = Math.max(150, Math.min(240, Math.min(renderer.width / renderer.scaleX, renderer.height / renderer.scaleY) * .42));
@@ -120,7 +143,7 @@
       const u = NightUpgrades.find(u => u.id === id), slot = document.createElement('button'), key = document.createElement('kbd'), icon = document.createElement('i'), name = document.createElement('span'), rank = document.createElement('b');
       slot.type = 'button'; slot.dataset.slot = i % 9 + 1; key.textContent = i % 9 + 1;
       icon.textContent = u?.icon || '-'; name.textContent = u?.title.toUpperCase() || 'ПУСТО'; slot.append(key, icon, name, rank); slot.title = u?.text || 'Место для будущего оружия';
-      $('loadout').append(slot); equipment.set(id || 'empty', { slot, rank, index: i });
+      $('loadout').append(slot); equipment.set(id || 'empty', { slot, rank, name, icon, index: i });
     });
   }
   function resetMetrics() {
@@ -157,7 +180,7 @@
     game = new NightGame(Date.now(), selectedCharacter, options()); if (persist) preferences(); resetMetrics(); resize(); updateHUD();
   }
   function updateCharacterDetails() {
-    const c = game.character, weapon = NightUpgrades.find(u => u.id === c.weapon);
+    const c = game.character, weapon = game.weaponInfo(c.weapon);
     text('character-name', c.name + ' / ' + c.role); text('character-description', c.text);
     text('character-stats', game.player.maxHp + ' HP  /  ' + Math.round(game.speed) + ' СКОРОСТЬ  /  ' + game.dashCooldown.toFixed(2) + ' С РЫВОК');
     text('character-weapon', weapon.icon + ' ' + weapon.title);
@@ -184,6 +207,8 @@
       const card = document.createElement('button'); card.className = 'upgrade-card'; card.type = 'button'; card.dataset.choice = i;
       const part = (className, content) => { const el = document.createElement('span'); el.className = className; el.textContent = content; card.append(el); };
       part('upgrade-icon', u.icon); part('upgrade-kind', u.weapon ? (game.levels[u.id] ? 'УСИЛЕНИЕ ОРУЖИЯ' : 'НОВОЕ ОРУЖИЕ') : u.kind); part('upgrade-name', u.title); part('upgrade-description', u.text);
+      const recipe = NightCatalog.evolutions.find(r => r.weapon === u.id || r.weapons?.includes(u.id));
+      if (recipe) part('upgrade-recipe', 'СВЯЗКА: ' + Object.entries(recipe.passives).map(([id, rank]) => NightUpgrades.find(p => p.id === id).title + (rank > 1 ? ' МАКС.' : '')).concat([recipe.weapon, ...(recipe.weapons || [])].filter(id => id !== u.id).map(id => NightUpgrades.find(p => p.id === id).title + ' МАКС.')).join(' + '));
       part('upgrade-rank', 'СТУПЕНЬ ' + (game.levels[u.id] + 1) + ' / ' + u.max); part('upgrade-key', i + 1);
       fragment.append(card);
     });
@@ -193,13 +218,14 @@
   }
   function showReward() {
     const reward = game.reward; if (!reward) return;
-    text('reward-title', reward.items.length && reward.count > 1 ? 'Сундук: ' + reward.count + (reward.count === 5 ? ' наград!' : ' награды!') : 'Сундук поверженного босса');
+    text('reward-title', reward.items.some(item => item.evolution) ? 'Эволюция оружия!' : reward.items.length && reward.count > 1 ? 'Сундук: ' + reward.count + (reward.count === 5 ? ' наград!' : ' награды!') : 'Сундук поверженного босса');
     const fragment = document.createDocumentFragment();
     for (const item of reward.items) {
-      const upgrade = NightUpgrades.find(u => u.id === item.id), card = document.createElement('div'); card.className = 'reward-item';
+      const upgrade = item.evolution ? NightCatalog.evolutions.find(r => r.id === item.evolution) : NightUpgrades.find(u => u.id === item.id), card = document.createElement('div'); card.className = 'reward-item' + (item.evolution ? ' evolved' : '');
       const icon = document.createElement('b'); icon.textContent = upgrade.icon;
       const title = document.createElement('span'); title.textContent = upgrade.title;
-      const rank = document.createElement('small'); rank.textContent = 'СТУПЕНЬ ' + item.rank + ' / ' + upgrade.max;
+      const rank = document.createElement('small'); rank.textContent = item.evolution ? 'ЭВОЛЮЦИЯ' : 'СТУПЕНЬ ' + item.rank + ' / ' + upgrade.max;
+      card.title = upgrade.text;
       card.append(icon, title, rank); fragment.append(card);
     }
     $('reward-loot').replaceChildren(fragment);
@@ -212,8 +238,8 @@
   }
   function updateHUD() {
     const p = game.player, status = game.status;
-    const weapon = NightUpgrades.find(u => u.id === game.selectedWeapon), manual = game.fireMode === 'manual';
-    text('selected-weapon', (NightSlots.indexOf(game.selectedWeapon) % 9 + 1) + ' / ' + weapon.title.toUpperCase() + ' · СТР. ' + (Math.floor(NightSlots.indexOf(game.selectedWeapon) / 9) + 1));
+    const weapon = game.weaponInfo(game.selectedWeapon), manual = game.fireMode === 'manual';
+    text('selected-weapon', (NightSlots.indexOf(game.selectedWeapon) % 9 + 1) + ' / ' + weapon.title.toUpperCase() + ' · СТР. ' + (Math.floor(NightSlots.indexOf(game.selectedWeapon) / 9) + 1) + (game.selectedWeapon === 'blades' && game.levels.blades ? ' · КЛИНКОВ: ' + (game.levels.blades + game.levels.fork + (game.isEvolved('blades') ? 2 : 0)) : ''));
     text('weapon-page', 'ОРУЖИЕ ' + (game.weaponPage + 1) + ' / ' + Math.ceil(NightSlots.length / 9));
     text('run-gold', 'ЗОЛОТО +' + game.goldEarned);
     $('fire-mode').setAttribute('aria-pressed', String(manual));
@@ -242,12 +268,17 @@
     $('dash-touch').disabled = status !== 'running' || p.dashReady > 0;
     $('pause').disabled = status !== 'running' && status !== 'paused';
     $('pause').setAttribute('aria-pressed', String(status === 'paused'));
-    for (const [id, { slot, rank, index }] of equipment) {
+    for (const [id, { slot, rank, name, icon, index }] of equipment) {
       slot.hidden = Math.floor(index / 9) !== game.weaponPage;
       const level = game.levels[id] || 0;
       slot.classList.toggle('locked', !level);
       slot.setAttribute('aria-pressed', String(id === game.selectedWeapon));
-      const value = level ? 'I'.repeat(level) : '—'; if (rank.textContent !== value) rank.textContent = value;
+      const info = game.weaponInfo(id), consumed = game.isConsumed(id), evolved = game.isEvolved(id);
+      if (name.textContent !== info.title.toUpperCase()) name.textContent = info.title.toUpperCase();
+      if (icon.textContent !== info.icon) icon.textContent = info.icon;
+      slot.classList.toggle('evolved', evolved); slot.disabled = consumed;
+      slot.title = info.title + (info.baseTitle ? ' (' + info.baseTitle + ')' : '') + ' · ' + info.text;
+      const value = consumed ? 'ОБЪЕД.' : evolved ? 'EVO' : level ? 'I'.repeat(level) : '—'; if (rank.textContent !== value) rank.textContent = value;
     }
     const passiveText = NightUpgrades.filter(u => !u.weapon && game.levels[u.id]).map(u => u.icon + ' ' + u.title + ' ' + game.levels[u.id] + '/' + u.max).join('   ·   ');
     text('passive-loadout', passiveText); $('passive-loadout').hidden = !passiveText;
@@ -331,6 +362,9 @@
   $('bestiary-open').addEventListener('click', openBestiary);
   $('bestiary-close').addEventListener('click', () => $('bestiary').close());
   $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
+  $('grimoire-open').addEventListener('click', openGrimoire);
+  $('grimoire-close').addEventListener('click', () => $('grimoire').close());
+  $('grimoire').addEventListener('close', () => { if (grimoireWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } grimoireWasRunning = false; });
   $('restart').addEventListener('click', restart); $('restart-pause').addEventListener('click', restart);
   $('change-character').addEventListener('click', returnToCharacters); $('change-character-pause').addEventListener('click', returnToCharacters);
   $('fire-mode').addEventListener('click', toggleFireMode);
@@ -341,11 +375,18 @@
   const megaPreset = document.createElement('button'); megaPreset.id = 'mega-pressure'; megaPreset.type = 'button'; megaPreset.textContent = 'Волны после 10 минут';
   $('stress-controls').append(megaPreset);
   megaPreset.addEventListener('click', () => { if (!game.stressMode || game.status !== 'running') return; game.pressureOffset = Math.max(game.pressureOffset, 600 - game.elapsed); updateHUD(); });
+  const evolutionTest = document.createElement('button'); evolutionTest.id = 'evolution-chest'; evolutionTest.type = 'button'; evolutionTest.textContent = 'Сундук эволюций (тест)';
+  $('stress-controls').append(evolutionTest);
+  evolutionTest.addEventListener('click', () => {
+    if (!game.stressMode || game.status !== 'running') return;
+    game.dropChest({ kind: 'darVetro', mega: true, x: game.player.x, y: game.player.y });
+    game.openChest(game.chests[game.chests.length - 1]); updateHUD(); dirty = true;
+  });
   $('save-metrics').addEventListener('click', exportMetrics);
   $('characters').addEventListener('click', e => { const card = e.target.closest('[data-character]'); if (card) selectCharacter(card.dataset.character); });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
-    if ($('bestiary').open || $('meta-shop').open) return;
+    if ($('bestiary').open || $('meta-shop').open || $('grimoire').open) return;
     if (!/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && (e.code === 'KeyG' && !e.ctrlKey && !e.altKey && !e.metaKey || e.code === 'Escape' && expandedView)) {
       e.preventDefault(); if (!e.repeat) toggleExpandedView(); return;
     }
