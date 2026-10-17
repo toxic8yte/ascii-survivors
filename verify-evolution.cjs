@@ -9,7 +9,7 @@ function fixture() {
 }
 function equip(g, recipe) {
   for (const id of [recipe.weapon, ...(recipe.weapons || [])]) g.levels[id] = NightUpgrades.find(u => u.id === id).max;
-  for (const [id, rank] of Object.entries(recipe.passives)) while (g.levels[id] < rank) g.applyUpgrade(NightUpgrades.find(u => u.id === id));
+  g.stressMode = true; for (const [id, rank] of Object.entries(recipe.passives)) while (g.levels[id] < rank) g.applyUpgrade(NightUpgrades.find(u => u.id === id)); g.stressMode = false;
   return g;
 }
 function evolved(weapon) {

@@ -29,11 +29,11 @@ defense.player.invulnerable = 0; defense.levels.armor = 2; defense.hurtPlayer(20
 defense.player.invulnerable = 0; defense.levels.revive = 1; defense.hurtPlayer(1000); assert.equal(defense.status, 'running'); assert.equal(defense.player.hp, 50); assert.equal(defense.revivesUsed, 1);
 const reborn = NightSave.restore(clone(NightSave.capture(defense))); reborn.pause(); reborn.player.invulnerable = 0; reborn.hurtPlayer(1000); assert.equal(reborn.status, 'dead', 'A saved resurrection is not reusable');
 const growth = fixture(); growth.levels.growth = 1; for (let i = 0; i < 100; i++) growth.gainXP(1); assert.equal(growth.xp, 110, 'Fractional XP bonuses accumulate');
-growth.levels.greed = 2; growth.awardGold(10); assert.equal(growth.goldEarned, 13);
+growth.levels.greed = 2; growth.awardGold(10); assert.equal(growth.goldEarned, 9);
 const area = fixture(); area.levels.area = area.levels.duration = area.levels.velocity = 2; area.levels.water = 1; area.castRelic('water');
 assert.ok(area.pools[0].radius > 69 && area.pools[0].life > 3.4); assert.ok(area.projectileSpeed > 1);
-const pages = fixture({ stressMode: true }); pages.cycleWeapons(1); assert.ok(pages.selectSlot(1)); assert.equal(pages.selectedWeapon, NightSlots[9]); pages.cycleWeapons(1); assert.ok(pages.selectSlot(2)); assert.equal(pages.selectedWeapon, 'birds');
-pages.cycleWeapons(1); assert.equal(pages.weaponPage, 0);
+const pages = fixture({ stressMode: true }); pages.cycleWeapons(1); assert.ok(pages.selectSlot(1)); assert.equal(pages.selectedWeapon, NightSlots[5]); pages.cycleWeapons(1); assert.ok(pages.selectSlot(2)); assert.equal(pages.selectedWeapon, NightSlots[11]);
+pages.cycleWeapons(1); pages.cycleWeapons(1); pages.cycleWeapons(1); assert.equal(pages.weaponPage, 0);
 
 const data = new Map(), storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 const p = new NightProgress(storage); assert.equal(p.profile.meta.gold, 50); assert.ok(p.purchase('vital', 0)); assert.equal(p.profile.meta.gold, 25);
@@ -44,16 +44,16 @@ const upgraded = new NightGame(1, 'hunter', { meta: p.profile.meta.ranks }); ass
 upgraded.start(); const oldRun = NightSave.restore(clone(NightSave.capture(upgraded))); assert.equal(oldRun.player.maxHp, 110); assert.equal(oldRun.meta.vital, 1);
 const concurrent = new NightProgress(storage); assert.equal(concurrent.purchase('vital', 0), false, 'A stale shop price cannot purchase another rank');
 concurrent.savePreferences('witch', 'auto', 6000); assert.equal(new NightProgress(storage).profile.meta.gold, 25, 'Other tabs preserve purchases when saving preferences');
-const earning = fixture(); earning.awardGold(20); assert.ok(p.checkpoint(earning)); assert.equal(p.profile.meta.gold, 45);
-p.checkpoint(earning); assert.equal(p.profile.meta.gold, 45); const reloaded = new NightProgress(storage); reloaded.checkpoint(earning); assert.equal(reloaded.profile.meta.gold, 45, 'Checkpoint reloads do not mint gold twice');
-earning.awardGold(7); earning.time = 1; reloaded.finish(earning); assert.equal(reloaded.profile.meta.gold, 52); reloaded.finish(earning); assert.equal(reloaded.profile.meta.gold, 52);
-const fail = new NightProgress({ ...storage, setItem() { throw Error('QuotaExceededError'); } }); assert.equal(fail.purchase('magnet'), false); assert.equal(new NightProgress(storage).profile.meta.gold, 52, 'Failed purchases do not spend gold');
+const earning = fixture(); earning.awardGold(20); assert.ok(p.checkpoint(earning)); assert.equal(p.profile.meta.gold, 40);
+p.checkpoint(earning); assert.equal(p.profile.meta.gold, 40); const reloaded = new NightProgress(storage); reloaded.checkpoint(earning); assert.equal(reloaded.profile.meta.gold, 40, 'Checkpoint reloads do not mint gold twice');
+earning.awardGold(7); earning.time = 1; reloaded.finish(earning); assert.equal(reloaded.profile.meta.gold, 45); reloaded.finish(earning); assert.equal(reloaded.profile.meta.gold, 45);
+const fail = new NightProgress({ ...storage, setItem() { throw Error('QuotaExceededError'); } }); assert.equal(fail.purchase('magnet'), false); assert.equal(new NightProgress(storage).profile.meta.gold, 45, 'Failed purchases do not spend gold');
 const testRun = fixture({ stressMode: true }); testRun.awardGold(1000); assert.equal(testRun.goldEarned, 0); assert.equal(p.checkpoint(testRun), false);
 const legacy = clone(NightSave.capture(fixture())); legacy.version = 2; delete legacy.meta;
 for (const u of NightUpgrades.filter(u => !['needle','power','haste','fork','blades','pulse','lightning','boomerang','frost','meteor','poison','stride','magnet','vital','regen','pierce'].includes(u.id))) { delete legacy.levels[u.id]; delete legacy.clocks[u.id]; }
 const legacyRun = NightSave.restore(legacy); assert.ok(legacyRun); assert.equal(legacyRun.levels.whip, 0); assert.equal(legacyRun.meta.vital, 0);
 
-const mega = fixture(); mega.time = 599; tick(mega, .5); assert.ok(!mega.enemies.some(e => e.mega));
+const mega = fixture(); mega.rosterBossIndex = 1e6; mega.time = 599; tick(mega, .5); assert.ok(!mega.enemies.some(e => e.mega));
 mega.time = 600; tick(mega, .02); const dark = mega.enemies.find(e => e.mega); assert.ok(dark); assert.equal(mega.encounter, null); assert.equal(mega.nextMegaAt, 1200);
 dark.skillClock = 0; dark.x = mega.player.x - 300; dark.y = mega.player.y; tick(mega, .02); assert.ok(dark.windup > 1.5, 'The long whips have a visible windup');
 tick(mega, 1.7); assert.ok(mega.bossWhips.length); assert.ok(mega.enemyShots.length >= 35); assert.ok(mega.enemyShots.every(s => s.ink === 13));
@@ -63,7 +63,7 @@ assert.ok(mega.freezes.get(dark.id) - mega.time <= .601, 'A mega-boss resists a 
 const resumedMega = NightSave.restore(clone(NightSave.capture(mega))); assert.ok(resumedMega); assert.equal(resumedMega.nextMegaAt, 1200); assert.ok(resumedMega.enemies.some(e => e.mega));
 mega.enemyShots = Array.from({ length: 256 }, () => ({ ink: 5 })); mega.enemySkill(dark);
 assert.equal(mega.enemyShots.length, 256); assert.equal(mega.enemyShots.filter(s => s.ink === 13).length, 40, 'A full shot budget still allows the red mega-boss burst');
-mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 125); assert.equal(mega.chests[0].source, 'darVetro');
+mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 93); assert.equal(mega.chests[0].source, 'darVetro');
 mega.openChest(mega.chests[0]); assert.equal(mega.reward.options.length, 3); assert.equal(mega.reward.count, 1);
 console.log('PASS: 16 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
 

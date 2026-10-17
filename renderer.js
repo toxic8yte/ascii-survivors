@@ -140,7 +140,7 @@
           this.enemyCells[key] = 1;
         }
         this.renderedEnemies++;
-        const sprite = e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.sprite;
+        const sprite = e.frames ? e.frames[Math.floor(game.time * 6 + e.phase) % e.frames.length] : e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.sprite;
         if (e.mega) megaBodies.push({ p, sprite, ink });
         this.world(p.x, p.y, sprite, ink);
         if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - 38, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
@@ -169,6 +169,7 @@
       for (const g of game.gems) this.world(g.x, g.y, g.value >= 6 ? '<*>' : '*', 10);
       for (const h of game.hearts) this.world(h.x, h.y, '[+]', 11);
       for (const chest of game.chests) { this.world(chest.x, chest.y, chest.canEvolve ? ' ___\n[E*]\n|__|' : ' ___\n[?*]\n|__|', chest.canEvolve ? 5 : 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
+      for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) this.world(cache.x, cache.y, '[X]', 7);
       const arena = game.encounter;
       if (arena) {
         const warning = arena.phase === 'warning', radius = arena.radius * (warning ? .85 + .15 * (1 - arena.warningLeft / 5) : 1);

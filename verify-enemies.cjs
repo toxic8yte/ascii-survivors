@@ -5,18 +5,19 @@ function fixture(options = {}) {
   const game = new NightGame(41, 'hunter', { fireMode: 'manual', terrain: false, ...options }); game.start();
   game.enemies = []; game.spawnClock = game.nextBossAt = 1e6; return game;
 }
-assert.equal(Object.keys(NightEnemies).length, 18);
-assert.equal(Object.values(NightEnemies).filter(e => e.boss && !e.mega).length, 6);
+assert.equal(Object.keys(NightEnemies).length, 58);
+assert.equal(Object.values(NightEnemies).filter(e => e.boss && !e.mega).length, 11);
 for (const [kind, definition] of Object.entries(NightEnemies)) {
   assert.match(definition.sprite, /^[\x20-\x7e\n]+$/, kind + ' uses ASCII');
   const g = fixture(), e = g.spawn(kind, g.player.x + 400, g.player.y); tick(g, 4);
   assert.ok(Number.isFinite(e.x + e.y + e.hp)); assert.ok(g.encountered.has(kind));
 }
 const early = fixture(); for (let i = 0; i < 8; i++) early.spawnWave();
-assert.ok(early.enemies.every(e => e.kind === 'ghoul'), 'New enemies enter gradually');
+assert.ok(early.enemies.every(e => ['ghoul', 'grave_rat'].includes(e.kind)), 'The opening contains only introductory enemies');
 const late = fixture({ enemyLimit: 24000 }); late.time = 600;
 for (let i = 0; i < 400; i++) late.spawnWave();
-for (const [kind, e] of Object.entries(NightEnemies)) if (!e.boss) assert.ok(late.encountered.has(kind), kind + ' appears in late waves');
+assert.ok(late.enemies.every(e => late.wavePlan.entries.some(row => row.id === e.kind)), 'Waves draw from their current readable composition');
+assert.ok(late.encountered.size <= 5); assert.ok(late.enemies.length <= late.wavePlan.target);
 
 for (const [kind, projectiles] of [['lich', 1], ['pumpkin', 3], ['lichLord', 3]]) {
   const g = fixture(), e = g.spawn(kind, g.player.x + 320, g.player.y); e.skillClock = 0;
@@ -48,10 +49,10 @@ assert.equal(slowed.speed, slowed.character.speed, 'Mummy curse expires');
 const swept = fixture(); swept.enemyShots.push({ x: swept.player.x - 50, y: swept.player.y, vx: 3000, vy: 0, life: 1, damage: 15, radius: 7, ink: 5, glyph: '~' });
 swept.update(.05); assert.equal(swept.player.hp, 85, 'Enemy missiles use swept collision'); assert.equal(swept.enemyShots.length, 0);
 
-const bosses = fixture(); bosses.nextBossAt = 60; bosses.nextMegaAt = 1e6; const order = [];
+const bosses = fixture(); bosses.nextBossAt = 60; bosses.nextMegaAt = 1e6; bosses.rosterBossIndex = 1e6; const order = [];
 for (let i = 0; i < 12; i++) { bosses.enemies = []; bosses.time = bosses.nextBossAt; bosses.update(.01); tick(bosses, 5.05); const boss = bosses.enemies.find(e => e.boss); order.push(boss.kind); bosses.hurtEnemy(boss, boss.hp + 1); }
 assert.equal(new Set(order.slice(0, 6)).size, 6); assert.deepEqual(order.slice(0, 6), order.slice(6));
 assert.equal(bosses.bossKills, 12); assert.equal(bosses.hearts[0].value, 60);
 const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .442) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
 quicker.levels.haste = 1; assert.ok(quicker.cooldown < .442);
-console.log('PASS: 18 enemies, six rotating mini-bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');
+console.log('PASS: 58 enemies, six rotating mini-bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');

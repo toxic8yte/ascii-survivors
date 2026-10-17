@@ -6,7 +6,7 @@
   const renderer = new NightRenderer(canvas, reducedMotion);
   let storage = null; try { storage = localStorage; } catch (_) {}
   const progress = new NightProgress(storage);
-  let savedRun = progress.loadRun(), lastSavedElapsed = 0, bestiaryWasRunning = false, grimoireWasRunning = false;
+  let savedRun = progress.loadRun(), lastSavedElapsed = 0, bestiaryWasRunning = false, grimoireWasRunning = false, mapWasRunning = false;
   let selectedCharacter = progress.profile.character;
   let fireModePreference = progress.profile.fireMode;
   $('enemy-limit').value = progress.profile.enemyLimit;
@@ -41,6 +41,21 @@
     const p = progress.profile;
     text('meta-open', 'НАСЛЕДИЕ · ' + p.meta.gold + ' ЗОЛОТА');
     text('progress-summary', 'ЗАБЕГОВ: ' + p.runs + ' · ИЗГНАНО: ' + p.kills + ' · БОССОВ: ' + p.bossKills + ' · СУНДУКОВ: ' + p.chestsOpened + (p.best ? ' · РЕКОРД: ' + formatTime(p.best.time) : ''));
+    updateFeatureButtons();
+  }
+  function updateFeatureButtons() {
+    for (const [id, featureId] of [['bestiary-open', 'bestiary'], ['grimoire-open', 'necronomicon'], ['map-open', 'treasureMap']]) {
+      const feature = NightCatalog.features.find(f => f.id === featureId), owned = progress.isFeatureUnlocked(featureId) || game.stressMode;
+      text(id, (featureId === 'treasureMap' ? 'КАРТА' : feature.title.toUpperCase()) + (owned ? '' : ' · ' + feature.cost)); $(id).classList.toggle('feature-locked', !owned); $(id).title = feature.title + (owned ? '' : ': ' + feature.cost + ' золота');
+    }
+  }
+  function accessFeature(id) {
+    progress.profile = progress.loadProfile();
+    if (game.stressMode || progress.isFeatureUnlocked(id)) return true;
+    const feature = NightCatalog.features.find(f => f.id === id);
+    if (game.status === 'running') { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
+    showMeta(); $('meta-shop').showModal();
+    text('meta-message', feature.title + ' открывается навсегда за ' + feature.cost + ' золота. Покупки доступны между забегами.'); return false;
   }
   function resumeSavedRun() {
     const restored = progress.loadRun();
@@ -55,6 +70,7 @@
     notify('ЗАБЕГ ВОССТАНОВЛЕН · ' + formatTime(game.elapsed));
   }
   function openBestiary() {
+    if (!accessFeature('bestiary')) return;
     bestiaryWasRunning = game.status === 'running'; if (bestiaryWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
     const seen = new Set([...progress.profile.seen, ...game.encountered]), fragment = document.createDocumentFragment();
     for (const [kind, enemy] of Object.entries(NightEnemies)) {
@@ -62,7 +78,7 @@
       const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
       const title = document.createElement('h3'); title.textContent = enemy.title;
       const description = document.createElement('p'); description.textContent = enemy.text;
-      const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С 10:00' : enemy.boss ? 'БОСС' : 'ВОЗРАСТ ВОЛН ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
+      const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С ' + formatTime(enemy.at ?? 600) : enemy.boss ? 'БОСС' + (enemy.roster ? ' · С ' + formatTime(enemy.at) : '') : 'ВОЗРАСТ ВОЛН ' + formatTime(enemy.at)) + (enemy.roster ? ' · ' + Math.round(enemy.hp) + ' БАЗОВЫХ HP · СОПРОТИВЛЕНИЕ ' + Math.round(enemy.knockbackResistance * 100) + '%' : '') + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
       card.append(sprite, title, description, hint); fragment.append(card);
     }
     $('bestiary-list').replaceChildren(fragment); $('bestiary').showModal();
@@ -76,12 +92,22 @@
       const info = document.createElement('p'); info.textContent = upgrade.text;
       const button = document.createElement('button'); button.type = 'button'; button.dataset.buy = upgrade.id; button.dataset.rank = rank;
       button.textContent = rank >= upgrade.max ? 'МАКСИМУМ · ' + rank + '/' + upgrade.max : 'РАНГ ' + rank + '/' + upgrade.max + ' → КУПИТЬ ЗА ' + cost;
-      button.disabled = rank >= upgrade.max || progress.profile.meta.gold < cost || !progress.available;
+      button.disabled = game.status !== 'ready' || rank >= upgrade.max || progress.profile.meta.gold < cost || !progress.available;
       card.append(title, info, button); fragment.append(card);
+    }
+    for (const feature of NightCatalog.features) {
+      const owned = progress.isFeatureUnlocked(feature.id), card = document.createElement('article'); card.className = 'meta-card feature-card';
+      const title = document.createElement('h3'); title.textContent = feature.icon + ' ' + feature.title;
+      const description = document.createElement('p'); description.textContent = feature.text;
+      const button = document.createElement('button'); button.type = 'button'; button.dataset.feature = feature.id;
+      button.textContent = owned ? 'ОТКРЫТО НАВСЕГДА' : 'ОТКРЫТЬ ЗА ' + feature.cost;
+      button.disabled = owned || game.status !== 'ready' || progress.profile.meta.gold < feature.cost || !progress.available;
+      card.append(title, description, button); fragment.append(card);
     }
     $('meta-grid').replaceChildren(fragment);
   }
   function openGrimoire() {
+    if (!accessFeature('necronomicon')) return;
     grimoireWasRunning = game.status === 'running';
     if (grimoireWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
     const fragment = document.createDocumentFragment();
@@ -103,6 +129,21 @@
       card.append(title, ingredients, description, state); fragment.append(card);
     }
     $('recipe-list').replaceChildren(fragment); $('grimoire').showModal();
+  }
+  function openMap() {
+    if (!accessFeature('treasureMap')) return;
+    mapWasRunning = game.status === 'running'; if (mapWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
+    const ns = 'http://www.w3.org/2000/svg', svg = $('treasure-map'); svg.replaceChildren();
+    svg.setAttribute('viewBox', '0 0 ' + game.width + ' ' + game.height);
+    const marker = (x, y, glyph, color, label) => {
+      const dot = document.createElementNS(ns, 'text'); dot.setAttribute('x', x); dot.setAttribute('y', y); dot.setAttribute('fill', color); dot.setAttribute('font-size', '290'); dot.setAttribute('text-anchor', 'middle'); dot.textContent = glyph;
+      const title = document.createElementNS(ns, 'title'); title.textContent = label; dot.append(title); svg.append(dot);
+    };
+    for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) marker(cache.x, cache.y, 'X', '#edc77d', 'Тайник ' + (cache.id + 1));
+    for (const chest of game.chests) marker(chest.x, chest.y, '$', '#c49be2', 'Оставленный сундук');
+    marker(game.player.x, game.player.y, '@', '#f47561', 'Ты здесь');
+    text('map-summary', 'ТАЙНИКОВ: ' + (12 - game.treasuresTaken.size) + '/12 · СУНДУКОВ БОССОВ: ' + game.chests.filter(c => !c.treasure).length + ' · ТВОЯ ПОЗИЦИЯ: ' + Math.round(game.player.x) + ' : ' + Math.round(game.player.y));
+    $('world-map').showModal();
   }
   function resize() {
     renderer.resize(arena.clientWidth, arena.clientHeight, devicePixelRatio || 1);
@@ -139,12 +180,11 @@
       button.append(sprite, name, role); fragment.append(button);
     }
     $('characters').replaceChildren(fragment); updateCharacterDetails();
-    NightSlots.forEach((id, i) => {
-      const u = NightUpgrades.find(u => u.id === id), slot = document.createElement('button'), key = document.createElement('kbd'), icon = document.createElement('i'), name = document.createElement('span'), rank = document.createElement('b');
-      slot.type = 'button'; slot.dataset.slot = i % 9 + 1; key.textContent = i % 9 + 1;
-      icon.textContent = u?.icon || '-'; name.textContent = u?.title.toUpperCase() || 'ПУСТО'; slot.append(key, icon, name, rank); slot.title = u?.text || 'Место для будущего оружия';
-      $('loadout').append(slot); equipment.set(id || 'empty', { slot, rank, name, icon, index: i });
-    });
+    for (let i = 0; i < 5; i++) {
+      const slot = document.createElement('button'), key = document.createElement('kbd'), icon = document.createElement('i'), name = document.createElement('span'), rank = document.createElement('b');
+      slot.type = 'button'; slot.dataset.slot = i + 1; key.textContent = i + 1; slot.append(key, icon, name, rank);
+      $('loadout').append(slot); equipment.set(i, { slot, rank, name, icon });
+    }
   }
   function resetMetrics() {
     records.length = 0; sampleCount = frameIndex = displayFPS = 0; frameMean = frameP95 = simulationMS = renderMS = 0; fpsSince = fpsFrames = 0; lastRecord = -1; mouseAim.active = false;
@@ -167,7 +207,7 @@
   function toggleFireMode() {
     fireModePreference = game.fireMode === 'auto' ? 'manual' : 'auto'; game.setFireMode(fireModePreference); mouseFiring = touchFiring = false; keys.delete('KeyF');
     updateHUD(); dirty = true;
-    notify(game.fireMode === 'manual' ? 'РУЧНОЙ: 1–9 оружие · ЛКМ / F атака · курсор — прицел.' : 'АВТО: всё найденное оружие атакует само.');
+    notify(game.fireMode === 'manual' ? 'РУЧНОЙ: 1–5 оружие · ЛКМ / F атака · курсор — прицел.' : 'АВТО: всё найденное оружие атакует само.');
     preferences();
   }
   function exportMetrics() {
@@ -241,7 +281,7 @@
         card.append(icon, title, description, rank); fragment.append(card);
       });
       $('reward-loot').replaceChildren(fragment); $('claim-reward').hidden = true;
-      text('reward-summary', NightEnemies[reward.source].title + ' · Одна награда на выбор +10 золота за сундук.');
+      text('reward-summary', (reward.treasure ? 'Найден тайник' : NightEnemies[reward.source].title) + ' · Одна награда на выбор +7,5 базового золота за сундук.');
       text('reward-hint', 'ВЫБОР МЫШЬЮ ИЛИ 1 / 2 / 3 · БОЙ НА ПАУЗЕ');
       $('reward-loot').querySelector('button')?.focus({ preventScroll: true }); return;
     }
@@ -267,8 +307,10 @@
   function updateHUD() {
     const p = game.player, status = game.status;
     const weapon = game.weaponInfo(game.selectedWeapon), manual = game.fireMode === 'manual';
-    text('selected-weapon', (NightSlots.indexOf(game.selectedWeapon) % 9 + 1) + ' / ' + weapon.title.toUpperCase() + ' · СТР. ' + (Math.floor(NightSlots.indexOf(game.selectedWeapon) / 9) + 1) + (game.selectedWeapon === 'blades' && game.levels.blades ? ' · КЛИНКОВ: ' + (game.levels.blades + game.levels.fork + (game.isEvolved('blades') ? 2 : 0)) : ''));
-    text('weapon-page', 'ОРУЖИЕ ' + (game.weaponPage + 1) + ' / ' + Math.ceil(NightSlots.length / 9));
+    const ownedWeapons = game.inventory(true), passives = game.inventory(false);
+    text('selected-weapon', (ownedWeapons.indexOf(game.selectedWeapon) % 5 + 1) + ' / ' + weapon.title.toUpperCase() + (game.selectedWeapon === 'blades' && game.levels.blades ? ' · КЛИНКОВ: ' + (game.levels.blades + game.levels.fork + (game.isEvolved('blades') ? 2 : 0)) : ''));
+    text('weapon-page', 'ОРУЖИЕ ' + ownedWeapons.length + '/5' + (game.weaponPages > 1 ? ' · СТР. ' + (game.weaponPage + 1) + '/' + game.weaponPages + (game.stressMode ? ' · ТЕСТ' : ' · СТАРЫЙ НАБОР') : ''));
+    $('weapons-prev').hidden = $('weapons-next').hidden = game.weaponPages <= 1;
     text('run-gold', 'ЗОЛОТО +' + game.goldEarned);
     $('fire-mode').setAttribute('aria-pressed', String(manual));
     text('fire-mode', manual ? 'РУЧНОЙ ОГОНЬ [M]' : 'АВТОАТАКА [M]');
@@ -296,8 +338,9 @@
     $('dash-touch').disabled = status !== 'running' || p.dashReady > 0;
     $('pause').disabled = status !== 'running' && status !== 'paused';
     $('pause').setAttribute('aria-pressed', String(status === 'paused'));
-    for (const [id, { slot, rank, name, icon, index }] of equipment) {
-      slot.hidden = Math.floor(index / 9) !== game.weaponPage;
+    for (const [index, { slot, rank, name, icon }] of equipment) {
+      const id = ownedWeapons[game.weaponPage * 5 + index];
+      if (!id) { slot.className = 'locked'; slot.disabled = true; slot.setAttribute('aria-pressed', 'false'); name.textContent = 'СВОБОДНЫЙ СЛОТ'; icon.textContent = '+'; rank.textContent = '—'; slot.title = 'Найди новое оружие при повышении уровня'; continue; }
       const level = game.levels[id] || 0;
       slot.classList.toggle('locked', !level);
       slot.setAttribute('aria-pressed', String(id === game.selectedWeapon));
@@ -308,8 +351,14 @@
       slot.title = info.title + (info.baseTitle ? ' (' + info.baseTitle + ')' : '') + ' · ' + info.text;
       const value = consumed ? 'ОБЪЕД.' : evolved ? 'EVO' : level ? 'I'.repeat(level) : '—'; if (rank.textContent !== value) rank.textContent = value;
     }
-    const passiveText = NightUpgrades.filter(u => !u.weapon && game.levels[u.id]).map(u => u.icon + ' ' + u.title + ' ' + game.levels[u.id] + '/' + u.max).join('   ·   ');
-    text('passive-loadout', passiveText); $('passive-loadout').hidden = !passiveText;
+    const passiveKey = passives.map(id => id + ':' + game.levels[id]).join('|');
+    if ($('passive-loadout').dataset.content !== passiveKey) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < 5; i++) { const id = passives[i], u = NightUpgrades.find(u => u.id === id), cell = document.createElement('span'); cell.className = 'passive-slot' + (u ? '' : ' empty'); cell.textContent = u ? u.icon + ' ' + u.title + ' ' + game.levels[id] + '/' + u.max : '+ ПАССИВКА ' + (i + 1); cell.title = u?.text || 'Свободный пассивный слот'; fragment.append(cell); }
+      if (passives.length > 5) { const legacy = document.createElement('small'); legacy.textContent = 'Старый набор / тест: ' + passives.slice(5).map(id => NightUpgrades.find(u => u.id === id).title + ' ' + game.levels[id]).join(' · '); fragment.append(legacy); }
+      $('passive-loadout').replaceChildren(fragment); $('passive-loadout').dataset.content = passiveKey;
+    }
+    $('passive-loadout').hidden = false; updateFeatureButtons();
     text('metric-enemies', game.enemies.length + ' / ' + game.enemyLimit); text('metric-peak', game.peakEnemies); text('metric-rendered', renderer.renderedEnemies || 0);
     text('metric-fps', displayFPS || '—'); text('metric-frame', frameMean.toFixed(1) + ' / ' + frameP95.toFixed(1) + ' мс');
     text('metric-cpu', simulationMS.toFixed(1) + ' / ' + renderMS.toFixed(1) + ' мс'); text('metric-sim', formatTime(game.time)); text('metric-pressure', formatTime(game.pressureTime));
@@ -390,6 +439,8 @@
   $('meta-open').addEventListener('click', () => { showMeta(); $('meta-shop').showModal(); });
   $('meta-close').addEventListener('click', () => $('meta-shop').close());
   $('meta-grid').addEventListener('click', e => {
+    const feature = e.target.closest('[data-feature]');
+    if (feature && game.status === 'ready') { const bought = progress.purchaseFeature(feature.dataset.feature); showMeta(); progressSummary(); text('meta-message', bought ? 'Раздел открыт навсегда. Покупка сохранена.' : 'Покупка не выполнена. Проверь баланс и доступность хранилища.'); return; }
     const button = e.target.closest('[data-buy]'); if (!button || game.status !== 'ready') return;
     const bought = progress.purchase(button.dataset.buy, Number(button.dataset.rank));
     showMeta(); if (bought) { configureRun(); updateCharacterDetails(); progressSummary(); text('meta-message', 'Покупка сохранена. Улучшение действует в новых забегах.'); }
@@ -398,6 +449,9 @@
   for (const [id, direction] of [['weapons-prev', -1], ['weapons-next', 1]]) $(id).addEventListener('click', () => { game.cycleWeapons(direction); updateHUD(); });
   window.addEventListener('storage', () => { progress.profile = progress.loadProfile(); if (game.status === 'ready') { configureRun(false); progressSummary(); updateCharacterDetails(); } if ($('meta-shop').open) showMeta(); });
   $('bestiary-open').addEventListener('click', openBestiary);
+  $('map-open').addEventListener('click', openMap);
+  $('map-close').addEventListener('click', () => $('world-map').close());
+  $('world-map').addEventListener('close', () => { if (mapWasRunning && game.status === 'paused') { game.pause(); updateHUD(); } mapWasRunning = false; });
   $('bestiary-close').addEventListener('click', () => $('bestiary').close());
   $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
   $('grimoire-open').addEventListener('click', openGrimoire);
@@ -424,7 +478,7 @@
   $('characters').addEventListener('click', e => { const card = e.target.closest('[data-character]'); if (card) selectCharacter(card.dataset.character); });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
-    if ($('bestiary').open || $('meta-shop').open || $('grimoire').open) return;
+    if ($('bestiary').open || $('meta-shop').open || $('grimoire').open || $('world-map').open) return;
     if (!/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && (e.code === 'KeyG' && !e.ctrlKey && !e.altKey && !e.metaKey || e.code === 'Escape' && expandedView)) {
       e.preventDefault(); if (!e.repeat) toggleExpandedView(); return;
     }

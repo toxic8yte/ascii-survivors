@@ -9,6 +9,8 @@
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
   const BALANCE = Object.freeze({ weaponCooldown: .65, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
+  const EnemySystem = root.NightEnemySystem || require('./enemy-system.js');
+  const ROSTER_BOSSES = Object.entries(ENEMIES).filter(([, e]) => e.roster && e.boss).sort((a, b) => a[1].at - b[1].at).map(([id]) => id);
   const TERRAIN_TYPES = [
     { kind: 'grave', w: 46, h: 46, sprite: ' ._.\n |+|\n_|_|_', ink: 1 },
     { kind: 'rock', w: 60, h: 42, sprite: ' .--.\n/####\\\n\\____/', ink: 1 },
@@ -43,6 +45,9 @@
       this.meta = Object.fromEntries(META.map(u => [u.id, clamp(Math.floor(Number(options.meta?.[u.id]) || 0), 0, u.max)]));
       this.goldEarned = 0; this.goldCarry = 0; this.xpCarry = 0; this.revivesUsed = 0;
       this.evolutions = new Set(); this.clockStep = 0;
+      this.weaponOrder = []; this.passiveOrder = []; this.legacyInventory = false; this.rosterBossIndex = 0;
+      this.treasuresTaken = new Set(); this.treasures = [];
+      for (let i = 0; i < 12; i++) { const hash = terrainHash(i + this.seed % 10000, 37); const cache = { id: i, x: 600 + hash % (this.width - 1200), y: 600 + (hash >>> 12) % (this.height - 1200), radius: 20 }; this.resolveTerrain(cache); this.treasures.push(cache); }
       this.enemyLimit = clamp(Math.floor(Number(options.enemyLimit) || 6000), 100, 24000);
       this.peakEnemies = 0; this.nextBossAt = 60; this.bossIndex = 0; this.bossKills = 0; this.lastBoss = '';
       this.nextMegaAt = 600; this.bossWhips = [];
@@ -60,9 +65,10 @@
       this.enemies = []; this.shots = []; this.gems = []; this.hearts = [];
       this.particles = []; this.rings = []; this.levels = Object.fromEntries(UPGRADES.map(u => [u.id, 0]));
       this.levels[this.character.weapon] = 1;
+      this.weaponOrder.push(this.character.weapon);
       if (this.stressMode) for (const u of UPGRADES) this.levels[u.id] = u.max;
       this.arcs = []; this.boomerangs = []; this.pools = []; this.meteors = [];
-      this.relics = []; this.freezes = new Map(); this.bibleHits = new Map(); this.bibleUntil = 0; this.shieldCharges = 0; this.shieldUntil = 0; this.weaponPage = Math.floor(SLOTS.indexOf(this.character.weapon) / 9);
+      this.relics = []; this.freezes = new Map(); this.bibleHits = new Map(); this.bibleUntil = 0; this.shieldCharges = 0; this.shieldUntil = 0; this.weaponPage = 0;
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
       this.slashes = []; this.gemBins = new Map(); this.cellPool = [];
@@ -105,6 +111,13 @@
     get elapsed() { return Math.max(this.time, this.wallTime); }
     get pressureTime() { return (this.elapsed + this.pressureOffset) * (1 + this.levels.curse * .1 + (this.levels.goldRing + this.levels.rightSign) * .08); }
     get waveAge() { const age = this.pressureTime; return age <= 600 ? age * .65 : 390 + (age - 600) * .85; }
+    inventory(weapon) {
+      const order = weapon ? this.weaponOrder : this.passiveOrder, all = weapon ? SLOTS : UPGRADES.filter(u => !u.weapon).map(u => u.id);
+      return [...new Set([...order, ...all])].filter(id => all.includes(id) && this.levels[id] > 0 && !this.isConsumed(id));
+    }
+    canUpgrade(u) { return Boolean(u && !this.isConsumed(u.id) && this.levels[u.id] < u.max && (this.levels[u.id] > 0 || this.stressMode || this.inventory(Boolean(u.weapon)).length < 5)); }
+    get weaponPages() { return Math.max(1, Math.ceil(this.inventory(true).length / 5)); }
+    get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode); }
     isEvolved(id) { return this.evolutions.has(EVOLUTION_BY_WEAPON[id]?.id); }
     isConsumed(id) { return EVOLUTIONS.some(e => this.evolutions.has(e.id) && e.weapons?.includes(id)); }
     weaponInfo(id) { return this.isEvolved(id) ? EVOLUTION_BY_WEAPON[id] : UPGRADES.find(u => u.id === id); }
@@ -117,16 +130,17 @@
       this.evolutions.add(recipe.id);
       for (const id of recipe.weapons || []) {
         this.levels[id] = 0;
-        if (this.selectedWeapon === id) { this.selectedWeapon = recipe.weapon; this.weaponPage = Math.floor(SLOTS.indexOf(recipe.weapon) / 9); }
+        if (this.selectedWeapon === id) this.selectedWeapon = recipe.weapon;
         if (this.queuedWeapon === id) this.queuedWeapon = null;
       }
       if (recipe.weapon in this.weaponClocks) this.weaponClocks[recipe.weapon] = 0;
       if (recipe.id === 'mikolenin') { this.boomerangs.length = 0; this.meteors = this.meteors.filter(m => m.kind !== 'hammer'); }
+      this.weaponPage = Math.min(this.weaponPage, this.weaponPages - 1);
       this.events.push('evolution'); return true;
     }
     awardGold(value) {
       if (this.stressMode) return;
-      const total = value * this.greed + this.goldCarry, whole = Math.floor(total + 1e-8);
+      const total = value * .75 * this.greed + this.goldCarry, whole = Math.floor(total + 1e-8);
       this.goldEarned += whole; this.goldCarry = Math.max(0, total - whole);
     }
     get wave() { return Math.floor(this.pressureTime / 30) + 1; }
@@ -221,7 +235,8 @@
       if (this.chests.length > 64) this.chests.shift(); this.events.push('chest-drop');
     }
     applyUpgrade(upgrade) {
-      if (!upgrade || this.isConsumed(upgrade.id) || this.levels[upgrade.id] >= upgrade.max) return false;
+      if (!this.canUpgrade(upgrade)) return false;
+      if (!this.levels[upgrade.id]) (upgrade.weapon ? this.weaponOrder : this.passiveOrder).push(upgrade.id);
       this.levels[upgrade.id]++;
       if (upgrade.id === 'vital') { this.player.maxHp += 25; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 40); }
       if (upgrade.id === 'leftSign') { this.player.maxHp += 10; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 10); }
@@ -237,7 +252,7 @@
         const recipe = ready.splice(Math.floor(this.random() * ready.length), 1)[0];
         options.push({ type: 'evolution', id: recipe.id });
       }
-      const candidates = UPGRADES.filter(u => !this.isConsumed(u.id) && this.levels[u.id] < u.max);
+      const candidates = UPGRADES.filter(u => this.canUpgrade(u));
       while (options.length < 3 && candidates.length) {
         const owned = candidates.filter(u => this.levels[u.id] > 0), pool = owned.length ? owned : candidates;
         const u = pool[Math.floor(this.random() * pool.length)]; candidates.splice(candidates.indexOf(u), 1);
@@ -247,7 +262,7 @@
       for (const option of [{ type: 'gold', value: mega ? 150 : 50 }, { type: 'xp', value: mega ? 200 : 75 }, { type: 'shield', value: 3 }]) {
         if (options.length < 3) options.push(option);
       }
-      this.reward = { id: chest.id, source: chest.source, count: 1, items: [], options, heal: 0, xp: 0 };
+      this.reward = { id: chest.id, source: chest.source, count: 1, items: [], options, heal: 0, xp: 0, treasure: Boolean(chest.treasure) };
       this.status = 'reward'; this.events.push('chest-open'); return true;
     }
     claimReward(index) {
@@ -264,10 +279,11 @@
       this.reward = null; this.status = 'running'; this.checkLevel(); return true;
     }
     selectSlot(slot) {
-      const id = SLOTS[this.weaponPage * 9 + slot - 1]; if (!id || !this.levels[id]) return false;
+      if (!Number.isInteger(slot) || slot < 1 || slot > 5) return false;
+      const id = this.inventory(true)[this.weaponPage * 5 + slot - 1]; if (!id || !this.levels[id]) return false;
       this.selectedWeapon = id; this.queuedWeapon = null; return true;
     }
-    cycleWeapons(direction) { this.weaponPage = (this.weaponPage + direction + Math.ceil(SLOTS.length / 9)) % Math.ceil(SLOTS.length / 9); }
+    cycleWeapons(direction) { this.weaponPage = (this.weaponPage + direction + this.weaponPages) % this.weaponPages; }
     setFireMode(mode) { if (mode !== 'auto' && mode !== 'manual') return; this.fireMode = mode; this.input.firing = false; this.queuedWeapon = null; }
     requestAttack() { if (this.status === 'running' && this.fireMode === 'manual') this.queuedWeapon = this.selectedWeapon; }
     consumeAttack(id) { if (this.queuedWeapon === id) this.queuedWeapon = null; }
@@ -307,7 +323,8 @@
         y = clamp(this.player.y + Math.sin(angle) * distance, 28, this.height - 28);
       }
       const scale = def.mega ? 1 + Math.max(0, this.elapsed - 600) / 1200 : 1 + this.waveAge / 340;
-      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: 0, chargeY: 0, targetX: x, targetY: y, arenaMember };
+      const dx = this.player.x - x, dy = this.player.y - y, d = Math.hypot(dx, dy) || 1;
+      const enemy = { ...def, damage: def.damage * (1 + Math.floor(this.pressureTime / 180) * .12), kind, id: this.nextId++, x, y, prevX: x, prevY: y, hp: def.hp * scale, maxHp: def.hp * scale, alive: true, flash: 0, bladeAt: -10, chilledTill: 0, poisonAt: 0, phase: this.random() * TAU, skillClock: 1.5 + this.random() * 2, windup: 0, chargeTime: 0, chargeX: def.ai === 'direct' ? dx / d : 0, chargeY: def.ai === 'direct' ? dy / d : 0, targetX: x, targetY: y, arenaMember };
       this.resolveTerrain(enemy); this.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
       this.enemies.push(enemy);
       enemy.bornAt = this.elapsed;
@@ -315,13 +332,10 @@
       return enemy;
     }
     spawnWave() {
-      const age = this.waveAge;
-      const candidates = Object.keys(ENEMIES).filter(kind => !ENEMIES[kind].boss && age >= ENEMIES[kind].at);
-      let roll = this.random() * candidates.reduce((sum, kind) => sum + ENEMIES[kind].weight, 0);
-      const kind = candidates.find(kind => (roll -= ENEMIES[kind].weight) < 0) || 'ghoul';
-      const count = Math.min(128, 2 + Math.floor(age / 45), this.enemyLimit - this.enemies.length - (this.encounter?.phase === 'warning' ? 1 : 0));
+      const plan = this.wavePlan, kind = EnemySystem.weighted(plan.entries, () => this.random());
+      const count = Math.min(this.stressMode ? 128 : plan.group, this.stressMode ? 2 + Math.floor(this.waveAge / 45) : Math.max(0, plan.target - this.enemies.length), this.enemyLimit - this.enemies.length - (this.encounter?.phase === 'warning' ? 1 : 0));
       for (let i = 0; i < count; i++) this.spawn(kind);
-      this.spawnClock += Math.max(.12, .86 - age * .0014);
+      this.spawnClock += this.stressMode ? Math.max(.12, .86 - this.waveAge * .0014) : plan.interval;
     }
     buildGrid() {
       for (const cell of this.grid.values()) { cell.length = 0; this.cellPool.push(cell); }
@@ -362,6 +376,7 @@
       }
     }
     addGem(x, y, value) {
+      if (value <= 0) return;
       const key = Math.floor(x / 64) + Math.floor(y / 64) * 1024, old = this.gemBins.get(key);
       if (old && !old.taken && !old.magnetized) { old.value += value; return; }
       const gem = { x, y, value, bin: key, magnetized: false }; this.gems.push(gem); this.gemBins.set(key, gem);
@@ -377,7 +392,7 @@
       e.hp -= damage; e.flash = .12;
       if (knockback) {
         const dx = e.x - this.player.x, dy = e.y - this.player.y, d = Math.hypot(dx, dy) || 1;
-        this.moveEntity(e, dx / d * knockback, dy / d * knockback);
+        const force = knockback * (1 - (e.knockbackResistance || 0)); this.moveEntity(e, dx / d * force, dy / d * force);
       }
       if (e.hp > 0) return;
       e.alive = false; this.kills++;
@@ -437,7 +452,7 @@
       if (this.status !== 'running' || this.xp < this.xpNeed) return;
       this.xp -= this.xpNeed; this.level++;
       this.xpNeed = Math.min(5000, Math.ceil(this.xpNeed * 1.2 + 3));
-      const candidates = UPGRADES.filter(u => !this.isConsumed(u.id) && this.levels[u.id] < u.max);
+      const candidates = UPGRADES.filter(u => this.canUpgrade(u));
       if (!candidates.length) { this.player.hp = Math.min(this.player.maxHp, this.player.hp + 30); return; }
       for (let i = candidates.length - 1; i > 0; i--) {
         const j = Math.floor(this.random() * (i + 1));
@@ -453,7 +468,7 @@
     }
     choose(index) {
       if (this.status !== 'upgrading' || !this.offers[index]) return false;
-      const u = this.offers[index]; this.applyUpgrade(u);
+      const u = this.offers[index]; if (!this.applyUpgrade(u)) return false;
       this.player.invulnerable = Math.max(this.player.invulnerable, .65);
       this.offers = []; this.status = 'running'; this.checkLevel();
       return true;
@@ -722,25 +737,33 @@
         this.resolveTerrain(e); this.resolveArena(e); e.prevX = e.x; e.prevY = e.y;
         this.burst(e.x, e.y, e.ink, 10);
       } else if (e.ai === 'charge') {
-        e.chargeTime = e.boss ? .65 : .45;
+        e.chargeTime = e.roster ? e.movement.chargeDuration : e.boss ? .65 : .45;
         if (e.kind === 'alienQueen') this.queueSummons(e, 'alien', 2);
       }
     }
     updateEnemy(e, dt) {
       if ((this.freezes.get(e.id) || 0) > this.time) { e.flash = Math.max(0, e.flash - dt); return; }
       const p = this.player, ex = p.x - e.x, ey = p.y - e.y, d = Math.hypot(ex, ey) || 1;
+      if (!e.boss && d > this.spawnRadius * (e.ai === 'direct' ? 2.8 : 4)) { e.alive = false; return; }
+      if (e.boss && !e.arenaMember && d > this.spawnRadius * 3) { const angle = this.random() * TAU; e.x = clamp(p.x + Math.cos(angle) * (this.spawnRadius + 100), 28, this.width - 28); e.y = clamp(p.y + Math.sin(angle) * (this.spawnRadius + 100), 28, this.height - 28); this.resolveTerrain(e); e.prevX = e.x; e.prevY = e.y; return; }
       const slow = e.chilledTill > this.time ? .4 : 1;
       let vx = ex / d, vy = ey / d, speed = e.speed * Math.min(1.85, 1 + this.waveAge / 750) * slow;
-      if (e.ai === 'weave') { const weave = Math.sin(this.time * 5 + e.phase) * .7; vx -= ey / d * weave; vy += ex / d * weave; }
+      if (e.roster) {
+        EnemySystem.movement[e.movement.type](e, ex, ey, d, this.time); vx = e.moveX; vy = e.moveY;
+        speed = e.speed * Math.min(1.5, 1 + this.pressureTime / 6000) * slow;
+      } else if (e.ai === 'weave') { const weave = Math.sin(this.time * 5 + e.phase) * .7; vx -= ey / d * weave; vy += ex / d * weave; }
       if (e.ai === 'ranged') speed *= d > 380 ? 1 : d < 230 ? -.65 : 0;
       e.skillClock = Math.max(0, e.skillClock - dt);
+      if (e.summon && e.skillClock === 0) { this.queueSummons(e, e.summon.kind, e.summon.count); e.skillClock = e.summon.interval; }
+      if (e.roster && e.ai === 'charge' && e.skillClock > e.movement.trackingDuration) speed = 0;
       if (e.windup > 0) {
         speed = 0; e.windup = Math.max(0, e.windup - dt);
         if (e.windup === 0) this.enemySkill(e);
       } else if (e.chargeTime > 0) {
         e.chargeTime = Math.max(0, e.chargeTime - dt); vx = e.chargeX; vy = e.chargeY; speed = (e.boss ? 380 : 340) * slow;
+        if (e.roster && e.chargeTime === 0) e.skillClock = e.movement.recoveryDuration + e.movement.trackingDuration;
       } else if (e.skill && e.skillClock <= 0 && d < (e.ai === 'charge' ? 620 : 850)) {
-        e.skillClock = e.skill; e.windup = e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
+        e.skillClock = e.skill; e.windup = e.roster ? e.movement.windupDuration : e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
         e.chargeX = ex / d; e.chargeY = ey / d;
         const angle = this.random() * TAU;
         e.targetX = clamp(p.x + Math.cos(angle) * 150, 28, this.width - 28);
@@ -790,6 +813,11 @@
         const boss = this.spawn('darVetro'); this.nextMegaAt = (Math.floor(megaAge / 600) + 1) * 600; this.lastBoss = boss.title; this.events.push('mega-boss');
       } else if (!this.encounter && this.pressureTime >= this.nextBossAt && this.enemies.length < this.enemyLimit && !this.enemies.some(e => e.alive && e.boss)) this.beginEncounter();
       this.updateEncounter(dt);
+      const rosterBoss = ROSTER_BOSSES[this.rosterBossIndex % ROSTER_BOSSES.length];
+      const rosterAt = ENEMIES[rosterBoss].at + Math.floor(this.rosterBossIndex / ROSTER_BOSSES.length) * 1800;
+      if (!this.encounter && megaAge >= rosterAt && !this.enemies.some(e => e.alive && e.boss) && this.enemies.length < this.enemyLimit) {
+        const boss = this.spawn(rosterBoss); this.rosterBossIndex++; this.lastBoss = boss.title; this.events.push(boss.mega ? 'mega-boss' : 'boss');
+      }
       this.peakEnemies = Math.max(this.peakEnemies, this.enemies.length);
       for (const e of this.enemies) if (e.alive) {
         e.prevX = e.x; e.prevY = e.y;
@@ -848,6 +876,11 @@
       }
       this.hearts = this.hearts.filter(h => !h.taken && (!h.expires || h.expires > this.time)).slice(-128);
       if (this.status === 'running') {
+        const cache = this.treasures.find(c => !this.treasuresTaken.has(c.id) && Math.hypot(c.x - p.x, c.y - p.y) < 32);
+        if (cache) {
+          this.treasuresTaken.add(cache.id); const found = { id: this.nextChestId++, source: 'lichLord', x: cache.x, y: cache.y, radius: 20, canEvolve: false, treasure: true };
+          this.chests.push(found); this.openChest(found);
+        }
         const chest = this.chests.find(c => Math.hypot(c.x - p.x, c.y - p.y) < 38);
         if (chest) this.openChest(chest);
       }

@@ -38,10 +38,10 @@ for (const id of ['hammer', 'capital', 'pistol', 'sling']) { delete oldReward.le
 const legacyReward = NightSave.restore(oldReward); assert.ok(legacyReward);
 const legacyGold = legacyReward.goldEarned; assert.ok(legacyReward.claimReward()); assert.equal(legacyReward.goldEarned, legacyGold, 'Old already-applied rewards never pay twice');
 
-const full = fixture(); for (const u of NightUpgrades) while (full.levels[u.id] < u.max) full.applyUpgrade(u);
-open(full, 'lichLord', 0); assert.deepEqual(full.reward.options.map(o => o.type), ['gold', 'xp', 'shield']);
+const full = fixture(); full.stressMode = true; for (const u of NightUpgrades) while (full.levels[u.id] < u.max) full.applyUpgrade(u);
+full.stressMode = false; open(full, 'lichLord', 0); assert.deepEqual(full.reward.options.map(o => o.type), ['gold', 'xp', 'shield']);
 assert.equal(full.goldEarned, 0); const fullReloaded = NightSave.restore(clone(NightSave.capture(full))); assert.ok(fullReloaded);
-fullReloaded.claimReward(0); assert.equal(fullReloaded.goldEarned, Math.floor(60 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
+fullReloaded.claimReward(0); assert.equal(fullReloaded.goldEarned, Math.floor(60 * .75 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
 const afterGold = fullReloaded.goldEarned; assert.equal(fullReloaded.claimReward(1), false); assert.equal(fullReloaded.goldEarned, afterGold);
 assert.equal(fullReloaded.shieldCharges, 0); assert.equal(fullReloaded.xp, 0);
 
@@ -62,7 +62,7 @@ roll = .01; e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.
 roll = .6; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1, 'Boss healing is now a 50% drop');
 roll = .4; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 2);
 const waves = fixture(); waves.time = 480; waves.spawnClock = 0; waves.spawnWave();
-assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 8); assert.ok(waves.spawnClock > .4);
+assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 4); assert.ok(waves.spawnClock > .4);
 assert.ok(waves.enemies.every(e => e.maxHp / NightEnemies[e.kind].hp < 2));
 waves.time = 600; assert.equal(waves.waveAge, 390); waves.time = 1800; assert.equal(waves.waveAge, 1410, 'Endless difficulty continues after the gentler opening');
 

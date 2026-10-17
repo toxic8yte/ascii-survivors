@@ -20,6 +20,22 @@
     alienQueen: { title: 'Матка Чужих', text: 'Босс: рывки и выводок ксеноморфов.', boss: true, ai: 'charge', skill: 4.8, hp: 2400, speed: 58, radius: 34, damage: 32, xp: 65, ink: 2, glyph: 'Q', sprite: ' /W\\\n(XXX)~\n/| |\\' },
     reaper: { title: 'Жнец', text: 'Босс: неотступно преследует героя.', boss: true, hp: 1000, speed: 61, radius: 32, damage: 28, xp: 35, ink: 6, glyph: 'W', sprite: ' /W\\\n (x)\n/| |\\' }
   };
+  const roster = root.NightEnemyData || require('./enemy-roster.js');
+  for (const row of roster) {
+    const boss = ['boss', 'finalBoss'].includes(row.rank), stats = row.stats;
+    ENEMIES[row.id] = Object.freeze({ title: row.name, text: row.text, roster: true, rank: row.rank, role: row.role, at: row.firstSecond, weight: 12, hp: stats.maxHealth * (boss ? 2 : 4), speed: stats.moveSpeed * 65, radius: stats.collisionRadius, damage: stats.damage, xp: stats.experience, knockbackResistance: stats.knockbackResistance, spawnCost: stats.spawnCost, movement: Object.freeze({ ...row.movement }), traits: Object.freeze([...row.traits]), ai: row.movement.type === 'charger' ? 'charge' : row.movement.type === 'wavy' ? 'weave' : row.movement.type, ...(row.movement.type === 'charger' ? { skill: 4.1 } : {}), boss, mega: row.rank === 'finalBoss', ink: row.visual.ink, glyph: row.visual.glyph[0], sprite: row.visual.glyph });
+  }
+  for (const row of roster) {
+    if (row.summon) ENEMIES[row.id] = Object.freeze({ ...ENEMIES[row.id], summon: Object.freeze({ ...row.summon }) });
+    if (row.visual.frames) ENEMIES[row.id] = Object.freeze({ ...ENEMIES[row.id], frames: Object.freeze([...row.visual.frames]) });
+  }
+  for (const enemy of Object.values(ENEMIES)) Object.freeze(enemy);
+  Object.freeze(ENEMIES);
+  const FEATURES = [
+    { id: 'bestiary', title: 'Бестиарий', icon: '[?]', cost: 100, text: 'Постоянный доступ к описаниям всех встреченных и будущих врагов.' },
+    { id: 'necronomicon', title: 'Некрономикон', icon: '[N]', cost: 200, text: 'Все рецепты эволюций и прогресс ингредиентов текущего забега.' },
+    { id: 'treasureMap', title: 'Карта сокровищ', icon: '[X]', cost: 350, text: 'Показывает героя, тайники и оставленные боссами сундуки на большой карте.' }
+  ];
   const EXTRA_WEAPONS = [
     { id: 'whip', title: 'Кнут', icon: '~==', cooldown: 1.15, behavior: 'whip', text: 'Хлёсткая дуга перед героем. Старшие ступени бьют и сзади.' },
     { id: 'axe', title: 'Топор', icon: '/P', cooldown: 2, behavior: 'axe', text: 'Тяжёлые топоры летят по дуге, пробивая толпу.' },
@@ -127,7 +143,7 @@
   ];
   const HERO_PRICES = { hunter: 0, scout: 300, duelist: 400, witch: 500, warden: 650, plague: 750, ripley: 1000, shepard: 1500, samus: 1800, mando: 2000 };
   for (const hero of CHARACTERS) hero.cost = HERO_PRICES[hero.id];
-  const catalog = { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS, evolutions: EVOLUTIONS };
+  const catalog = { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS, evolutions: EVOLUTIONS, features: FEATURES };
   root.NightCatalog = catalog;
   if (typeof module !== 'undefined' && module.exports) module.exports = catalog;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
