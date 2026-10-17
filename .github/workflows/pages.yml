@@ -35,7 +35,7 @@ jobs:
           node build-enemies.cjs
       - name: Check JavaScript syntax
         run: |
-          for file in enemy-roster.js enemy-system.js build-enemies.cjs build-content.cjs content-data.js catalog.js combat.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs verify-progression.cjs verify-director.cjs verify-heroes.cjs verify-combat.cjs verify-data.cjs verify-balance.cjs benchmark.cjs; do
+          for file in enemy-roster.js enemy-system.js build-enemies.cjs build-content.cjs content-data.js catalog.js combat.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs verify-progression.cjs verify-director.cjs verify-heroes.cjs verify-combat.cjs verify-data.cjs verify-balance.cjs verify-scifi.cjs benchmark.cjs; do
             node --check "$file"
           done
       - name: Test gameplay and rendering
@@ -44,6 +44,7 @@ jobs:
           node build-content.cjs --check
           node verify-data.cjs
           node verify-balance.cjs
+          node verify-scifi.cjs
           node verify-director.cjs
           node verify-combat.cjs
           node verify-heroes.cjs

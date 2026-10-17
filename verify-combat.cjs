@@ -79,4 +79,4 @@ for (let i = 0; i < 100; i++) quota.spawnWave();
 assert.equal(quota.enemies.filter(e => e.kind === 'pumpkin').length, quotaPlan.quotas.ranged, 'A caster-heavy pool stops at the caster quota');
 assert.equal(quota.enemies.filter(e => e.rank === 'elite').length, Math.min(quotaPlan.quotas.elite, quotaPlan.quotas.special - quotaPlan.quotas.ranged), 'Overlapping elite/special limits apply together');
 assert.equal(quota.enemies.length, quotaPlan.target, 'Weak enemies fill space after dangerous roles reach their quotas');
-console.log('PASS: effective damage, overkill, all 24 weapon sources including clock/laurel evolutions, healing, incoming damage, rewards, 10-second windows, bounded history, checkpoint migration, wave timeline, recovery and threat quotas.');
+console.log('PASS: effective damage, overkill, all 27 weapon sources including clock/laurel evolutions, healing, incoming damage, rewards, 10-second windows, bounded history, checkpoint migration, wave timeline, recovery and threat quotas.');

@@ -189,7 +189,7 @@ const tap = fixture(); tap.setFireMode('manual'); tap.shootClock = 0; tap.reques
 assert.equal(tap.shots.length, 1, 'A quick press between two frames still fires once'); assert.equal(tap.queuedWeapon, null);
 tick(tap, 1.7); assert.equal(tap.shots.length, 0, 'A tap does not become a stuck trigger');
 const stress = new NightGame(99, 'hunter', { stressMode: true, enemyLimit: 1000 }); stress.start(); stress.hurtPlayer(1e9); assert.equal(stress.player.hp, 100);
-assert.equal(NightUpgrades.filter(u => u.weapon).filter(u => stress.levels[u.id] === u.max).length, 24);
+assert.equal(NightUpgrades.filter(u => u.weapon).filter(u => stress.levels[u.id] === u.max).length, NightSlots.length);
 const beforePressure = stress.time; stress.pressureOffset += 1800; assert.equal(stress.time, beforePressure, 'Load preset does not pretend to advance elapsed play time');
 stress.enemies = []; for (let i = 0; i < 3; i++) stress.spawnWave(); assert.ok(stress.enemies.length > 100, 'Late waves exceed the old crowd size quickly');
 while (stress.enemies.length < stress.enemyLimit) stress.spawnWave(); assert.equal(stress.enemies.length, 1000); stress.spawnWave(); assert.equal(stress.enemies.length, 1000);
@@ -201,5 +201,5 @@ for (const u of NightUpgrades.filter(u => u.weapon)) {
   assert.equal(idle.shots.length + idle.boomerangs.length + idle.rings.length + idle.pools.length + idle.arcs.length + idle.meteors.length + idle.slashes.length, 0, u.id + ' waits for manual input');
 }
 console.log(`PASS: movement, combat, XP, upgrades and endless play. Three-minute run: ${longRun.kills} kills, level ${longRun.level}, peak ${maxEnemies} enemies.`);
-console.log('PASS: 30 heroes, 24 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
+console.log('PASS: 30 heroes, 27 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
 console.log('PASS: slots 1–5, locked slots, manual aim/trigger/slash, auto mode, stress settings, population budget and merged XP.');

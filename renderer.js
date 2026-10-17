@@ -1,6 +1,7 @@
 (function (root) {
   'use strict';
   const PALETTE = ['#3d5840', '#82916b', '#82d2ad', '#acb77e', '#cfc7af', '#ac8db8', '#df7054', '#f4c77f', '#f0edd0', '#79bace', '#c6ffdc', '#ffd0b8', '#ff8b2b', '#ff3c52', '#080b09'];
+  const BALLISTICS = Object.fromEntries((root.NightCatalog || require('./catalog.js')).extraWeapons.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const TAU = Math.PI * 2;
   const hash = (x, y) => { let v = Math.imul(x ^ 0x64ab, 374761393) ^ Math.imul(y ^ 0xf8c, 668265263); v = Math.imul(v ^ v >>> 13, 1274126177); return (v ^ v >>> 16) >>> 0; };
   const mix = (previous, current, alpha) => (previous ?? current) + (current - (previous ?? current)) * alpha;
@@ -157,7 +158,7 @@
         this.world(p.x, p.y - 48, 'DAR VETROV', 13);
       }
       for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
-      for (const s of game.relics) { const p = this.position(s); this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
+      for (const s of game.relics) { const p = this.position(s), ballistic = BALLISTICS[s.kind]; if (ballistic) { if (s.kind === 'gauss') this.world(p.x - s.vx * .015, p.y - s.vy * .015, '===', ballistic.ink); this.world(p.x, p.y, ballistic.glyph, ballistic.ink); continue; } this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
       for (const b of game.biblePositions()) this.world(b.x, b.y, game.isEvolved('bible') ? '[B!]' : '[B]', game.isEvolved('bible') ? 5 : 7);
       for (const whip of game.bossWhips) this.line(whip, { x: whip.x + Math.cos(whip.angle) * whip.radius, y: whip.y + Math.sin(whip.angle) * whip.radius }, 13, '~', true);
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', 6); this.world(p.x, p.y, '*', 7); }

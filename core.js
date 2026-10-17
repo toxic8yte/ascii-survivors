@@ -6,6 +6,7 @@
   const EVOLUTION_BY_WEAPON = Object.fromEntries(EVOLUTIONS.map(e => [e.weapon, e]));
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
   const SLOTS = ['needle', 'blades', 'pulse', 'lightning', 'boomerang', 'frost', 'meteor', 'poison', ...EXTRA_WEAPONS.map(w => w.id)];
+  const BALLISTICS = Object.fromEntries(EXTRA_WEAPONS.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
   const BALANCE = Object.freeze({ xpDropChance: .5, goldMultiplier: .45, weaponCooldown: .65, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
@@ -592,6 +593,15 @@
     castRelic(id) {
       const level = this.levels[id], evolved = this.isEvolved(id), p = this.player, target = this.fireMode === 'manual' ? this.aimPoint() : this.targets()[0];
       const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : Math.atan2(p.dirY, p.dirX);
+      const ballistic = BALLISTICS[id];
+      if (ballistic) {
+        const count = Math.min(12, 1 + this.levels.fork + (ballistic.rankCount ? Math.floor(level / ballistic.rankCount) : 0));
+        for (let i = 0; i < count && this.relics.length < 512; i++) {
+          const a = angle + (i ? Math.ceil(i / 2) * (i % 2 ? 1 : -1) * ballistic.spread : 0), speed = ballistic.speed * this.projectileSpeed;
+          this.relics.push({ kind: id, evolved: false, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: ballistic.life * this.effectDuration, damage: (ballistic.damage + ballistic.rankDamage * level) * this.power, radius: ballistic.radius * this.area, remaining: ballistic.pierce + ballistic.rankPierce * level + this.levels.pierce, hits: new Map(), minX: 0, maxX: this.width, minY: 0, maxY: this.height });
+        }
+        return;
+      }
       if (id === 'laurel') { this.shieldCharges = 1 + Math.floor(level / 2); this.shieldUntil = this.time + (3 + level) * this.effectDuration; return; }
       if (id === 'bible') { this.bibleUntil = this.time + (2 + level * .4) * this.effectDuration; return; }
       if (id === 'hammer') {
@@ -671,6 +681,8 @@
             s.hits.set(e.id, this.time + (s.kind === 'rune' ? .35 : 100)); s.remaining--;
             const critical = s.evolved && s.kind === 'pistol' && this.random() < Math.min(.75, .3 * this.luck);
             this.hurtEnemy(e, s.damage * (critical ? 3 : s.evolved && s.kind === 'sling' && e.boss ? 2 : 1), s.kind === 'sling' ? 24 : 7, s.kind);
+            const ballistic = BALLISTICS[s.kind];
+            if (ballistic?.splashRadius) this.explode(e.x, e.y, ballistic.splashRadius * this.area, s.damage * ballistic.splashScale, ballistic.ink, 8, s.kind);
             if (s.evolved && ['fireball', 'sling'].includes(s.kind)) this.explode(e.x, e.y, 80 * this.area, s.damage * .4, s.kind === 'sling' ? 7 : 12, 18, s.kind);
           }
         }

@@ -13,7 +13,7 @@
   }
   const items = new Map([...content.weapons, ...content.passives].map(row => [row.id, row]));
   const UPGRADES = [...new Set([...content.upgradeOrder, ...items.keys()])].map(id => describe(items.get(id)));
-  const EXTRA_WEAPONS = content.weapons.filter(row => Number.isFinite(row.cooldown)).map(row => describe({ id: row.id, title: row.title, icon: row.icon, cooldown: row.cooldown, behavior: row.behavior, description: row.description }));
+  const EXTRA_WEAPONS = content.weapons.filter(row => Number.isFinite(row.cooldown)).map(row => describe({ id: row.id, title: row.title, icon: row.icon, cooldown: row.cooldown, behavior: row.behavior, projectile: row.projectile, description: row.description }));
   const catalog = {
     enemies: ENEMIES, upgrades: UPGRADES, heroes: content.heroes.map(describe),
     permanents: content.permanents.map(describe), extraWeapons: EXTRA_WEAPONS,

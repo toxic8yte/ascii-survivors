@@ -33,7 +33,7 @@ growth.levels.greed = 2; growth.awardGold(10); assert.equal(growth.goldEarned, 5
 const area = fixture(); area.levels.area = area.levels.duration = area.levels.velocity = 2; area.levels.water = 1; area.castRelic('water');
 assert.ok(area.pools[0].radius > 69 && area.pools[0].life > 3.4); assert.ok(area.projectileSpeed > 1);
 const pages = fixture({ stressMode: true }); pages.cycleWeapons(1); assert.ok(pages.selectSlot(1)); assert.equal(pages.selectedWeapon, NightSlots[5]); pages.cycleWeapons(1); assert.ok(pages.selectSlot(2)); assert.equal(pages.selectedWeapon, NightSlots[11]);
-pages.cycleWeapons(1); pages.cycleWeapons(1); pages.cycleWeapons(1); assert.equal(pages.weaponPage, 0);
+for (let i = 2; i < Math.ceil(NightSlots.length / 5); i++) pages.cycleWeapons(1); assert.equal(pages.weaponPage, 0);
 
 const data = new Map(), storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 const p = new NightProgress(storage); assert.equal(p.profile.meta.gold, 50); assert.ok(p.purchase('vital', 0)); assert.equal(p.profile.meta.gold, 25);
@@ -65,5 +65,5 @@ mega.enemyShots = Array.from({ length: 256 }, () => ({ ink: 5 })); mega.enemySki
 assert.equal(mega.enemyShots.length, 256); assert.equal(mega.enemyShots.filter(s => s.ink === 13).length, 40, 'A full shot budget still allows the red mega-boss burst');
 mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 56); assert.equal(mega.chests[0].source, 'darVetro');
 mega.openChest(mega.chests[0]); assert.equal(mega.reward.options.length, 3); assert.equal(mega.reward.count, 1);
-console.log('PASS: 16 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
+console.log('PASS: 19 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
 

@@ -28,7 +28,7 @@
   function capture(game) {
     if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return null;
     const save = {
-      version: 7, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
+      version: 8, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
       weaponOrder: game.inventory(true), passiveOrder: game.inventory(false), legacyInventory: game.legacyInventory || game.inventory(true).length > 5 || game.inventory(false).length > 5,
       treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       evolutions: Array.from(game.evolutions), enemyBirths: game.enemies.filter(e => e.alive).map(e => [e.id, e.bornAt]),
@@ -58,7 +58,7 @@
 
   function restore(save) {
     try {
-      if (!plain(save) || ![1, 2, 3, 4, 5, 6, 7].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
+      if (!plain(save) || ![1, 2, 3, 4, 5, 6, 7, 8].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
       if (save.version >= 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
@@ -73,7 +73,7 @@
       if (game.xpNeed > 5000 || game.bossKills > game.kills) return null;
       if (!uint(game.chestsOpened) || !uint(game.nextChestId) || game.nextChestId < 1) return null;
       for (const upgrade of NightUpgrades) {
-        const newItem = save.version < 5 && ['hammer', 'capital'].includes(upgrade.id) || save.version < 6 && ['pistol', 'sling'].includes(upgrade.id);
+        const newItem = save.version < 5 && ['hammer', 'capital'].includes(upgrade.id) || save.version < 6 && ['pistol', 'sling'].includes(upgrade.id) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(upgrade.id);
         const level = (save.version < 4 || newItem) && save.levels[upgrade.id] === undefined ? 0 : save.levels[upgrade.id];
         if (!uint(level) || level > upgrade.max) return null;
         game.levels[upgrade.id] = level;
@@ -115,7 +115,7 @@
       game.runId = save.runId; game.randomState = save.randomState; game.selectedWeapon = save.selectedWeapon;
       game.fireMode = save.fireMode === 'manual' ? 'manual' : 'auto';
       game.lastBoss = typeof save.lastBoss === 'string' ? save.lastBoss.slice(0, 80) : '';
-      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = (save.version < 4 || save.version < 5 && key === 'hammer' || save.version < 6 && ['pistol', 'sling'].includes(key)) && save.clocks[key] === undefined ? .3 : number(save.clocks[key], 0);
+      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = (save.version < 4 || save.version < 5 && key === 'hammer' || save.version < 6 && ['pistol', 'sling'].includes(key) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(key)) && save.clocks[key] === undefined ? .3 : number(save.clocks[key], 0);
       game.enemies = list(save.enemies, game.enemyLimit).map(row => {
         list(row, enemyKeys.length + 1);
         const keys = save.version === 1 ? enemyKeys.slice(0, -2) : enemyKeys;
@@ -203,7 +203,7 @@
         if (key === 'pools') { copy.home = Boolean(entity.home); copy.acid = Boolean(entity.acid); }
         if (key === 'meteors' && entity.kind) { if (!['meteor', 'echo', 'bird', 'ebony', 'hammer'].includes(entity.kind)) throw new Error('Invalid blast'); copy.kind = entity.kind; }
         if (key === 'relics') {
-          if (!['axe', 'rune', 'dagger', 'fireball', 'pistol', 'sling'].includes(entity.kind)) throw new Error('Invalid relic');
+          if (!['axe', 'rune', 'dagger', 'fireball', 'pistol', 'sling', 'crossbow', 'gauss', 'plasmaMinigun'].includes(entity.kind)) throw new Error('Invalid relic');
           copy.kind = entity.kind; copy.hits = new Map(list(entity.hits, 100000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
           copy.evolved = Boolean(entity.evolved);
         }

@@ -24,6 +24,7 @@
   const mouseAim = { x: .5, y: .2, active: false };
   const textCache = new Map(), equipment = new Map();
   if (best && Number.isFinite(best.time)) $('best').textContent = formatTime(best.time) + ' / ' + (best.kills || 0) + ' ИЗГНАНО';
+  $('arsenal-note').textContent = '5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ' + NightUpgrades.filter(u => u.weapon).length + ' ОРУЖИЙ · ' + NightCatalog.evolutions.length + ' ЭВОЛЮЦИИ · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ';
   canvas.tabIndex = 0;
 
   function formatTime(t) { return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }

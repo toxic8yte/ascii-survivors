@@ -32,6 +32,9 @@ for (const mutate of [
   d => d.legacyEnemies[0].description = ' ',
   d => d.legacyEnemies[0].projectileSpeed = -1,
   d => d.legacyEnemies[0].projectileDamageScale = 0,
+  d => d.weapons.find(w => w.id === 'gauss').projectile.speed = -1,
+  d => d.weapons.find(w => w.id === 'plasmaMinigun').projectile.splashScale = 2,
+  d => d.weapons.find(w => w.id === 'crossbow').projectile.glyph = '💥',
   d => d.upgradeOrder.push('missing')
 ]) { const bad = clone(data); mutate(bad); assert.throws(() => validateContent(bad, enemies), /Content data:/); }
 
