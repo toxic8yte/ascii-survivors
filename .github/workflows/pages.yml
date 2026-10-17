@@ -46,6 +46,8 @@ jobs:
           node verify-balance.cjs
           node verify-scifi.cjs
           node verify-sheet-edits.cjs
+          node --check verify-upgrades.cjs
+          node verify-upgrades.cjs
           node verify-director.cjs
           node verify-combat.cjs
           node verify-heroes.cjs

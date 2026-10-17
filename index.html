@@ -58,19 +58,22 @@ ___|_____|___|__|___|_____|___</pre>
             <button class="primary-button" id="unlock-hero" type="button" hidden>ОТКРЫТЬ ГЕРОЯ</button>
             <div class="continue-box" id="continue-box" hidden><p id="continue-summary"></p><button class="primary-button" id="continue-run" type="button">ПРОДОЛЖИТЬ ЗАБЕГ →</button></div>
             <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
-            <div id="arsenal-note" class="arsenal-note">5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ОРУЖИЕ: 32 · ЭВОЛЮЦИИ: 22 · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ</div>
+            <div id="arsenal-note" class="arsenal-note">5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ОРУЖИЕ: 33 · ЭВОЛЮЦИИ: 22 · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ</div>
             <div id="progress-summary" class="progress-summary"></div>
           </section>
         </div>
       </div>
 
-      <div class="overlay" id="upgrade" hidden>
+      <div class="overlay" id="upgrade" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="upgrade-heading" hidden>
         <div class="upgrade-content">
           <div class="eyebrow">ДУШИ ДЕЛАЮТ ТЕБЯ СИЛЬНЕЕ</div>
-          <h2>Новый уровень<span id="upgrade-level">02</span></h2>
-          <p>Выбери дар. Время остановлено.</p>
+          <h2 id="upgrade-heading">Новый уровень<span id="upgrade-level">02</span></h2>
+          <p>Выдели дар и подтверди кнопкой. Время остановлено.</p>
+          <div class="rarity-legend" aria-label="Редкость оружия"><span data-rarity="common">Обычное</span><span data-rarity="uncommon">Необычное</span><span data-rarity="rare">Редкое</span><span data-rarity="epic">Эпическое</span><span data-rarity="legendary">Легендарное</span></div>
           <div class="upgrade-grid" id="upgrade-cards"></div>
-          <div class="overlay-hint">ВЫБОР МЫШЬЮ ИЛИ КЛАВИШАМИ 1 / 2 / 3</div>
+          <p id="upgrade-selection" role="status" aria-live="polite">Сначала выдели карточку.</p>
+          <div class="upgrade-actions"><button type="button" id="upgrade-banish" disabled>ИЗГНАТЬ · 3</button><button type="button" id="upgrade-skip">ПРОПУСТИТЬ · 3</button><button type="button" id="upgrade-confirm" disabled>ВЫБРАТЬ →</button></div>
+          <div class="overlay-hint">1 / 2 / 3 — ВЫДЕЛИТЬ · ПРОБЕЛ НЕ ПОДТВЕРЖДАЕТ<br>ИЗГНАНИЕ — ДО КОНЦА ЗАБЕГА · ПРОПУСК — БЕЗ НАГРАДЫ</div>
         </div>
       </div>
 

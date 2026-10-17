@@ -201,5 +201,5 @@ for (const u of NightUpgrades.filter(u => u.weapon)) {
   assert.equal(idle.shots.length + idle.boomerangs.length + idle.rings.length + idle.pools.length + idle.arcs.length + idle.meteors.length + idle.slashes.length, 0, u.id + ' waits for manual input');
 }
 console.log(`PASS: movement, combat, XP, upgrades and endless play. Three-minute run: ${longRun.kills} kills, level ${longRun.level}, peak ${maxEnemies} enemies.`);
-console.log('PASS: 30 heroes, 32 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
+console.log('PASS: 30 heroes, 33 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
 console.log('PASS: slots 1–5, locked slots, manual aim/trigger/slash, auto mode, stress settings, population budget and merged XP.');

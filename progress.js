@@ -28,7 +28,8 @@
   function capture(game) {
     if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return null;
     const save = {
-      version: 9, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
+      version: 10, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
+      banished: [...game.banished], banishesLeft: game.banishesLeft, skipsLeft: game.skipsLeft, offerSelection: game.offerSelection,
       weaponOrder: game.inventory(true), passiveOrder: game.inventory(false), legacyInventory: game.legacyInventory || game.inventory(true).length > 5 || game.inventory(false).length > 5,
       treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       leechBudget: game.leechBudget,
@@ -61,11 +62,16 @@
 
   function restore(save) {
     try {
-      if (!plain(save) || ![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
+      if (!plain(save) || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
       if (save.version >= 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
       const game = new NightGame(save.seed, save.characterId, { enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version >= 3 ? save.meta : {} });
+      if (save.version >= 10) {
+        const banned = list(save.banished, 3);
+        if (banned.some(id => !NightUpgrades.some(u => u.id === id)) || new Set(banned).size !== banned.length || !uint(save.banishesLeft) || save.banishesLeft !== 3 - banned.length || !uint(save.skipsLeft) || save.skipsLeft > 3 || !Number.isInteger(save.offerSelection) || save.offerSelection < -1 || save.offerSelection > 2) return null;
+        game.banished = new Set(banned); game.banishesLeft = save.banishesLeft; game.skipsLeft = save.skipsLeft;
+      }
       for (const key of save.version === 1 ? legacyScalarKeys : save.version === 2 ? versionTwoKeys : save.version === 3 ? versionThreeKeys : scalarKeys) game[key] = number(save[key], key.endsWith('Clock') ? -1 : 0);
       if (!uint(game.clockStep)) return null;
       if (save.version < 3) game.goldEarned = Math.floor(game.kills / 5) + game.bossKills * 25 + game.chestsOpened * 10 + Math.floor(game.time / 60) * 5;
@@ -76,7 +82,7 @@
       if (game.xpNeed > 5000 || game.bossKills > game.kills) return null;
       if (!uint(game.chestsOpened) || !uint(game.nextChestId) || game.nextChestId < 1) return null;
       for (const upgrade of NightUpgrades) {
-        const newItem = save.version < 5 && ['hammer', 'capital'].includes(upgrade.id) || save.version < 6 && ['pistol', 'sling'].includes(upgrade.id) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(upgrade.id) || save.version < 9 && ['lightStaff','crowbar','chozo','flamethrower','electropistol'].includes(upgrade.id);
+        const newItem = save.version < 5 && ['hammer', 'capital'].includes(upgrade.id) || save.version < 6 && ['pistol', 'sling'].includes(upgrade.id) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(upgrade.id) || save.version < 9 && ['lightStaff','crowbar','chozo','flamethrower','electropistol'].includes(upgrade.id) || save.version < 10 && upgrade.id === 'gauntlets';
         const level = (save.version < 4 || newItem) && save.levels[upgrade.id] === undefined ? 0 : save.levels[upgrade.id];
         if (!uint(level) || level > upgrade.max) return null;
         game.levels[upgrade.id] = level;
@@ -92,8 +98,8 @@
           if (game.levels[recipe.weapon] !== NightUpgrades.find(u => u.id === recipe.weapon).max || Object.entries(recipe.passives).some(([id, rank]) => game.levels[id] < rank) || recipe.weapons?.some(id => game.levels[id] !== 0)) return null;
         }
       }
-      const previousStarter = { volt:'pistol', beacon:'meteor', ripley:'fireball', samus:'dagger', whisper:'garlic', ark:'water', shepard:'rune', error:'rune' }[game.character.id];
-      if (!(game.levels[game.character.weapon] || game.isConsumed(game.character.weapon) || previousStarter && (game.levels[previousStarter] || game.isConsumed(previousStarter))) || !NightSlots.includes(save.selectedWeapon) || !game.levels[save.selectedWeapon] || game.isConsumed(save.selectedWeapon)) return null;
+      const previousStarters = { volt:['pistol'], beacon:['meteor'], ripley:['fireball'], samus:['dagger'], whisper:['garlic'], ark:['water','gauss'], shepard:['rune'], error:['rune'] }[game.character.id] || [];
+      if (!(game.levels[game.character.weapon] || game.isConsumed(game.character.weapon) || previousStarters.some(id => game.levels[id] || game.isConsumed(id))) || !NightSlots.includes(save.selectedWeapon) || !game.levels[save.selectedWeapon] || game.isConsumed(save.selectedWeapon)) return null;
       if (save.version >= 7) {
         for (const [key, weapon] of [['weaponOrder', true], ['passiveOrder', false]]) {
           const ids = list(save[key], NightUpgrades.length), owned = game.inventory(weapon);
@@ -120,7 +126,7 @@
       game.runId = save.runId; game.randomState = save.randomState; game.selectedWeapon = save.selectedWeapon;
       game.fireMode = save.fireMode === 'manual' ? 'manual' : 'auto';
       game.lastBoss = typeof save.lastBoss === 'string' ? save.lastBoss.slice(0, 80) : '';
-      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = (save.version < 4 || save.version < 5 && key === 'hammer' || save.version < 6 && ['pistol', 'sling'].includes(key) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(key) || save.version < 9 && ['lightStaff','crowbar','chozo','flamethrower','electropistol'].includes(key)) && save.clocks[key] === undefined ? .3 : number(save.clocks[key], 0);
+      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = (save.version < 4 || save.version < 5 && key === 'hammer' || save.version < 6 && ['pistol', 'sling'].includes(key) || save.version < 8 && ['crossbow', 'gauss', 'plasmaMinigun'].includes(key) || save.version < 9 && ['lightStaff','crowbar','chozo','flamethrower','electropistol'].includes(key) || save.version < 10 && key === 'gauntlets') && save.clocks[key] === undefined ? .3 : number(save.clocks[key], 0);
       game.enemies = list(save.enemies, game.enemyLimit).map(row => {
         list(row, enemyKeys.length + 1);
         const keys = save.version === 1 ? enemyKeys.slice(0, -2) : enemyKeys;
@@ -221,6 +227,8 @@
       game.encountered = new Set(list(save.encountered, 100).filter(kind => Object.hasOwn(NightEnemies, kind)));
       game.offers = list(save.offers, 3).map(id => NightUpgrades.find(u => u.id === id));
       if (save.status === 'upgrading' && (!game.offers.length || game.offers.some(u => !u || game.levels[u.id] >= u.max) || new Set(save.offers).size !== save.offers.length)) return null;
+      if (save.version >= 10 && (save.status === 'upgrading' ? game.offers.some(u => !game.canUpgrade(u)) || save.offerSelection >= game.offers.length : save.offerSelection !== -1)) return null;
+      game.offerSelection = save.version >= 10 ? save.offerSelection : -1;
       if (save.status !== 'upgrading') game.offers = [];
       if (save.version < 7 && save.status === 'upgrading') game.offers = game.offers.filter(u => game.canUpgrade(u));
       game.status = ['upgrading', 'reward'].includes(save.status) ? save.status : 'paused';

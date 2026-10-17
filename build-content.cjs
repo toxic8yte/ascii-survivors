@@ -24,8 +24,12 @@ function validateContent(data, roster = []) {
   }
   const upgrades = [...data.weapons, ...data.passives], upgradeIds = new Set(upgrades.map(row => row.id));
   if (upgradeIds.size !== upgrades.length) fail('weapon and passive IDs overlap');
+  const icons = new Set();
   for (const row of upgrades) {
     if (!ascii(row.icon) || !uint(row.max) || !row.max || !text(row.kind, 80)) fail(row.id + ': invalid icon, max or kind');
+    if (icons.has(row.icon)) fail(row.id + ': duplicate upgrade icon');
+    icons.add(row.icon);
+    if (row.weapon && !['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(row.rarity)) fail(row.id + ': invalid weapon rarity');
     if (ids.weapons.has(row.id) !== (row.weapon === true)) fail(row.id + ': weapon flag does not match its file');
     if (row.cooldown !== undefined && (!positive(row.cooldown) || !text(row.behavior, 40))) fail(row.id + ': invalid cooldown or behavior');
     if (row.projectile !== undefined) {

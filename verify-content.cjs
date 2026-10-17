@@ -65,5 +65,5 @@ mega.enemyShots = Array.from({ length: 256 }, () => ({ ink: 5 })); mega.enemySki
 assert.equal(mega.enemyShots.length, 256); assert.equal(mega.enemyShots.filter(s => s.ink === 13).length, 40, 'A full shot budget still allows the red mega-boss burst');
 mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 56); assert.equal(mega.chests[0].source, 'darVetro');
 mega.openChest(mega.chests[0]); assert.equal(mega.reward.options.length, 3); assert.equal(mega.reward.count, 1);
-console.log('PASS: 24 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
+console.log('PASS: 25 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
 

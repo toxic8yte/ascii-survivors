@@ -11,7 +11,7 @@ const tick = (g,seconds) => { for(let i=0;i<Math.ceil(seconds*60);i++) g.update(
 function target(g,dx=150) {const e=g.spawn('brute',g.player.x+dx,g.player.y); e.hp=e.maxHp=10000;e.speed=0;return e;}
 const hero = id => NightCharacters.find(h=>h.id===id);
 assert.equal(hero('witch').name,'Электра Ивановна');assert.equal(hero('tact').name,'DJ Харон');
-assert.equal(hero('ark').weapon,'gauss');assert.deepEqual(hero('ark').extraWeapons,['crowbar']);
+assert.equal(hero('ark').weapon,'crowbar');assert.equal(hero('ark').extraWeapons,undefined);
 assert.deepEqual(fixture('shepard').inventory(true),['crossbow','rune']);
 assert.equal(NightUpgrades.find(w=>w.id==='birds').title,'Летучая мышь из Китая');
 assert.equal(NightEnemies.pumpkin.title,'Джек-о-Лантерн');

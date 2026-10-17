@@ -102,20 +102,43 @@ h1 > span { display: block; font-family: Consolas, monospace; font-size: 10px; l
 .intro-keys kbd { margin-right: 5px; font-size: 8px; }
 .best { margin-top: 20px; color: #766b56; font-size: 8px; letter-spacing: .12em; }
 .best b { color: #ae9870; font-weight: normal; margin-left: 9px; }
-.upgrade-content { width: min(860px, 100%); text-align: center; }
+.upgrade-content { width: min(1000px, 100%); text-align: center; }
 h2 { color: #e7d9bb; font-weight: normal; font-size: 34px; letter-spacing: -.06em; margin: 14px 0 8px; }
 h2 span { display: inline-block; padding: 6px 11px; margin-left: 14px; border: 1px solid #625232; color: var(--gold); font-size: 20px; vertical-align: middle; }
 .upgrade-content > p { font-size: 11px; color: #a29987; margin: 10px 0 27px; }
 .upgrade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; text-align: left; }
-.upgrade-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 242px; padding: 20px; color: #d8ceb8; border: 1px solid #4d4431; background: #201e17; text-align: left; position: relative; transition: border-color .15s, transform .15s; }
-.upgrade-card:hover, .upgrade-card:focus-visible { background: #2c251a; border-color: #c7a56a; transform: translateY(-3px); }
-.upgrade-icon { color: #ddbb7b; font-size: 26px; line-height: 36px; letter-spacing: -.08em; margin: 0 0 17px; }
+.upgrade-card { --rarity: #c1c4c6; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; min-height: 242px; padding: 20px; color: #d8ceb8; border: 1px solid var(--rarity); border-top-width: 3px; background: #171d17; text-align: left; position: relative; transition: background .15s, box-shadow .15s; }
+.upgrade-card:hover, .upgrade-card:focus-visible { background: #263027; box-shadow: inset 0 0 0 1px var(--rarity); }
+.upgrade-card[aria-pressed="true"] { background: #2a3026; outline: 2px solid #f1eee2; outline-offset: 3px; box-shadow: inset 0 -4px var(--rarity); }
+.upgrade-icon { color: var(--rarity); font-size: 26px; line-height: 36px; letter-spacing: -.06em; white-space: pre; margin: 0 32px 12px 0; }
 .upgrade-kind { color: #ba8a55; font-size: 8px; letter-spacing: .12em; }
 .upgrade-name { font-size: 16px; font-weight: normal; color: #ebddbd; margin: 10px 0; }
 .upgrade-description { color: #a49c86; font-size: 10px; line-height: 1.65; flex: 1; }
 .upgrade-rank { color: #807354; font-size: 8px; margin-top: 18px; }
 .upgrade-key { position: absolute; top: 15px; right: 15px; font-size: 10px; color: #a38b61; border: 1px solid #4e432f; padding: 4px 7px; }
 .overlay-hint { font-size: 8px; color: #7e735f; margin-top: 25px; letter-spacing: .1em; }
+[data-rarity="common"] { --rarity: #c1c4c6; }
+[data-rarity="uncommon"] { --rarity: #8bd67c; }
+[data-rarity="rare"] { --rarity: #78b7ff; }
+[data-rarity="epic"] { --rarity: #ca9bff; }
+[data-rarity="legendary"] { --rarity: #ffc269; }
+.rarity-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin: 0 0 20px; font-size: 9px; }
+.rarity-legend span { color: var(--rarity); }
+.rarity-legend span::before { content: '+'; margin-right: 5px; }
+.upgrade-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: 8px; line-height: 1.6; letter-spacing: .04em; }
+.upgrade-badges > span { padding: 2px 5px; border: 1px solid currentColor; }
+.badge-weapon { color: #f0b99d; }.badge-passive { color: #85d5ca; }.badge-new { color: #b5f88a; background: #34492a; }.badge-rarity { color: var(--rarity); }
+.upgrade-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.upgrade-actions > button { flex: 1; min-width: 130px; max-width: 250px; padding: 14px; font-size: 11px; border: 1px solid #657361; background: #1e281e; color: #d9dfcb; }
+.upgrade-actions > button:hover:enabled, .upgrade-actions > button:focus-visible { background: #344233; outline: 2px solid #e8d7b7; outline-offset: 2px; }
+#upgrade-confirm { background: #d5573f; border-color: #ff8e71; color: #1b100c; font-weight: bold; }
+#upgrade-selection { min-height: 18px; margin: 18px 0; color: #d8d3bc; }
+#upgrade .overlay-hint { line-height: 1.8; margin-top: 17px; }
+#upgrade:focus { outline: none; }
+#upgrade { position: fixed; inset: 12px; z-index: 30; border: 1px solid #46503c; background: #101710f5; }
+.equipment-tooltip { position: fixed; z-index: 40; pointer-events: none; width: min(360px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow: hidden; padding: 14px 16px; border: 1px solid var(--rarity, #a2b39a); border-top-width: 3px; background: #101b15f5; color: #e0ddca; box-shadow: 0 10px 28px #0009; font: 12px/1.65 Consolas, monospace; }
+.equipment-tooltip strong { display: block; color: var(--rarity); font-size: 13px; font-weight: normal; }.equipment-tooltip small { display: block; margin-top: 7px; color: #9fb8aa; font-size: 10px; }.equipment-tooltip p { margin: 10px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.passive-slot:focus-visible { outline: 2px solid #9cd8be; outline-offset: -3px; }
 .small-modal { text-align: center; width: min(430px, 100%); }
 .text-button { display: block; background: transparent; border: none; color: #aa9b80; padding: 12px; margin: 20px auto 0; font-size: 11px; text-decoration: underline; }
 .ending-art { color: var(--red); font-size: 19px; line-height: 1.15; margin: 0 0 26px; }
@@ -124,7 +147,8 @@ h2 span { display: inline-block; padding: 6px 11px; margin-left: 14px; border: 1
 footer { flex-shrink: 0; padding: 16px 0 17px; }
 .loadout { display: flex; align-items: center; gap: 20px; font-size: 8px; color: #c9b691; overflow-x: auto; padding-bottom: 5px; scrollbar-width: thin; scrollbar-color: #554830 transparent; }
 .loadout > button { display: flex; align-items: center; gap: 7px; flex-shrink: 0; white-space: nowrap; border: 1px solid #3e392c; background: #171710; color: inherit; padding: 7px 9px; font-size: inherit; }
-.loadout > button[aria-pressed="true"] { border-color: #c8a15f; background: #302719; }.loadout kbd { font-size: 9px; padding: 1px 4px; border-color: #4d4633; }
+.loadout > button[aria-pressed="true"], .loadout > button.evolved[aria-pressed="true"] { border-color: #ff6957; background: #692620; color: #fff0e6; box-shadow: inset 0 -3px #ff5445, 0 0 10px #ff493c30; }.loadout > button[aria-pressed="true"] > * { color: #fff0e6; }.loadout kbd { font-size: 9px; padding: 1px 4px; border-color: #4d4633; }
+#fire-mode[aria-pressed="true"] { color: #fff0e6; background: #692620; border-color: #ff6957; box-shadow: inset 0 -2px #ff5445; }
 .loadout i { font-style: normal; color: #e6b56c; font-size: 14px; }
 .loadout b { font-weight: normal; color: #e7c48b; }
 .loadout .locked { opacity: .3; }
@@ -191,7 +215,8 @@ footer { flex-shrink: 0; padding: 16px 0 17px; }
   .hud { gap: 11px; }.health-block { min-width: 90px; }.combat-bar { gap: 8px; font-size: 7px; }.combat-bar button { font-size: 8px; padding: 5px 6px; }.combat-bar kbd { display: none; }#selected-weapon { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.run-options { font-size: 9px; gap: 7px; margin-top: 12px; padding-top: 10px; }
   .arena { min-height: 0; }.field-note { left: 10px; right: 10px; font-size: 7px; }.field-note #coords { display: none; }
   .overlay { padding: 20px 14px; }.eyebrow { font-size: 7px; letter-spacing: .12em; }.castle { font-size: 8px; margin-top: 17px; }h1 { font-size: 41px; }.intro-content p { font-size: 11px; margin: 16px 0; }.intro-keys { gap: 8px; font-size: 7px; }.intro-keys kbd { font-size: 7px; padding: 3px 4px; }.best { margin-top: 16px; }
-  .upgrade-grid { grid-template-columns: 1fr; gap: 9px; }.upgrade-card { min-height: 0; padding: 13px 16px 13px 72px; }.upgrade-icon { position: absolute; left: 14px; top: 25px; font-size: 20px; margin: 0; }.upgrade-name { font-size: 14px; margin: 6px 0; }.upgrade-kind, .upgrade-rank { font-size: 7px; }.upgrade-description { font-size: 9px; }.upgrade-rank { margin-top: 8px; }.upgrade-key { top: 10px; right: 10px; font-size: 8px; padding: 2px 4px; }h2 { font-size: 28px; }.upgrade-content > p { margin-bottom: 16px; }.overlay-hint { margin-top: 16px; font-size: 7px; }
+  .upgrade-grid { grid-template-columns: 1fr; gap: 9px; }.upgrade-card { min-height: 0; padding: 13px 16px 13px 90px; }.upgrade-icon { position: absolute; left: 14px; top: 25px; font-size: 17px; margin: 0; }.upgrade-name { font-size: 14px; margin: 6px 0; }.upgrade-kind, .upgrade-rank { font-size: 7px; }.upgrade-description { font-size: 9px; }.upgrade-rank { margin-top: 8px; }.upgrade-key { top: 10px; right: 10px; font-size: 8px; padding: 2px 4px; }h2 { font-size: 28px; }.upgrade-content > p { margin-bottom: 16px; }.overlay-hint { margin-top: 16px; font-size: 7px; }
+  .upgrade-actions > button { min-width: 0; padding: 12px 6px; font-size: 9px; }.rarity-legend { font-size: 8px; }
   footer { padding: 12px 0; }.loadout { gap: 15px; font-size: 7px; }.loadout > span { gap: 5px; }.loadout i { font-size: 11px; }.legend { font-size: 8px; margin-top: 9px; }.desktop-help { display: none; }.notice { font-size: 9px; padding: 9px; }
 }
 @media (max-width: 800px) {

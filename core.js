@@ -77,7 +77,8 @@
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
       this.slashes = []; this.gemBins = new Map(); this.cellPool = [];
-      this.offers = []; this.shootClock = .15; this.spawnClock = .35; this.pulseClock = 1.2;
+      this.offers = []; this.offerSelection = -1; this.banished = new Set(); this.banishesLeft = 3; this.skipsLeft = 3;
+      this.shootClock = .15; this.spawnClock = .35; this.pulseClock = 1.2;
       this.spawnRadius = 650; this.bossSpawned = false; this.damageFlash = 0; this.events = [];
       this.grid = new Map();
     }
@@ -120,7 +121,29 @@
       const order = weapon ? this.weaponOrder : this.passiveOrder, all = weapon ? SLOTS : UPGRADES.filter(u => !u.weapon).map(u => u.id);
       return [...new Set([...order, ...all])].filter(id => all.includes(id) && this.levels[id] > 0 && !this.isConsumed(id));
     }
-    canUpgrade(u) { return Boolean(u && !this.isConsumed(u.id) && this.levels[u.id] < u.max && (this.levels[u.id] > 0 || this.stressMode || this.inventory(Boolean(u.weapon)).length < 5)); }
+    canUpgrade(u) { return Boolean(u && !this.banished.has(u.id) && !this.isConsumed(u.id) && this.levels[u.id] < u.max && (this.levels[u.id] > 0 || this.stressMode || this.inventory(Boolean(u.weapon)).length < 5)); }
+    upgradeWeight(u) {
+      const rarity = (root.NightCatalog || require('./catalog.js')).rarities[u.rarity];
+      return rarity ? rarity.weight * (1 + (this.luck - 1) * rarity.tier) : 100;
+    }
+    pickUpgrade(pool) {
+      if (!pool.length) return null;
+      let roll = this.random() * pool.reduce((sum, u) => sum + this.upgradeWeight(u), 0);
+      for (const u of pool) { roll -= this.upgradeWeight(u); if (roll < 0) return u; }
+      return pool[pool.length - 1];
+    }
+    drawOffers(candidates = UPGRADES.filter(u => this.canUpgrade(u))) {
+      const pool = [...candidates], offers = [];
+      while (offers.length < 3 && pool.length) {
+        const u = this.pickUpgrade(pool); offers.push(u); pool.splice(pool.indexOf(u), 1);
+      }
+      // Keep the first level useful without making its guaranteed weapon uniform.
+      if (this.level === 2 && !offers.some(u => u.weapon && !this.levels[u.id])) {
+        const fresh = this.pickUpgrade(candidates.filter(u => u.weapon && !this.levels[u.id]));
+        if (fresh) offers[Math.min(2, offers.length)] = fresh;
+      }
+      this.offers = offers; this.offerSelection = -1;
+    }
     get weaponPages() { return Math.max(1, Math.ceil(this.inventory(true).length / 5)); }
     get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode); }
     isEvolved(id) { return this.evolutions.has(EVOLUTION_BY_WEAPON[id]?.id); }
@@ -261,7 +284,7 @@
       const candidates = UPGRADES.filter(u => this.canUpgrade(u));
       while (options.length < 3 && candidates.length) {
         const owned = candidates.filter(u => this.levels[u.id] > 0), pool = owned.length ? owned : candidates;
-        const u = pool[Math.floor(this.random() * pool.length)]; candidates.splice(candidates.indexOf(u), 1);
+        const u = this.pickUpgrade(pool); candidates.splice(candidates.indexOf(u), 1);
         options.push({ type: 'upgrade', id: u.id, rank: this.levels[u.id] + 1 });
       }
       const mega = ENEMIES[chest.source].mega;
@@ -485,23 +508,34 @@
       this.xpNeed = Math.min(5000, Math.ceil(this.xpNeed * 1.2 + 3));
       const candidates = UPGRADES.filter(u => this.canUpgrade(u));
       if (!candidates.length) { this.healPlayer(30); return; }
-      for (let i = candidates.length - 1; i > 0; i--) {
-        const j = Math.floor(this.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-      }
-      this.offers = candidates.slice(0, 3);
-      // The first choice always contains a weapon this hero does not have yet.
-      if (this.level === 2 && !this.offers.some(u => u.weapon && !this.levels[u.id])) {
-        const fresh = candidates.filter(u => u.weapon && !this.levels[u.id]);
-        if (fresh.length) this.offers[2] = fresh[0];
-      }
+      this.drawOffers(candidates);
       this.status = 'upgrading'; this.events.push('level');
     }
-    choose(index) {
-      if (this.status !== 'upgrading' || !this.offers[index]) return false;
-      const u = this.offers[index]; if (!this.applyUpgrade(u)) return false;
+    selectOffer(index) {
+      if (this.status !== 'upgrading' || !Number.isInteger(index) || !this.offers[index]) return false;
+      this.offerSelection = index; return true;
+    }
+    finishUpgrade() {
       this.player.invulnerable = Math.max(this.player.invulnerable, .65);
-      this.offers = []; this.status = 'running'; this.checkLevel();
+      this.offers = []; this.offerSelection = -1; this.status = 'running'; this.checkLevel();
+    }
+    banishOffer(index = this.offerSelection) {
+      if (this.status !== 'upgrading' || !Number.isInteger(index) || !this.offers[index] || !this.banishesLeft) return false;
+      const u = this.offers[index]; this.banished.add(u.id); this.banishesLeft--;
+      const replacement = this.pickUpgrade(UPGRADES.filter(candidate => this.canUpgrade(candidate) && !this.offers.includes(candidate)));
+      if (replacement) this.offers[index] = replacement; else this.offers.splice(index, 1);
+      this.offerSelection = -1;
+      if (!this.offers.length) this.finishUpgrade();
+      return true;
+    }
+    skipUpgrade() {
+      if (this.status !== 'upgrading' || !this.skipsLeft) return false;
+      this.skipsLeft--; this.finishUpgrade(); return true;
+    }
+    choose(index) {
+      if (this.status !== 'upgrading' || !Number.isInteger(index) || !this.offers[index]) return false;
+      const u = this.offers[index]; if (!this.applyUpgrade(u)) return false;
+      this.finishUpgrade();
       return true;
     }
     bladePositions() {
@@ -620,6 +654,15 @@
         for (const e of this.nearby(p.x,p.y,radius+50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y)<radius+e.radius) {
           const delta = Math.atan2(e.y-p.y,e.x-p.x)-angle;
           if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < 1.2) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
+        }
+        return;
+      }
+      if (id === 'gauntlets') {
+        const radius = (90 + level * 10) * this.area, count = 2 + this.levels.fork;
+        for (let i = 0; i < count; i++) this.slashes.push({ x:p.x, y:p.y, angle:angle + (i - (count - 1) / 2) * .14, radius:radius + i % 2 * 10, life:.28, ink:8, glyph:'[=]' });
+        for (const e of this.nearby(p.x,p.y,radius + 50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y) < radius + e.radius) {
+          const delta = Math.atan2(e.y-p.y,e.x-p.x) - angle;
+          if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < .85) this.hurtEnemy(e,(12 + level * 8) * this.power * count,55,id);
         }
         return;
       }
