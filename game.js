@@ -10,7 +10,7 @@
   let selectedCharacter = progress.profile.character;
   let fireModePreference = progress.profile.fireMode;
   $('enemy-limit').value = progress.profile.enemyLimit;
-  function options() { return { fireMode: fireModePreference, stressMode: $('stress-mode').checked, enemyLimit: Number($('enemy-limit').value) }; }
+  function options() { return { fireMode: fireModePreference, stressMode: $('stress-mode').checked, enemyLimit: Number($('enemy-limit').value), meta: progress.profile.meta.ranks }; }
   let game = new NightGame(Date.now(), selectedCharacter, options()), keys = new Set();
   let camera = { x: game.player.x, y: game.player.y }, pointer = { x: 0, y: 0, id: null };
   let last = 0, accumulator = 0, lastHUD = 0, previousStatus = '', offersLevel = 0;
@@ -39,6 +39,7 @@
     if (savedRun) text('continue-summary', savedRun.character.name + ' · ' + formatTime(savedRun.elapsed) + ' · УР. ' + savedRun.level + ' · ' + Math.ceil(savedRun.player.hp) + ' HP');
     text('start', savedRun ? 'НОВЫЙ ЗАБЕГ →' : 'ВОЙТИ В НОЧЬ →');
     const p = progress.profile;
+    text('meta-open', 'НАСЛЕДИЕ · ' + p.meta.gold + ' ЗОЛОТА');
     text('progress-summary', 'ЗАБЕГОВ: ' + p.runs + ' · ИЗГНАНО: ' + p.kills + ' · БОССОВ: ' + p.bossKills + ' · СУНДУКОВ: ' + p.chestsOpened + (p.best ? ' · РЕКОРД: ' + formatTime(p.best.time) : ''));
   }
   function resumeSavedRun() {
@@ -61,10 +62,24 @@
       const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
       const title = document.createElement('h3'); title.textContent = enemy.title;
       const description = document.createElement('p'); description.textContent = enemy.text;
-      const hint = document.createElement('small'); hint.textContent = (enemy.boss ? 'БОСС' : 'С ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
+      const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С 10:00' : enemy.boss ? 'БОСС' : 'С ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
       card.append(sprite, title, description, hint); fragment.append(card);
     }
     $('bestiary-list').replaceChildren(fragment); $('bestiary').showModal();
+  }
+  function showMeta() {
+    progress.profile = progress.loadProfile(); text('meta-gold', progress.profile.meta.gold + ' ЗОЛОТА');
+    const fragment = document.createDocumentFragment();
+    for (const upgrade of NightMeta) {
+      const rank = progress.profile.meta.ranks[upgrade.id], cost = upgrade.cost * (rank + 1) ** 2, card = document.createElement('article'); card.className = 'meta-card';
+      const title = document.createElement('h3'); title.textContent = upgrade.icon + ' ' + upgrade.title;
+      const info = document.createElement('p'); info.textContent = upgrade.text;
+      const button = document.createElement('button'); button.type = 'button'; button.dataset.buy = upgrade.id; button.dataset.rank = rank;
+      button.textContent = rank >= upgrade.max ? 'МАКСИМУМ · ' + rank + '/' + upgrade.max : 'РАНГ ' + rank + '/' + upgrade.max + ' → КУПИТЬ ЗА ' + cost;
+      button.disabled = rank >= upgrade.max || progress.profile.meta.gold < cost || !progress.available;
+      card.append(title, info, button); fragment.append(card);
+    }
+    $('meta-grid').replaceChildren(fragment);
   }
   function resize() {
     renderer.resize(arena.clientWidth, arena.clientHeight, devicePixelRatio || 1);
@@ -103,9 +118,9 @@
     $('characters').replaceChildren(fragment); updateCharacterDetails();
     NightSlots.forEach((id, i) => {
       const u = NightUpgrades.find(u => u.id === id), slot = document.createElement('button'), key = document.createElement('kbd'), icon = document.createElement('i'), name = document.createElement('span'), rank = document.createElement('b');
-      slot.type = 'button'; slot.dataset.slot = i + 1; key.textContent = i + 1;
+      slot.type = 'button'; slot.dataset.slot = i % 9 + 1; key.textContent = i % 9 + 1;
       icon.textContent = u?.icon || '-'; name.textContent = u?.title.toUpperCase() || 'ПУСТО'; slot.append(key, icon, name, rank); slot.title = u?.text || 'Место для будущего оружия';
-      $('loadout').append(slot); equipment.set(id || 'empty', { slot, rank });
+      $('loadout').append(slot); equipment.set(id || 'empty', { slot, rank, index: i });
     });
   }
   function resetMetrics() {
@@ -118,12 +133,12 @@
     const sorted = Array.from(frameTimes.subarray(0, sampleCount)).sort((a, b) => a - b);
     frameMean = sorted.length ? sorted.reduce((a, b) => a + b, 0) / sorted.length : 0;
     frameP95 = sorted[Math.max(0, Math.ceil(sorted.length * .95) - 1)] || 0;
-    records.push({ seconds: +game.elapsed.toFixed(2), simulationSeconds: +game.time.toFixed(2), pressureSeconds: +game.pressureTime.toFixed(2), enemies: game.enemies.length, peakEnemies: game.peakEnemies, fps: displayFPS, frameMS: +frameMean.toFixed(2), frameP95MS: +frameP95.toFixed(2), simulationMS: +simulationMS.toFixed(2), renderMS: +renderMS.toFixed(2), drops: game.gems.length, projectiles: game.shots.length + game.boomerangs.length + game.enemyShots.length });
+    records.push({ seconds: +game.elapsed.toFixed(2), simulationSeconds: +game.time.toFixed(2), pressureSeconds: +game.pressureTime.toFixed(2), enemies: game.enemies.length, peakEnemies: game.peakEnemies, fps: displayFPS, frameMS: +frameMean.toFixed(2), frameP95MS: +frameP95.toFixed(2), simulationMS: +simulationMS.toFixed(2), renderMS: +renderMS.toFixed(2), drops: game.gems.length, projectiles: game.shots.length + game.boomerangs.length + game.relics.length + game.enemyShots.length });
     if (records.length > 3600) records.shift();
   }
   function selectWeapon(number) {
     if (game.status === 'upgrading' || game.status === 'reward') return;
-    if (!game.selectSlot(number)) { notify(number === 9 ? 'Слот 9 пока пуст.' : 'Оружие ещё не найдено — выбери его при повышении уровня.'); return; }
+    if (!game.selectSlot(number)) { notify('В этом слоте пока нет оружия — найди его при повышении уровня.'); return; }
     updateHUD(); dirty = true;
   }
   function toggleFireMode() {
@@ -137,14 +152,14 @@
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = 'ascii-survivors-metrics.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
-  function configureRun() {
+  function configureRun(persist = true) {
     if (game.status !== 'ready') return;
-    game = new NightGame(Date.now(), selectedCharacter, options()); preferences(); resetMetrics(); resize(); updateHUD();
+    game = new NightGame(Date.now(), selectedCharacter, options()); if (persist) preferences(); resetMetrics(); resize(); updateHUD();
   }
   function updateCharacterDetails() {
     const c = game.character, weapon = NightUpgrades.find(u => u.id === c.weapon);
     text('character-name', c.name + ' / ' + c.role); text('character-description', c.text);
-    text('character-stats', c.hp + ' HP  /  ' + c.speed + ' СКОРОСТЬ  /  ' + (c.dash * NightBalance.dashCooldown).toFixed(2) + ' С РЫВОК');
+    text('character-stats', game.player.maxHp + ' HP  /  ' + Math.round(game.speed) + ' СКОРОСТЬ  /  ' + game.dashCooldown.toFixed(2) + ' С РЫВОК');
     text('character-weapon', weapon.icon + ' ' + weapon.title);
     for (const card of $('characters').children) card.setAttribute('aria-pressed', String(card.dataset.character === selectedCharacter));
   }
@@ -198,7 +213,9 @@
   function updateHUD() {
     const p = game.player, status = game.status;
     const weapon = NightUpgrades.find(u => u.id === game.selectedWeapon), manual = game.fireMode === 'manual';
-    text('selected-weapon', (NightSlots.indexOf(game.selectedWeapon) + 1) + ' / ' + weapon.title.toUpperCase());
+    text('selected-weapon', (NightSlots.indexOf(game.selectedWeapon) % 9 + 1) + ' / ' + weapon.title.toUpperCase() + ' · СТР. ' + (Math.floor(NightSlots.indexOf(game.selectedWeapon) / 9) + 1));
+    text('weapon-page', 'ОРУЖИЕ ' + (game.weaponPage + 1) + ' / ' + Math.ceil(NightSlots.length / 9));
+    text('run-gold', 'ЗОЛОТО +' + game.goldEarned);
     $('fire-mode').setAttribute('aria-pressed', String(manual));
     text('fire-mode', manual ? 'РУЧНОЙ ОГОНЬ [M]' : 'АВТОАТАКА [M]');
     $('fire-touch').hidden = !manual; $('stress-controls').hidden = !game.stressMode;
@@ -225,16 +242,19 @@
     $('dash-touch').disabled = status !== 'running' || p.dashReady > 0;
     $('pause').disabled = status !== 'running' && status !== 'paused';
     $('pause').setAttribute('aria-pressed', String(status === 'paused'));
-    for (const [id, { slot, rank }] of equipment) {
+    for (const [id, { slot, rank, index }] of equipment) {
+      slot.hidden = Math.floor(index / 9) !== game.weaponPage;
       const level = game.levels[id] || 0;
       slot.classList.toggle('locked', !level);
       slot.setAttribute('aria-pressed', String(id === game.selectedWeapon));
       const value = level ? 'I'.repeat(level) : '—'; if (rank.textContent !== value) rank.textContent = value;
     }
+    const passiveText = NightUpgrades.filter(u => !u.weapon && game.levels[u.id]).map(u => u.icon + ' ' + u.title + ' ' + game.levels[u.id] + '/' + u.max).join('   ·   ');
+    text('passive-loadout', passiveText); $('passive-loadout').hidden = !passiveText;
     text('metric-enemies', game.enemies.length + ' / ' + game.enemyLimit); text('metric-peak', game.peakEnemies); text('metric-rendered', renderer.renderedEnemies || 0);
     text('metric-fps', displayFPS || '—'); text('metric-frame', frameMean.toFixed(1) + ' / ' + frameP95.toFixed(1) + ' мс');
     text('metric-cpu', simulationMS.toFixed(1) + ' / ' + renderMS.toFixed(1) + ' мс'); text('metric-sim', formatTime(game.time)); text('metric-pressure', formatTime(game.pressureTime));
-    text('metric-objects', (game.shots.length + game.boomerangs.length + game.enemyShots.length) + ' / ' + game.gems.length);
+    text('metric-objects', (game.shots.length + game.boomerangs.length + game.relics.length + game.enemyShots.length) + ' / ' + game.gems.length);
     if (status !== previousStatus) {
       dirty = true;
       $('intro').hidden = status !== 'ready'; $('upgrade').hidden = status !== 'upgrading'; $('paused').hidden = status !== 'paused'; $('ending').hidden = status !== 'dead' && status !== 'won'; $('chest-reward').hidden = status !== 'reward';
@@ -243,7 +263,7 @@
         saveBest(); const won = status === 'won';
         text('ending-title', won ? 'Ты встретил рассвет' : 'Ночь победила');
         text('ending-caption', won ? 'СОЛНЦЕ ВЗОШЛО НАД КЛАДБИЩЕМ' : 'КЛАДБИЩЕ ПОЛУЧИЛО ЕЩЁ ОДНУ ДУШУ');
-        text('ending-text', 'Беги к осколкам опыта. Новое оружие поможет пережить следующую ночь.');
+        text('ending-text', 'Заработано ' + game.goldEarned + ' золота. Постоянные улучшения ждут в «Наследии» на стартовом экране.');
         text('ending-art', won ? ' \\ | /\n-- * --\n / | \\' : ' .-.\n(x x)\n |=|\n_|_|_');
         text('result-time', formatTime(game.elapsed)); text('result-kills', game.kills); text('result-level', game.level);
         $('restart').focus({ preventScroll: true });
@@ -298,6 +318,16 @@
   });
   $('continue-run').addEventListener('click', resumeSavedRun);
   $('claim-reward').addEventListener('click', claimReward);
+  $('meta-open').addEventListener('click', () => { showMeta(); $('meta-shop').showModal(); });
+  $('meta-close').addEventListener('click', () => $('meta-shop').close());
+  $('meta-grid').addEventListener('click', e => {
+    const button = e.target.closest('[data-buy]'); if (!button || game.status !== 'ready') return;
+    const bought = progress.purchase(button.dataset.buy, Number(button.dataset.rank));
+    showMeta(); if (bought) { configureRun(); updateCharacterDetails(); progressSummary(); text('meta-message', 'Покупка сохранена. Улучшение действует в новых забегах.'); }
+    else text('meta-message', 'Покупка не выполнена. Баланс и цены обновлены; проверь доступность хранилища.');
+  });
+  for (const [id, direction] of [['weapons-prev', -1], ['weapons-next', 1]]) $(id).addEventListener('click', () => { game.cycleWeapons(direction); updateHUD(); });
+  window.addEventListener('storage', () => { progress.profile = progress.loadProfile(); if (game.status === 'ready') { configureRun(false); progressSummary(); updateCharacterDetails(); } if ($('meta-shop').open) showMeta(); });
   $('bestiary-open').addEventListener('click', openBestiary);
   $('bestiary-close').addEventListener('click', () => $('bestiary').close());
   $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
@@ -308,11 +338,14 @@
   $('loadout').addEventListener('click', e => { const slot = e.target.closest('[data-slot]'); if (slot) selectWeapon(Number(slot.dataset.slot)); });
   $('metrics-toggle').addEventListener('click', () => { const panel = $('engine-panel'); panel.hidden = !panel.hidden; $('metrics-toggle').setAttribute('aria-expanded', String(!panel.hidden)); });
   $('pressure').addEventListener('click', () => { if (!game.stressMode || game.status !== 'running') return; game.pressureOffset += 300; updateHUD(); });
+  const megaPreset = document.createElement('button'); megaPreset.id = 'mega-pressure'; megaPreset.type = 'button'; megaPreset.textContent = 'Волны после 10 минут';
+  $('stress-controls').append(megaPreset);
+  megaPreset.addEventListener('click', () => { if (!game.stressMode || game.status !== 'running') return; game.pressureOffset = Math.max(game.pressureOffset, 600 - game.elapsed); updateHUD(); });
   $('save-metrics').addEventListener('click', exportMetrics);
   $('characters').addEventListener('click', e => { const card = e.target.closest('[data-character]'); if (card) selectCharacter(card.dataset.character); });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
-    if ($('bestiary').open) return;
+    if ($('bestiary').open || $('meta-shop').open) return;
     if (!/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && (e.code === 'KeyG' && !e.ctrlKey && !e.altKey && !e.metaKey || e.code === 'Escape' && expandedView)) {
       e.preventDefault(); if (!e.repeat) toggleExpandedView(); return;
     }
@@ -322,6 +355,7 @@
     if (movement) { e.preventDefault(); keys.add(e.code); syncInput(); }
     if (e.code === 'KeyF' && game.status === 'running') { e.preventDefault(); keys.add(e.code); if (!e.repeat) game.requestAttack(); syncInput(); }
     if (e.repeat) return;
+    if (e.code === 'KeyQ' || e.code === 'KeyE') { e.preventDefault(); game.cycleWeapons(e.code === 'KeyQ' ? -1 : 1); updateHUD(); return; }
     if (game.status === 'upgrading' && /^(Digit|Numpad)[123]$/.test(e.code)) { e.preventDefault(); choose(Number(e.code.slice(-1)) - 1); }
     else if (/^(Digit|Numpad)[1-9]$/.test(e.code)) { e.preventDefault(); selectWeapon(Number(e.code.slice(-1))); }
     else if (e.code === 'KeyM') { e.preventDefault(); toggleFireMode(); }
@@ -374,10 +408,12 @@
     } else accumulator = 0;
     simulationMS += (performance.now() - simulationStart - simulationMS) * .1;
     if (game.events.includes('boss')) notify('БОСС: ' + game.lastBoss.toUpperCase());
+    if (game.events.includes('mega-boss')) notify('МЕГАБОСС: ' + game.lastBoss.toUpperCase() + ' · БЕЗ ЗАМКНУТОЙ СТЕНЫ');
+    if (game.events.includes('revive')) notify('ВОЗРОЖДЕНИЕ · ТРИ СЕКУНДЫ ЗАЩИТЫ');
     if (game.events.includes('arena-warning')) notify('ГОТОВЬСЯ: ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ СТЕНЫ');
     if (game.events.includes('arena-clear') || game.events.includes('boss-defeated')) notify('БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК');
     if (game.events.includes('arena-timeout')) notify('СТЕНА ИСЧЕЗЛА · БОСС ОСТАЛСЯ НА ПОЛЕ');
-    if (game.events.some(event => ['boss', 'arena-warning', 'arena-clear', 'arena-timeout', 'boss-defeated', 'chest-open'].includes(event))) saveCheckpoint();
+    if (game.events.some(event => ['boss', 'mega-boss', 'revive', 'arena-warning', 'arena-clear', 'arena-timeout', 'boss-defeated', 'chest-open'].includes(event))) saveCheckpoint();
     game.events.length = 0;
     if (now - lastHUD > 85) { updateHUD(); lastHUD = now; }
     if (!document.hidden && (game.status === 'running' || dirty)) {

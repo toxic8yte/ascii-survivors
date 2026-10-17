@@ -5,8 +5,8 @@ function fixture(options = {}) {
   const game = new NightGame(41, 'hunter', { fireMode: 'manual', terrain: false, ...options }); game.start();
   game.enemies = []; game.spawnClock = game.nextBossAt = 1e6; return game;
 }
-assert.equal(Object.keys(NightEnemies).length, 17);
-assert.equal(Object.values(NightEnemies).filter(e => e.boss).length, 6);
+assert.equal(Object.keys(NightEnemies).length, 18);
+assert.equal(Object.values(NightEnemies).filter(e => e.boss && !e.mega).length, 6);
 for (const [kind, definition] of Object.entries(NightEnemies)) {
   assert.match(definition.sprite, /^[\x20-\x7e\n]+$/, kind + ' uses ASCII');
   const g = fixture(), e = g.spawn(kind, g.player.x + 400, g.player.y); tick(g, 4);
@@ -48,10 +48,10 @@ assert.equal(slowed.speed, slowed.character.speed, 'Mummy curse expires');
 const swept = fixture(); swept.enemyShots.push({ x: swept.player.x - 50, y: swept.player.y, vx: 3000, vy: 0, life: 1, damage: 15, radius: 7, ink: 5, glyph: '~' });
 swept.update(.05); assert.equal(swept.player.hp, 85, 'Enemy missiles use swept collision'); assert.equal(swept.enemyShots.length, 0);
 
-const bosses = fixture(); bosses.nextBossAt = 60; const order = [];
+const bosses = fixture(); bosses.nextBossAt = 60; bosses.nextMegaAt = 1e6; const order = [];
 for (let i = 0; i < 12; i++) { bosses.enemies = []; bosses.time = bosses.nextBossAt; bosses.update(.01); tick(bosses, 5.05); const boss = bosses.enemies.find(e => e.boss); order.push(boss.kind); bosses.hurtEnemy(boss, boss.hp + 1); }
 assert.equal(new Set(order.slice(0, 6)).size, 6); assert.deepEqual(order.slice(0, 6), order.slice(6));
 assert.equal(bosses.bossKills, 12); assert.equal(bosses.hearts[0].value, 60);
 const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .442) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
 quicker.levels.haste = 1; assert.ok(quicker.cooldown < .442);
-console.log('PASS: 17 enemies, six rotating bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');
+console.log('PASS: 18 enemies, six rotating mini-bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');

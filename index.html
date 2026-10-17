@@ -52,12 +52,12 @@ ___|_____|___|__|___|_____|___</pre>
           <div class="run-options"><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>В тесте: неуязвимость и весь арсенал. Выживание — без ограничения времени.</small></div>
           </div>
           <section class="character-picker" aria-label="Выбор персонажа">
-            <div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div>
+            <div class="picker-heading"><div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div><button id="meta-open" type="button" class="meta-open">НАСЛЕДИЕ · 50 ЗОЛОТА</button></div>
             <div class="characters" id="characters" role="group" aria-label="Персонажи"></div>
             <div class="character-details"><h3 id="character-name">Мара / Охотница</h3><p id="character-description"></p><div id="character-stats"></div><b id="character-weapon"></b></div>
             <div class="continue-box" id="continue-box" hidden><p id="continue-summary"></p><button class="primary-button" id="continue-run" type="button">ПРОДОЛЖИТЬ ЗАБЕГ →</button></div>
             <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
-            <div class="arsenal-note">6 ГЕРОЕВ · 8 ОРУЖИЙ · 17 ВРАГОВ / 6 БОССОВ</div>
+            <div class="arsenal-note">10 ГЕРОЕВ · 20 ОРУЖИЙ · 17 ПАССИВОК · МЕГАБОСС ПОСЛЕ 10 МИНУТ</div>
             <div id="progress-summary" class="progress-summary"></div>
           </section>
         </div>
@@ -99,11 +99,15 @@ ___|_____|___|__|___|_____|___</pre>
     </section>
 
     <footer>
+      <div class="weapon-pages"><button id="weapons-prev" type="button" aria-label="Предыдущая страница оружия">← Q</button><span id="weapon-page">ОРУЖИЕ 1 / 3</span><button id="weapons-next" type="button" aria-label="Следующая страница оружия">E →</button><span id="run-gold">ЗОЛОТО +0</span></div>
       <div class="loadout" id="loadout" aria-label="Оружие"></div>
-      <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span id="save-status" role="status">АВТОСОХРАНЕНИЕ</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · 1–9 оружие · M режим · ЛКМ / F атака · P пауза · G весь экран</span></div>
+      <div id="passive-loadout" class="passive-loadout" aria-label="Пассивные усиления" hidden></div>
+      <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span id="save-status" role="status">АВТОСОХРАНЕНИЕ</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · Q/E страницы · 1–9 оружие · M режим · ЛКМ / F атака · P пауза · G весь экран</span></div>
     </footer>
   </main>
   <dialog id="bestiary" aria-labelledby="bestiary-title"><div class="bestiary-heading"><div><div class="eyebrow">ОБИТАТЕЛИ КЛАДБИЩА</div><h2 id="bestiary-title">Бестиарий</h2></div><button id="bestiary-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Перед рывком появляется линия, перед телепортацией — метка. Уходи с линии атаки.</p><div id="bestiary-list" class="bestiary-grid"></div></dialog>
+  <dialog id="meta-shop" aria-labelledby="meta-title"><div class="bestiary-heading"><div><div class="eyebrow">ПОСТОЯННЫЕ УЛУЧШЕНИЯ</div><h2 id="meta-title">Наследие</h2><strong id="meta-gold">50 ЗОЛОТА</strong></div><button id="meta-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Каждые 5 убийств: 1 золото · мини-босс: +25 · мегабосс: +125 · сундук: +10 · минута жизни: +5. Первые 50 — стартовый запас. Старые достижения тоже учтены. Покупки действуют в новых забегах.</p><div id="meta-grid" class="meta-grid"></div><p id="meta-message" role="status"></p></dialog>
+  <script src="catalog.js"></script>
   <script src="core.js"></script>
   <script src="progress.js"></script>
   <script src="renderer.js"></script>

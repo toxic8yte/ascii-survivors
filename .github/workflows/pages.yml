@@ -31,7 +31,7 @@ jobs:
           package-manager-cache: false
       - name: Check JavaScript syntax
         run: |
-          for file in core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs benchmark.cjs; do
+          for file in catalog.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs benchmark.cjs; do
             node --check "$file"
           done
       - name: Test gameplay and rendering
@@ -40,16 +40,17 @@ jobs:
           node verify-enemies.cjs
           node verify-progress.cjs
           node verify-arena.cjs
+          node verify-content.cjs
       - name: Package game files
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           mkdir -p _site
-          cp index.html style.css core.js progress.js renderer.js game.js _site/
+          cp index.html style.css catalog.js core.js progress.js renderer.js game.js _site/
           node <<'NODE'
           const fs = require('node:fs');
           const path = '_site/index.html';
           let html = fs.readFileSync(path, 'utf8');
-          for (const file of ['style.css', 'core.js', 'progress.js', 'renderer.js', 'game.js']) {
+          for (const file of ['style.css', 'catalog.js', 'core.js', 'progress.js', 'renderer.js', 'game.js']) {
             html = html.replaceAll(`"${file}"`, `"${file}?v=${process.env.GITHUB_SHA}"`);
           }
           fs.writeFileSync(path, html);

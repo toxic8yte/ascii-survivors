@@ -2,7 +2,8 @@
   'use strict';
   const PROFILE_KEY = 'ascii-night-progress-v2', RUN_KEY = 'ascii-night-run-v1';
   const legacyScalarKeys = ['time', 'wallTime', 'pressureOffset', 'steps', 'kills', 'bossKills', 'level', 'xp', 'xpNeed', 'nextId', 'peakEnemies', 'nextBossAt', 'bossIndex', 'shootClock', 'spawnClock', 'pulseClock'];
-  const scalarKeys = [...legacyScalarKeys, 'chestsOpened', 'nextChestId'];
+  const versionTwoKeys = [...legacyScalarKeys, 'chestsOpened', 'nextChestId'];
+  const scalarKeys = [...versionTwoKeys, 'goldEarned', 'goldCarry', 'xpCarry', 'revivesUsed', 'weaponPage', 'bibleUntil', 'shieldCharges', 'shieldUntil', 'nextMegaAt'];
   const enemyKeys = ['id', 'x', 'y', 'hp', 'maxHp', 'damage', 'speed', 'flash', 'bladeAt', 'chilledTill', 'poisonAt', 'phase', 'skillClock', 'windup', 'chargeTime', 'chargeX', 'chargeY', 'targetX', 'targetY', 'arenaMember', 'radius'];
   const playerKeys = ['x', 'y', 'hp', 'maxHp', 'invulnerable', 'dash', 'dashReady', 'dirX', 'dirY', 'slowTill'];
   const effects = {
@@ -11,9 +12,11 @@
     pools: ['x', 'y', 'radius', 'life'],
     meteors: ['x', 'y', 'wait', 'radius', 'damage'],
     hearts: ['x', 'y', 'value', 'expires'],
-    enemyShots: ['x', 'y', 'vx', 'vy', 'life', 'damage', 'radius', 'ink']
+    enemyShots: ['x', 'y', 'vx', 'vy', 'life', 'damage', 'radius', 'ink'],
+    relics: ['x', 'y', 'vx', 'vy', 'life', 'damage', 'radius', 'remaining', 'minX', 'maxX', 'minY', 'maxY'],
+    bossWhips: ['x', 'y', 'angle', 'radius', 'life']
   };
-  const limits = { shots: 12000, boomerangs: 300, pools: 500, meteors: 100, hearts: 128, enemyShots: 256 };
+  const limits = { shots: 12000, boomerangs: 300, pools: 500, meteors: 100, hearts: 128, enemyShots: 256, relics: 512, bossWhips: 12 };
   const number = (value, min = -1e12, max = 1e12) => { if (!Number.isFinite(value) || value < min || value > max) throw new Error('Invalid save number'); return value; };
   const list = (value, max) => { if (!Array.isArray(value) || value.length > max) throw new Error('Invalid save list'); return value; };
   const pick = (object, keys) => Object.fromEntries(keys.map(key => [key, object[key]]));
@@ -24,7 +27,8 @@
   function capture(game) {
     if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return null;
     const save = {
-      version: 2, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
+      version: 3, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
+      meta: { ...game.meta }, freezes: Array.from(game.freezes), bibleHits: Array.from(game.bibleHits),
       characterId: game.character.id, enemyLimit: game.enemyLimit, status: game.status,
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
@@ -40,6 +44,8 @@
       if (key === 'shots') copy.hits = Array.from(entity.hits);
       if (key === 'boomerangs') copy.hits = Array.from(entity.hits.entries());
       if (key === 'enemyShots') copy.glyph = entity.glyph;
+      if (key === 'pools') { copy.kind = entity.kind || 'poison'; copy.damage = entity.damage || 0; }
+      if (key === 'relics') { copy.kind = entity.kind; copy.hits = Array.from(entity.hits); }
       return copy;
     });
     return save;
@@ -47,17 +53,21 @@
 
   function restore(save) {
     try {
-      if (!plain(save) || ![1, 2].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId) return null;
+      if (!plain(save) || ![1, 2, 3].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
-      const game = new NightGame(save.seed, save.characterId, { enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false });
-      for (const key of save.version === 1 ? legacyScalarKeys : scalarKeys) game[key] = number(save[key], key.endsWith('Clock') ? -1 : 0);
+      if (save.version === 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
+      const game = new NightGame(save.seed, save.characterId, { enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version === 3 ? save.meta : {} });
+      for (const key of save.version === 1 ? legacyScalarKeys : save.version === 2 ? versionTwoKeys : scalarKeys) game[key] = number(save[key], key.endsWith('Clock') ? -1 : 0);
+      if (save.version < 3) game.goldEarned = Math.floor(game.kills / 5) + game.bossKills * 25 + game.chestsOpened * 10 + Math.floor(game.time / 60) * 5;
+      if (!uint(game.goldEarned) || !uint(game.revivesUsed) || !uint(game.weaponPage) || game.weaponPage >= Math.ceil(NightSlots.length / 9)) return null;
+      number(game.goldCarry, 0, 1); number(game.xpCarry, 0, 1); number(game.shieldCharges, 0, 3);
       if (!uint(game.level) || game.level < 1 || !uint(game.kills) || !uint(game.nextId) || game.nextId < 1 || game.xpNeed < 1) return null;
       for (const key of ['steps', 'bossKills', 'xp', 'xpNeed', 'peakEnemies', 'bossIndex']) if (!uint(game[key])) return null;
       if (game.xpNeed > 5000 || game.bossKills > game.kills) return null;
       if (!uint(game.chestsOpened) || !uint(game.nextChestId) || game.nextChestId < 1) return null;
       for (const upgrade of NightUpgrades) {
-        const level = save.levels[upgrade.id];
+        const level = save.version < 3 && save.levels[upgrade.id] === undefined ? 0 : save.levels[upgrade.id];
         if (!uint(level) || level > upgrade.max) return null;
         game.levels[upgrade.id] = level;
       }
@@ -65,12 +75,12 @@
       Object.assign(game.player, numeric(save.player, playerKeys));
       number(game.player.x, 28, game.width - 28); number(game.player.y, 28, game.height - 28);
       number(game.player.hp, .001, game.player.maxHp);
-      if (game.player.maxHp !== game.character.hp + game.levels.vital * 25) return null;
+      if (game.player.maxHp !== game.character.hp + game.levels.vital * 25 + game.meta.vital * 10) return null;
       game.player.prevX = game.player.x; game.player.prevY = game.player.y;
       game.runId = save.runId; game.randomState = save.randomState; game.selectedWeapon = save.selectedWeapon;
       game.fireMode = save.fireMode === 'manual' ? 'manual' : 'auto';
       game.lastBoss = typeof save.lastBoss === 'string' ? save.lastBoss.slice(0, 80) : '';
-      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = number(save.clocks[key], 0);
+      for (const key of Object.keys(game.weaponClocks)) game.weaponClocks[key] = save.version < 3 && save.clocks[key] === undefined ? .3 : number(save.clocks[key], 0);
       game.enemies = list(save.enemies, game.enemyLimit).map(row => {
         list(row, enemyKeys.length + 1);
         const keys = save.version === 1 ? enemyKeys.slice(0, -2) : enemyKeys;
@@ -85,7 +95,7 @@
       });
       const ids = new Set(game.enemies.map(e => e.id));
       if (ids.size !== game.enemies.length || game.enemies.some(e => e.id >= game.nextId)) return null;
-      if (save.version === 2) {
+      if (save.version >= 2) {
         if (save.encounter !== null) {
           const a = save.encounter;
           if (!plain(a) || !['warning', 'locked'].includes(a.phase) || !Object.hasOwn(NightEnemies, a.kind) || !NightEnemies[a.kind].boss) return null;
@@ -111,7 +121,7 @@
         if (save.status === 'reward') {
           const r = save.reward;
           if (!plain(r) || ![1, 3, 5].includes(r.count) || !uint(r.id) || r.id < 1 || r.id >= game.nextChestId || !Object.hasOwn(NightEnemies, r.source) || !NightEnemies[r.source].boss || game.chests.some(c => c.id === r.id)) return null;
-          game.reward = { id: r.id, source: r.source, count: r.count, heal: number(r.heal, 0, 35), xp: number(r.xp, 25, 125), items: list(r.items, r.count).map(item => {
+          game.reward = { id: r.id, source: r.source, count: r.count, heal: number(r.heal, 0, 35), xp: number(r.xp, 25, 1000), items: list(r.items, r.count).map(item => {
             const u = NightUpgrades.find(u => u.id === item.id); if (!u || !uint(item.rank) || item.rank < 1 || item.rank > u.max || item.rank > game.levels[u.id]) throw new Error('Invalid reward');
             return { id: item.id, rank: item.rank };
           }) };
@@ -122,13 +132,19 @@
         number(gem.value, 1); number(gem.x, 0, game.width); number(gem.y, 0, game.height);
         if (!gem.magnetized) game.gemBins.set(gem.bin, gem);
       }
-      for (const [key, fields] of Object.entries(effects)) game[key] = list(save[key], limits[key]).map(entity => {
+      for (const [key, fields] of Object.entries(effects)) game[key] = list(save.version < 3 && ['relics', 'bossWhips'].includes(key) ? [] : save[key], limits[key]).map(entity => {
         const copy = numeric(entity, fields); copy.prevX = copy.x; copy.prevY = copy.y;
         if (key === 'shots') copy.hits = new Set(list(entity.hits, 100000).map(id => number(id, 1)));
         if (key === 'boomerangs') copy.hits = new Map(list(entity.hits, 100000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
         if (key === 'enemyShots') { if (!['o', '~'].includes(entity.glyph)) throw new Error('Invalid shot'); copy.glyph = entity.glyph; }
+        if (key === 'pools' && entity.kind) { if (!['water', 'poison'].includes(entity.kind)) throw new Error('Invalid pool'); copy.kind = entity.kind; copy.damage = number(entity.damage, 0); }
+        if (key === 'relics') {
+          if (!['axe', 'rune', 'dagger', 'fireball'].includes(entity.kind)) throw new Error('Invalid relic');
+          copy.kind = entity.kind; copy.hits = new Map(list(entity.hits, 100000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
+        }
         return copy;
       });
+      if (save.version === 3) for (const key of ['freezes', 'bibleHits']) game[key] = new Map(list(save[key], 24000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
       game.encountered = new Set(list(save.encountered, 100).filter(kind => Object.hasOwn(NightEnemies, kind)));
       game.offers = list(save.offers, 3).map(id => NightUpgrades.find(u => u.id === id));
       if (save.status === 'upgrading' && (!game.offers.length || game.offers.some(u => !u || game.levels[u.id] >= u.max) || new Set(save.offers).size !== save.offers.length)) return null;
@@ -154,9 +170,13 @@
       const source = raw?.version === 2 ? raw : {};
       const count = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
       const best = source.best || oldBest;
+      const ranks = Object.fromEntries(NightMeta.map(u => [u.id, Math.min(u.max, count(source.meta?.ranks?.[u.id]))]));
+      const seconds = Number.isFinite(source.seconds) && source.seconds >= 0 ? source.seconds : 0;
+      const initialGold = 50 + Math.floor(count(source.kills) / 5) + count(source.bossKills) * 25 + count(source.chestsOpened) * 10 + Math.floor(seconds / 60) * 5;
+      const meta = plain(source.meta) && source.meta.version === 1 ? { version: 1, gold: count(source.meta.gold), lifetimeGold: count(source.meta.lifetimeGold), ranks, credited: Object.fromEntries(Object.entries(source.meta.credited || {}).filter(([id, value]) => id.length <= 120 && !['__proto__', 'constructor', 'prototype'].includes(id) && uint(value))) } : { version: 1, gold: initialGold, lifetimeGold: initialGold, ranks, credited: {} };
       return {
-        version: 2, runs: count(source.runs), kills: count(source.kills), bossKills: count(source.bossKills), chestsOpened: count(source.chestsOpened),
-        seconds: Number.isFinite(source.seconds) && source.seconds >= 0 ? source.seconds : 0,
+        version: 2, meta, runs: count(source.runs), kills: count(source.kills), bossKills: count(source.bossKills), chestsOpened: count(source.chestsOpened),
+        seconds,
         maxLevel: count(source.maxLevel), best: best && Number.isFinite(best.time) && best.time >= 0 ? { time: best.time, kills: count(best.kills) } : null,
         character: NightCharacters.some(c => c.id === (source.character || oldCharacter)) ? (source.character || oldCharacter) : 'hunter',
         fireMode: source.fireMode === 'manual' ? 'manual' : 'auto',
@@ -166,14 +186,30 @@
       };
     }
     savePreferences(character, fireMode, enemyLimit) {
+      this.profile = this.loadProfile();
       this.profile.character = character; this.profile.fireMode = fireMode; this.profile.enemyLimit = enemyLimit;
       return this.write(PROFILE_KEY, this.profile);
+    }
+    bank(game, p) {
+      const earned = Math.max(0, game.goldEarned - (p.meta.credited[game.runId] || 0));
+      p.meta.gold += earned; p.meta.lifetimeGold += earned;
+      p.meta.credited[game.runId] = Math.max(game.goldEarned, p.meta.credited[game.runId] || 0);
+      p.seen = [...new Set([...p.seen, ...game.encountered])];
+    }
+    purchase(id, expectedRank) {
+      const upgrade = NightMeta.find(u => u.id === id), p = this.loadProfile();
+      if (!upgrade || !this.storage) return false;
+      const rank = p.meta.ranks[id], cost = upgrade.cost * (rank + 1) ** 2;
+      if (rank >= upgrade.max || expectedRank !== undefined && rank !== expectedRank || p.meta.gold < cost) return false;
+      p.meta.gold -= cost; p.meta.ranks[id]++;
+      if (!this.write(PROFILE_KEY, p)) return false;
+      this.profile = p; return true;
     }
     checkpoint(game) {
       const save = capture(game); if (!save) return false;
       const written = this.write(RUN_KEY, save);
-      this.profile.seen = [...new Set([...this.profile.seen, ...game.encountered])];
-      if (written) this.write(PROFILE_KEY, this.profile);
+      const p = this.loadProfile(); this.bank(game, p);
+      if (written && this.write(PROFILE_KEY, p)) this.profile = p;
       return written;
     }
     loadRun() { return restore(this.read(RUN_KEY)); }
@@ -181,13 +217,14 @@
       try { if (this.read(RUN_KEY)?.runId === runId) this.storage?.removeItem(RUN_KEY); } catch (_) {}
     }
     finish(game) {
-      if (game.stressMode || !game.elapsed || this.profile.finished.includes(game.runId)) return false;
-      const p = this.profile;
+      const p = this.loadProfile();
+      if (game.stressMode || !game.elapsed || p.finished.includes(game.runId)) return false;
+      this.bank(game, p);
       p.runs++; p.kills += game.kills; p.bossKills += game.bossKills; p.chestsOpened += game.chestsOpened; p.seconds += game.elapsed; p.maxLevel = Math.max(p.maxLevel, game.level);
       p.seen = [...new Set([...p.seen, ...game.encountered])];
       if (!p.best || game.elapsed > p.best.time || game.elapsed === p.best.time && game.kills > p.best.kills) p.best = { time: game.elapsed, kills: game.kills };
       p.finished = [...p.finished, game.runId].slice(-50);
-      const written = this.write(PROFILE_KEY, p); this.clearRun(game.runId); return written;
+      const written = this.write(PROFILE_KEY, p); if (written) { this.profile = p; this.clearRun(game.runId); } return written;
     }
   }
   root.NightSave = { capture, restore }; root.NightProgress = NightProgress;
