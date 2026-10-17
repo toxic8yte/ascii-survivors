@@ -30,12 +30,17 @@ function validateContent(data, roster = []) {
     if (row.cooldown !== undefined && (!positive(row.cooldown) || !text(row.behavior, 40))) fail(row.id + ': invalid cooldown or behavior');
     if (row.projectile !== undefined) {
       const p = row.projectile;
+      if (p.charge !== undefined && !positive(p.charge)) fail(row.id + ': invalid charge duration');
       if (!row.weapon || !positive(row.cooldown) || !p || !['speed', 'damage', 'rankDamage', 'life', 'radius'].every(key => positive(p[key])) || !['pierce', 'rankPierce', 'rankCount'].every(key => uint(p[key])) || p.pierce < 1 || !['spread', 'splashRadius', 'splashScale'].every(key => Number.isFinite(p[key]) && p[key] >= 0) || p.splashScale > 1 || !uint(p.ink) || p.ink > 14 || !ascii(p.glyph)) fail(row.id + ': invalid projectile definition');
     }
   }
   for (const hero of data.heroes) {
     if (!ids.weapons.has(hero.weapon) || !['hp', 'speed', 'magnet', 'dash'].every(key => positive(hero[key])) || !uint(hero.cost) || !ascii(hero.sprite) || !text(hero.role, 120) || !uint(hero.ink) || hero.ink > 14) fail('heroes/' + hero.id + ': invalid weapon, stats, portrait or price');
-    if (hero.traits && Object.entries(hero.traits).some(([key, value]) => !['armor', 'power', 'area', 'greed'].includes(key) || !Number.isFinite(value) || value < 0)) fail('heroes/' + hero.id + ': invalid traits');
+    if (hero.traits?.chozoAmount !== undefined && (!uint(hero.traits.chozoAmount) || hero.traits.chozoAmount > 10)) fail('heroes/' + hero.id + ': invalid charge bonus');
+    if (hero.traits?.lifesteal !== undefined && hero.traits.lifesteal > 1) fail('heroes/' + hero.id + ': invalid life steal');
+    if (hero.extraWeapons && (!Array.isArray(hero.extraWeapons) || hero.extraWeapons.length > 4 || new Set(hero.extraWeapons).size !== hero.extraWeapons.length || hero.extraWeapons.some(id => !ids.weapons.has(id) || id === hero.weapon))) fail('heroes/' + hero.id + ': invalid extra weapons');
+    if (hero.facingSprites && !['left','right','up','down'].every(key => ascii(hero.facingSprites[key]))) fail('heroes/' + hero.id + ': invalid facing sprites');
+    if (hero.traits && Object.entries(hero.traits).some(([key, value]) => !['armor', 'power', 'area', 'greed', 'lifesteal', 'chozoAmount'].includes(key) || !Number.isFinite(value) || value < 0)) fail('heroes/' + hero.id + ': invalid traits');
   }
   const evolved = new Set();
   for (const recipe of data.evolutions) {

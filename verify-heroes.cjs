@@ -10,7 +10,7 @@ for (const hero of NightCharacters) {
   assert.match(hero.sprite, /^[\x20-\x7e\n]+$/);
   const g = new NightGame(427, hero.id, { terrain: false, fireMode: 'auto' }); g.start();
   g.enemies = []; g.spawnClock = g.nextBossAt = g.nextMegaAt = 1e8; g.rosterBossIndex = 1e6; g.player.invulnerable = 1e8;
-  assert.equal(g.inventory(true).length, 1);
+  assert.equal(g.inventory(true).length, 1 + (hero.extraWeapons?.length || 0));
   for (const radius of [60, 110, 180, 260]) for (let i = 0; i < 24; i++) {
     const angle = i * Math.PI / 12, e = g.spawn('ghoul', g.player.x + Math.cos(angle) * radius, g.player.y + Math.sin(angle) * radius); e.speed = 0;
   }

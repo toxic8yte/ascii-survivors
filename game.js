@@ -24,7 +24,7 @@
   const mouseAim = { x: .5, y: .2, active: false };
   const textCache = new Map(), equipment = new Map();
   if (best && Number.isFinite(best.time)) $('best').textContent = formatTime(best.time) + ' / ' + (best.kills || 0) + ' ИЗГНАНО';
-  $('arsenal-note').textContent = '5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ' + NightUpgrades.filter(u => u.weapon).length + ' ОРУЖИЙ · ' + NightCatalog.evolutions.length + ' ЭВОЛЮЦИИ · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ';
+  $('arsenal-note').textContent = '5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ОРУЖИЕ: ' + NightUpgrades.filter(u => u.weapon).length + ' · ЭВОЛЮЦИИ: ' + NightCatalog.evolutions.length + ' · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ';
   canvas.tabIndex = 0;
 
   function formatTime(t) { return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
@@ -268,7 +268,7 @@
     const c = game.character, weapon = game.weaponInfo(c.weapon);
     text('character-name', c.name + ' / ' + c.role); text('character-description', c.description);
     text('character-stats', game.player.maxHp + ' HP  /  ' + Math.round(game.speed) + ' СКОРОСТЬ  /  ' + game.dashCooldown.toFixed(2) + ' С РЫВОК');
-    text('character-weapon', weapon.icon + ' ' + weapon.title);
+    text('character-weapon', [c.weapon,...(c.extraWeapons || [])].map(id => { const w = game.weaponInfo(id); return w.icon + ' ' + w.title; }).join(' + '));
     for (const card of $('characters').children) {
       const hero = NightCharacters.find(c => c.id === card.dataset.character), owned = progress.isHeroUnlocked(hero.id);
       card.setAttribute('aria-pressed', String(hero.id === selectedCharacter)); card.classList.toggle('hero-locked', !owned);

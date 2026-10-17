@@ -108,6 +108,10 @@
         this.ctx.drawImage(this.chunk(x, y), p.x, p.y, 400 * this.scaleX, 320 * this.scaleY);
       }
     }
+    facingSprite(game) {
+      const p = game.player, direction = Math.abs(p.dirX) >= Math.abs(p.dirY) ? p.dirX < 0 ? 'left' : 'right' : p.dirY < 0 ? 'up' : 'down';
+      return game.character.facingSprites?.[direction] || game.character.sprite;
+    }
     render(game, camera, alpha = 1) {
       if (this.worldWidth !== game.width || this.worldHeight !== game.height) { this.worldWidth = game.width; this.worldHeight = game.height; this.chunks.clear(); }
       this.camera = camera; this.alpha = Math.max(0, Math.min(1, alpha)); this.scenery();
@@ -116,15 +120,19 @@
       for (const block of game.visibleObstacles(camera.x - halfW - 80, camera.y - halfH - 80, camera.x + halfW + 80, camera.y + halfH + 80)) this.world(block.x, block.y, block.sprite, block.ink);
       for (const pool of game.pools) {
         this.circle(pool.x, pool.y, pool.radius, pool.kind === 'water' ? 9 : 3, '~');
-        for (let i = 0; i < 8; i++) { const a = i * 2.4; this.world(pool.x + Math.cos(a) * pool.radius * .55, pool.y + Math.sin(a) * pool.radius * .55, '.', 2); }
+        for (let i = 0; i < 8; i++) { const a = i * 2.4; this.world(pool.x + Math.cos(a) * pool.radius * .55, pool.y + Math.sin(a) * pool.radius * .55, '.', pool.kind === 'water' ? 9 : 2); }
         this.world(pool.x, pool.y, pool.kind === 'water' ? '{~}' : 'x', pool.kind === 'water' ? 9 : 3);
       }
-      for (const m of game.meteors) { const bird = ['bird', 'ebony'].includes(m.kind); this.circle(m.x, m.y, m.radius, bird ? 9 : 6, ':'); this.world(m.x, m.y, m.kind === 'hammer' ? '[T]' : m.kind === 'echo' ? '[Z]' : bird ? '<v>' : '[X]', m.kind === 'ebony' ? 5 : 7); }
-      for (const r of game.rings) { const t = 1 - r.life / r.maxLife; this.circle(r.x, r.y, r.radius * Math.sqrt(t), t < .7 ? (r.ink ?? 7) : 1, r.glyph || (t < .45 ? '+' : '.')); }
+      for (const m of game.meteors) { const bird = ['bird','ebony'].includes(m.kind), ink = m.kind === 'bird' ? 13 : m.kind === 'ebony' ? 9 : 7; this.circle(m.x,m.y,m.radius,bird ? ink : 6,':'); this.world(m.x,m.y,m.kind === 'hammer' ? '[T]' : m.kind === 'echo' ? '[Z]' : bird ? (Math.sin(game.time*12)>0 ? '\\v/' : '<v>') : '[X]',ink); }
+      for (const r of game.rings) {
+        const t = 1-r.life/r.maxLife;
+        if (r.kind === 'pentagram') { const emblemRadius = Math.min(r.radius*.8,Math.min(this.width/this.scaleX,this.height/this.scaleY)*.42); const vertices = Array.from({length:5},(_,i)=>({x:r.x+Math.cos(-Math.PI/2+i*TAU/5)*emblemRadius,y:r.y+Math.sin(-Math.PI/2+i*TAU/5)*emblemRadius})); for(let i=0;i<5;i++) this.line(vertices[i],vertices[(i+2)%5],5,'*'); this.circle(r.x,r.y,emblemRadius*1.06,5,':'); }
+        else this.circle(r.x,r.y,r.radius*Math.sqrt(t),t<.7 ? (r.ink ?? 7) : 1,r.glyph || (t<.45 ? '+' : '.'));
+      }
       if (game.levels.blades && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, game.bladeRadius, game.isEvolved('blades') ? 9 : 0);
       if (game.levels.garlic && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, (75 + game.levels.garlic * 15) * game.area, 3, '.');
       if (game.isEvolved('boomerang') && game.fireMode === 'auto') { this.circle(game.player.x, game.player.y, game.mikoleninRadius, 13, '+'); this.world(game.player.x, game.player.y - 52, '{M}', 7); }
-      for (const s of game.slashes) for (let a = -.95; a <= .95; a += .13) this.world(s.x + Math.cos(s.angle + a) * s.radius, s.y + Math.sin(s.angle + a) * s.radius, '/', 8);
+      for (const s of game.slashes) for (let a = -.95; a <= .95; a += .13) this.world(s.x + Math.cos(s.angle + a) * s.radius, s.y + Math.sin(s.angle + a) * s.radius, s.glyph || '/', s.ink ?? 8);
       const megaBodies = [];
       for (const e of game.enemies) {
         const ink = e.flash > 0 ? 8 : e.chilledTill > game.time || (game.freezes.get(e.id) || 0) > game.time ? 9 : e.ink, p = this.position(e);
@@ -144,6 +152,7 @@
         const sprite = e.frames ? e.frames[Math.floor(game.time * 6 + e.phase) % e.frames.length] : e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.sprite;
         if (e.mega) megaBodies.push({ p, sprite, ink });
         this.world(p.x, p.y, sprite, ink);
+        if (game.holyMarks.has(e.id)) this.world(p.x,p.y-25,'+',7);
         if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - 38, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
         if (e.windup > 0) {
           this.world(p.x, p.y - 52, '!', 7);
@@ -158,7 +167,7 @@
         this.world(p.x, p.y - 48, 'DAR VETROV', 13);
       }
       for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
-      for (const s of game.relics) { const p = this.position(s), ballistic = BALLISTICS[s.kind]; if (ballistic) { if (s.kind === 'gauss') this.world(p.x - s.vx * .015, p.y - s.vy * .015, '===', ballistic.ink); this.world(p.x, p.y, ballistic.glyph, ballistic.ink); continue; } this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
+      for (const s of game.relics) { const p = this.position(s), ballistic = BALLISTICS[s.kind]; if (ballistic) { if (s.chargeLeft > 0) { this.circle(p.x,p.y,22,9,'+'); this.world(p.x,p.y,Math.floor(game.time*12)%2 ? '(o)' : '(O)',9); continue; } if (s.kind === 'gauss') this.world(p.x - s.vx * .015, p.y - s.vy * .015, '===', ballistic.ink); this.world(p.x, p.y, ballistic.glyph, ballistic.ink); continue; } this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? ['<+>','{|}','[#]','/|\\'][Math.floor(game.time*8)%4] : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
       for (const b of game.biblePositions()) this.world(b.x, b.y, game.isEvolved('bible') ? '[B!]' : '[B]', game.isEvolved('bible') ? 5 : 7);
       for (const whip of game.bossWhips) this.line(whip, { x: whip.x + Math.cos(whip.angle) * whip.radius, y: whip.y + Math.sin(whip.angle) * whip.radius }, 13, '~', true);
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', 6); this.world(p.x, p.y, '*', 7); }
@@ -179,7 +188,7 @@
       }
       const p = game.player, position = this.position(p);
       const ink = p.invulnerable > 0 && Math.floor(game.time * 12) % 2 ? 9 : game.character.ink;
-      this.world(position.x, position.y, game.character.sprite, ink);
+      this.world(position.x, position.y, this.facingSprite(game), ink);
       if (game.shieldCharges > 0 && game.shieldUntil > game.time) { this.circle(position.x, position.y, 38, 9, '+'); this.world(position.x, position.y - 45, '[' + game.shieldCharges + ']', 9); }
       if (game.fireMode === 'manual') { const target = game.aimPoint(game.selectedWeapon === 'poison' ? 360 : 620); this.world(target.x, target.y, '[+]', 7); }
       if (p.dash > 0) this.circle(position.x, position.y, 24, 2, ':');

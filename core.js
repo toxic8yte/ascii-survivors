@@ -69,8 +69,10 @@
       this.particles = []; this.rings = []; this.levels = Object.fromEntries(UPGRADES.map(u => [u.id, 0]));
       this.levels[this.character.weapon] = 1;
       this.weaponOrder.push(this.character.weapon);
+      for (const id of this.character.extraWeapons || []) { this.levels[id] = 1; this.weaponOrder.push(id); }
       if (this.stressMode) for (const u of UPGRADES) this.levels[u.id] = u.max;
       this.arcs = []; this.boomerangs = []; this.pools = []; this.meteors = [];
+      this.leechBudget = 2; this.holyMarks = new Map();
       this.relics = []; this.freezes = new Map(); this.bibleHits = new Map(); this.bibleUntil = 0; this.shieldCharges = 0; this.shieldUntil = 0; this.weaponPage = 0;
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
@@ -110,7 +112,7 @@
     get cooldown() { return .68 * BALANCE.weaponCooldown / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)) * (this.isEvolved('needle') ? .4 : 1); }
     get speed() { return this.character.speed * (1 + .15 * this.levels.stride + .03 * this.meta.stride) * (this.player.slowTill > this.time ? .65 : 1); }
     get dashCooldown() { return this.character.dash * BALANCE.dashCooldown * Math.pow(.9, this.levels.stride); }
-    get magnet() { return this.character.magnet + this.levels.magnet * 65 + this.meta.magnet * 15; }
+    get magnet() { return this.character.magnet + this.levels.magnet * 30 + this.meta.magnet * 15; }
     get elapsed() { return Math.max(this.time, this.wallTime); }
     get pressureTime() { return (this.elapsed + this.pressureOffset) * (1 + this.levels.curse * .1 + (this.levels.goldRing + this.levels.rightSign) * .08); }
     get waveAge() { const age = this.pressureTime; return age <= 600 ? age * .65 : 390 + (age - 600) * .85; }
@@ -408,13 +410,14 @@
     hurtEnemy(e, damage, knockback = 0, weapon = 'other') {
       if (!e.alive || !Number.isFinite(damage) || damage <= 0) return;
       this.combat.hit(weapon, damage, Math.min(e.hp, damage), damage >= e.hp);
+      if (weapon === 'poison' && this.character.traits?.lifesteal) this.leechBudget -= this.healPlayer(Math.min(this.leechBudget,1,Math.min(e.hp,damage)*this.character.traits.lifesteal));
       e.hp -= damage; e.flash = .12;
       if (knockback) {
         const dx = e.x - this.player.x, dy = e.y - this.player.y, d = Math.hypot(dx, dy) || 1;
         const force = knockback * (1 - (e.knockbackResistance || 0)); this.moveEntity(e, dx / d * force, dy / d * force);
       }
       if (e.hp > 0) return;
-      e.alive = false; this.kills++;
+      e.alive = false; this.holyMarks.delete(e.id); this.kills++;
       if (this.kills % 5 === 0) this.awardGold(1);
       if (e.boss) this.bossKills++;
       if (e.boss) {
@@ -595,10 +598,28 @@
       const angle = target ? Math.atan2(target.y - p.y, target.x - p.x) : Math.atan2(p.dirY, p.dirX);
       const ballistic = BALLISTICS[id];
       if (ballistic) {
-        const count = Math.min(12, 1 + this.levels.fork + (ballistic.rankCount ? Math.floor(level / ballistic.rankCount) : 0));
+        const count = Math.min(12, 1 + this.levels.fork + (id === 'chozo' ? this.character.traits?.chozoAmount || 0 : 0) + (ballistic.rankCount ? Math.floor(level / ballistic.rankCount) : 0));
         for (let i = 0; i < count && this.relics.length < 512; i++) {
           const a = angle + (i ? Math.ceil(i / 2) * (i % 2 ? 1 : -1) * ballistic.spread : 0), speed = ballistic.speed * this.projectileSpeed;
-          this.relics.push({ kind: id, evolved: false, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: ballistic.life * this.effectDuration, damage: (ballistic.damage + ballistic.rankDamage * level) * this.power, radius: ballistic.radius * this.area, remaining: ballistic.pierce + ballistic.rankPierce * level + this.levels.pierce, hits: new Map(), minX: 0, maxX: this.width, minY: 0, maxY: this.height });
+          this.relics.push({ kind: id, evolved: false, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: ballistic.life * this.effectDuration, damage: (ballistic.damage + ballistic.rankDamage * level) * this.power, radius: ballistic.radius * this.area * (id === 'chozo' ? 1 + (level - 1) * .15 : 1), chargeLeft: ballistic.charge ? Math.max(.12, (ballistic.charge - (level - 1) * .12) / this.haste) : 0, chargeAngle: a, remaining: ballistic.pierce + ballistic.rankPierce * level + this.levels.pierce, hits: new Map(), minX: 0, maxX: this.width, minY: 0, maxY: this.height });
+        }
+        return;
+      }
+      if (id === 'lightStaff') {
+        const radius = (240 + level * 20) * this.area;
+        this.rings.push({ x:p.x, y:p.y, radius, life:.7, maxLife:.7, ink:7, glyph:'+' });
+        for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive && Math.hypot(e.x-p.x, e.y-p.y) < radius + e.radius) {
+          this.hurtEnemy(e, (20 + level * 10) * this.power, 5, id);
+          if (e.alive) this.holyMarks.set(e.id, { expires:this.time + 4 * this.effectDuration, next:this.time + .5, damage:(5 + level * 3) * this.power });
+        }
+        return;
+      }
+      if (id === 'crowbar') {
+        const radius = (105 + level * 12) * this.area, count = 1 + this.levels.fork;
+        for (let i=0;i<count;i++) this.slashes.push({x:p.x,y:p.y,angle:angle+(i-(count-1)/2)*.25,radius,life:.25,ink:12,glyph:'J'});
+        for (const e of this.nearby(p.x,p.y,radius+50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y)<radius+e.radius) {
+          const delta = Math.atan2(e.y-p.y,e.x-p.x)-angle;
+          if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < 1.2) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
         }
         return;
       }
@@ -625,11 +646,11 @@
       if (['whip', 'garlic', 'pentagram', 'clock'].includes(id)) {
         const radius = (id === 'pentagram' ? 650 : id === 'clock' ? 480 : id === 'garlic' ? 75 + level * 15 : 155 + level * 20) * this.area * (evolved && id === 'garlic' ? 1.4 : 1);
         const facing = id === 'clock' && this.fireMode === 'auto' ? this.clockStep * Math.PI / 6 : angle;
-        const whipAngles = id === 'whip' ? [facing, ...(level >= 3 ? [facing + Math.PI] : []), ...Array.from({ length: this.levels.fork }, (_, i) => facing + (i + 1) * .35)] : [];
+        const whipAngles = id === 'whip' ? [facing, facing + Math.PI, ...Array.from({ length: this.levels.fork }, (_, i) => facing + (i + 1) * .35)] : [];
         let healing = 0;
-        this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' ? 9 : 7, glyph: id === 'pentagram' ? '*' : '.' });
+        this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' || id === 'whip' ? 9 : 7, kind: id === 'pentagram' ? 'pentagram' : '', glyph: id === 'pentagram' ? '*' : '.' });
         if (id === 'whip') {
-          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25 });
+          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25, ink:9, glyph:'~' });
         }
         if (id === 'clock') this.arcs.push({ points: [{ x: p.x, y: p.y }, { x: p.x + Math.cos(facing) * radius, y: p.y + Math.sin(facing) * radius }], life: .3, maxLife: .3 });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive) {
@@ -665,6 +686,7 @@
         if (this.weaponClocks[w.id] <= 0 && this.wantsFire(w.id)) { this.castRelic(w.id); this.consumeAttack(w.id); const rapid = this.isEvolved(w.id) && ['dagger', 'pentagram', 'pistol'].includes(w.id) ? (w.id === 'pistol' ? .5 : .4) : 1; this.weaponClocks[w.id] = w.cooldown * rapid * BALANCE.weaponCooldown / this.haste / (1 + (this.levels[w.id] - 1) * .12); }
       }
       for (const s of this.relics) {
+        if (s.chargeLeft > 0) { s.chargeLeft = Math.max(0,s.chargeLeft-dt); s.x = s.prevX = this.player.x; s.y = s.prevY = this.player.y; if (s.chargeLeft > 0) continue; }
         const x = s.x, y = s.y; s.prevX = x; s.prevY = y; s.life -= dt;
         if (s.kind === 'axe' && !s.evolved) s.vy += 360 * dt;
         s.x += s.vx * dt; s.y += s.vy * dt;
@@ -728,6 +750,11 @@
         }
       }
       this.pools = this.pools.filter(pool => pool.life > 0);
+      if (this.holyMarks.size) {
+        const markedAlive = new Set();
+        for (const e of this.enemies) { const mark = this.holyMarks.get(e.id); if (!mark || !e.alive || mark.expires <= this.time) continue; markedAlive.add(e.id); if (this.time >= mark.next) { mark.next = this.time + .5; this.hurtEnemy(e,mark.damage,0,'lightStaff'); } }
+        for (const id of this.holyMarks.keys()) if (!markedAlive.has(id)) this.holyMarks.delete(id);
+      }
       for (const m of this.meteors) {
         m.wait -= dt;
         if (m.wait <= 0) {
@@ -829,7 +856,7 @@
     update(dt) {
       if (this.status !== 'running') return;
       dt = clamp(dt, 0, .05);
-      this.time += dt; this.steps++;
+      this.time += dt; this.steps++; this.leechBudget = Math.min(2,this.leechBudget+dt*2);
       if (Math.floor(this.time / 60) > Math.floor((this.time - dt) / 60)) this.awardGold(5);
       const p = this.player;
       p.prevX = p.x; p.prevY = p.y;

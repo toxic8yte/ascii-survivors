@@ -14,7 +14,7 @@ for (const w of NightCatalog.extraWeapons) {
   g.aim = { x: enemy.x, y: enemy.y, active: true };
   tick(g, .4); assert.equal(g.relics.length + g.pools.length + g.meteors.length + g.rings.length, 0, w.id + ' waits for manual input');
   g.requestAttack(); tick(g, .02);
-  assert.ok(g.relics.length + g.pools.length + g.meteors.length + g.rings.length + g.freezes.size + g.shieldCharges > 0 || g.bibleUntil > g.time || !enemy.alive, w.id + ' activates when triggered');
+  assert.ok(g.relics.length + g.pools.length + g.meteors.length + g.rings.length + g.slashes.length + g.freezes.size + g.shieldCharges > 0 || g.bibleUntil > g.time || !enemy.alive, w.id + ' activates when triggered');
   const restored = NightSave.restore(clone(NightSave.capture(g))); assert.ok(restored, w.id + ' resumes');
   assert.equal(restored.relics.length, g.relics.length); assert.equal(restored.pools.length, g.pools.length);
   assert.equal(restored.shieldCharges, g.shieldCharges); assert.equal(restored.bibleUntil, g.bibleUntil);
@@ -65,5 +65,5 @@ mega.enemyShots = Array.from({ length: 256 }, () => ({ ink: 5 })); mega.enemySki
 assert.equal(mega.enemyShots.length, 256); assert.equal(mega.enemyShots.filter(s => s.ink === 13).length, 40, 'A full shot budget still allows the red mega-boss burst');
 mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 56); assert.equal(mega.chests[0].source, 'darVetro');
 mega.openChest(mega.chests[0]); assert.equal(mega.reward.options.length, 3); assert.equal(mega.reward.count, 1);
-console.log('PASS: 19 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
+console.log('PASS: 24 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
 

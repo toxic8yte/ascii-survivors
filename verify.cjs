@@ -62,7 +62,7 @@ caps.player.hp = 20; caps.grantXP(6); assert.equal(caps.status, 'running'); asse
 const vital = fixture(); vital.player.hp = 20; vital.offers = [NightUpgrades.find(u => u.id === 'vital')]; vital.status = 'upgrading'; vital.choose(0);
 assert.equal(vital.player.maxHp, 125); assert.equal(vital.player.hp, 60);
 
-const magnet = fixture(); magnet.levels.magnet = 1; magnet.gems.push({ x: 1730, y: 1200, value: 1 }); tick(magnet, .6); assert.equal(magnet.xp, 1);
+const magnet = fixture(); magnet.levels.magnet = 1; magnet.gems.push({ x: 1710, y: 1200, value: 1 }); tick(magnet, .6); assert.equal(magnet.xp, 1);
 const outOfReach = fixture(); outOfReach.gems.push({ x: 1730, y: 1200, value: 1 }); tick(outOfReach, 1); assert.equal(outOfReach.xp, 0);
 const healing = fixture(); healing.player.hp = 91; healing.hearts.push({ x: 1600, y: 1200, value: 20 }); tick(healing, .1); assert.equal(healing.player.hp, 100);
 healing.hearts.push({ x: 1600, y: 1200, value: 20 }); tick(healing, .1); assert.equal(healing.hearts.length, 1, 'Full-health player leaves medicine on the ground');
@@ -107,7 +107,7 @@ for (const hero of NightCharacters) {
   const character = new NightGame(123, hero.id);
   assert.equal(character.player.maxHp, hero.hp); assert.equal(character.speed, hero.speed);
   assert.equal(character.levels[hero.weapon], 1);
-  assert.equal(NightUpgrades.filter(u => u.weapon).reduce((sum, u) => sum + character.levels[u.id], 0), 1, 'Each hero starts with one distinct weapon');
+  assert.equal(NightUpgrades.filter(u => u.weapon).reduce((sum, u) => sum + character.levels[u.id], 0), 1 + (hero.extraWeapons?.length || 0), 'Each hero starts with its configured weapons');
   assert.match(hero.sprite, /^[\x20-\x7e\n]+$/);
   if (hero.weapon !== 'needle') { character.spawn('ghoul', 1700, 1200); character.fire(); assert.equal(character.shots.length, 0, 'Unowned weapons do not fire'); }
   for (let seed = 1; seed <= 20; seed++) {
@@ -201,5 +201,5 @@ for (const u of NightUpgrades.filter(u => u.weapon)) {
   assert.equal(idle.shots.length + idle.boomerangs.length + idle.rings.length + idle.pools.length + idle.arcs.length + idle.meteors.length + idle.slashes.length, 0, u.id + ' waits for manual input');
 }
 console.log(`PASS: movement, combat, XP, upgrades and endless play. Three-minute run: ${longRun.kills} kills, level ${longRun.level}, peak ${maxEnemies} enemies.`);
-console.log('PASS: 30 heroes, 27 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
+console.log('PASS: 30 heroes, 32 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
 console.log('PASS: slots 1–5, locked slots, manual aim/trigger/slash, auto mode, stress settings, population budget and merged XP.');
