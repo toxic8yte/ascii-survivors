@@ -118,10 +118,11 @@
         for (let i = 0; i < 8; i++) { const a = i * 2.4; this.world(pool.x + Math.cos(a) * pool.radius * .55, pool.y + Math.sin(a) * pool.radius * .55, '.', 2); }
         this.world(pool.x, pool.y, pool.kind === 'water' ? '{~}' : 'x', pool.kind === 'water' ? 9 : 3);
       }
-      for (const m of game.meteors) { const bird = ['bird', 'ebony'].includes(m.kind); this.circle(m.x, m.y, m.radius, bird ? 9 : 6, ':'); this.world(m.x, m.y, m.kind === 'echo' ? '[Z]' : bird ? '<v>' : '[X]', m.kind === 'ebony' ? 5 : 7); }
+      for (const m of game.meteors) { const bird = ['bird', 'ebony'].includes(m.kind); this.circle(m.x, m.y, m.radius, bird ? 9 : 6, ':'); this.world(m.x, m.y, m.kind === 'hammer' ? '[T]' : m.kind === 'echo' ? '[Z]' : bird ? '<v>' : '[X]', m.kind === 'ebony' ? 5 : 7); }
       for (const r of game.rings) { const t = 1 - r.life / r.maxLife; this.circle(r.x, r.y, r.radius * Math.sqrt(t), t < .7 ? (r.ink ?? 7) : 1, r.glyph || (t < .45 ? '+' : '.')); }
       if (game.levels.blades && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, game.bladeRadius, game.isEvolved('blades') ? 9 : 0);
       if (game.levels.garlic && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, (75 + game.levels.garlic * 15) * game.area, 3, '.');
+      if (game.isEvolved('boomerang') && game.fireMode === 'auto') { this.circle(game.player.x, game.player.y, game.mikoleninRadius, 13, '+'); this.world(game.player.x, game.player.y - 52, '{M}', 7); }
       for (const s of game.slashes) for (let a = -.95; a <= .95; a += .13) this.world(s.x + Math.cos(s.angle + a) * s.radius, s.y + Math.sin(s.angle + a) * s.radius, '/', 8);
       const megaBodies = [];
       for (const e of game.enemies) {
@@ -132,7 +133,7 @@
         if (screen.x < -35 || screen.x > this.width + 35 || screen.y < -45 || screen.y > this.height + 45) continue;
         // Thousands of overlapping bodies share a visible ASCII cell. Composite
         // one representative there; every enemy still runs in the simulation.
-        if (game.enemies.length > 1000 && !e.boss) {
+        if (game.enemies.length > 250 && !e.boss) {
           const x = Math.max(0, Math.min(this.cols - 1, Math.floor(screen.x / this.cellW)));
           const y = Math.max(0, Math.min(this.rows - 1, Math.floor(screen.y / this.cellH))), key = y * this.cols + x;
           if (this.enemyCells[key]) continue;
@@ -156,7 +157,7 @@
         this.world(p.x, p.y - 48, 'DAR VETROV', 13);
       }
       for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
-      for (const s of game.relics) { const p = this.position(s); this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
+      for (const s of game.relics) { const p = this.position(s); this.world(p.x, p.y, s.kind === 'axe' ? ['/P', '-P', 'P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? '<#>' : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->', s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8); }
       for (const b of game.biblePositions()) this.world(b.x, b.y, game.isEvolved('bible') ? '[B!]' : '[B]', game.isEvolved('bible') ? 5 : 7);
       for (const whip of game.bossWhips) this.line(whip, { x: whip.x + Math.cos(whip.angle) * whip.radius, y: whip.y + Math.sin(whip.angle) * whip.radius }, 13, '~', true);
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', 6); this.world(p.x, p.y, '*', 7); }

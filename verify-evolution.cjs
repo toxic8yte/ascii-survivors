@@ -20,8 +20,8 @@ function chest(g, bornAt = 600, kind = 'lichLord') {
   g.time = bornAt; const boss = g.spawn(kind, g.player.x + 260, g.player.y); g.dropChest(boss);
   g.enemies = []; g.buildGrid(); return g.chests[g.chests.length - 1];
 }
-assert.equal(NightCatalog.evolutions.length, 20);
-assert.equal(new Set(NightCatalog.evolutions.map(r => r.weapon)).size, 20);
+assert.equal(NightCatalog.evolutions.length, 22);
+assert.equal(new Set(NightCatalog.evolutions.map(r => r.weapon)).size, 22);
 const permanent = new NightGame(724, 'hunter', { meta: { armor: 5 } }); permanent.levels.rune = 4;
 assert.equal(permanent.canEvolve(NightCatalog.evolutions.find(r => r.weapon === 'rune')), false, 'Permanent legacy upgrades do not replace a run catalyst');
 const blades = fixture(); blades.setFireMode('auto'); blades.levels.blades = 1;
@@ -38,12 +38,14 @@ for (const recipe of NightCatalog.evolutions) {
   const required = Object.entries(recipe.passives).find(([, rank]) => rank > 1);
   if (required) { g.levels[required[0]]--; assert.equal(g.canEvolve(recipe), false, 'Special catalysts require their maximum rank'); g.levels[required[0]]++; }
   const dropped = chest(g); assert.ok(g.openChest(dropped));
-  assert.ok(g.evolutions.has(recipe.id), recipe.id + ' is a guaranteed first chest reward');
-  assert.equal(g.reward.items.filter(item => item.evolution).length, 1);
+  assert.equal(g.evolutions.size, 0, 'Opening a chest never applies the offered evolution');
+  assert.equal(g.reward.options.filter(item => item.type === 'evolution').length, 1);
   assert.equal(g.openChest(dropped), false, 'One chest cannot pay twice');
   const resumed = NightSave.restore(clone(NightSave.capture(g)));
-  assert.ok(resumed, recipe.id + ' reward resumes'); assert.ok(resumed.evolutions.has(recipe.id));
-  assert.equal(resumed.reward.items[0].evolution, recipe.id); assert.equal(resumed.weaponInfo(recipe.weapon).title, recipe.title);
+  assert.ok(resumed, recipe.id + ' reward resumes'); assert.equal(resumed.evolutions.size, 0);
+  const choice = resumed.reward.options.findIndex(item => item.id === recipe.id);
+  assert.ok(choice >= 0); assert.ok(resumed.claimReward(choice)); assert.ok(resumed.evolutions.has(recipe.id));
+  assert.equal(resumed.weaponInfo(recipe.weapon).title, recipe.title);
   assert.equal(resumed.evolve(recipe), false, 'Evolution cannot be granted twice');
 }
 const early = fixture(); equip(early, NightCatalog.evolutions[0]); const earlyChest = chest(early, 599);
@@ -52,8 +54,9 @@ assert.equal(earlyResumed.chests[0].canEvolve, false); earlyResumed.openChest(ea
 const missing = fixture(); missing.levels.whip = 3; missing.applyUpgrade(NightUpgrades.find(u => u.id === 'vital')); missing.openChest(chest(missing));
 assert.equal(missing.evolutions.size, 0, 'A chest upgrade to max rank is not an evolution in the same reward');
 const mega = fixture(); for (const recipe of NightCatalog.evolutions) equip(mega, recipe);
-mega.openChest(chest(mega, 600, 'darVetro')); assert.equal(mega.evolutions.size, 5, 'Mega-boss rewards can evolve five ready weapons');
-assert.equal(mega.reward.items.filter(item => item.evolution).length, 5); assert.ok(NightSave.restore(clone(NightSave.capture(mega))));
+mega.openChest(chest(mega, 600, 'darVetro')); assert.equal(mega.evolutions.size, 0);
+assert.equal(mega.reward.options.filter(item => item.type === 'evolution').length, 3); assert.ok(NightSave.restore(clone(NightSave.capture(mega))));
+assert.ok(mega.claimReward(1)); assert.equal(mega.evolutions.size, 1, 'Even a mega-boss chest grants only the selected reward');
 
 const union = evolved('birds'); assert.equal(union.levels.ebony, 0); assert.ok(union.isConsumed('ebony'));
 assert.equal(union.applyUpgrade(NightUpgrades.find(u => u.id === 'ebony')), false); union.grantXP(union.xpNeed); assert.ok(union.offers.every(u => u.id !== 'ebony'));
@@ -79,4 +82,4 @@ const thunder = evolved('lightning'); thunder.spawn('brute', thunder.player.x + 
 const moon = evolved('pentagram'); moon.addGem(moon.player.x + 1100, moon.player.y, 2); moon.castRelic('pentagram'); assert.ok(moon.gems[0].magnetized); assert.ok(moon.xp >= 25);
 for (const active of [axes, water, rune, thunder, bible, clock]) assert.ok(NightSave.restore(clone(NightSave.capture(active))), 'Active evolved effects survive a JSON save');
 const corrupt = clone(NightSave.capture(shield)); corrupt.evolutions.push('unknown'); assert.equal(NightSave.restore(corrupt), null);
-console.log('PASS: Duplicator orbits and manual attacks, 20 chest evolutions, catalyst ranks, early-chest timing, five mega rewards, bird union, old-save migration and distinct evolved combat effects.');
+console.log('PASS: Duplicator orbits and manual attacks, 22 chest evolutions, catalyst ranks, early-chest timing, one-of-three mega rewards, unions, old-save migration and distinct evolved combat effects.');

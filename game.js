@@ -62,7 +62,7 @@
       const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
       const title = document.createElement('h3'); title.textContent = enemy.title;
       const description = document.createElement('p'); description.textContent = enemy.text;
-      const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С 10:00' : enemy.boss ? 'БОСС' : 'С ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
+      const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С 10:00' : enemy.boss ? 'БОСС' : 'ВОЗРАСТ ВОЛН ' + formatTime(enemy.at)) + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
       card.append(sprite, title, description, hint); fragment.append(card);
     }
     $('bestiary-list').replaceChildren(fragment); $('bestiary').showModal();
@@ -177,14 +177,25 @@
   }
   function configureRun(persist = true) {
     if (game.status !== 'ready') return;
-    game = new NightGame(Date.now(), selectedCharacter, options()); if (persist) preferences(); resetMetrics(); resize(); updateHUD();
+    game = new NightGame(Date.now(), selectedCharacter, options()); if (persist) preferences(); resetMetrics(); resize(); updateCharacterDetails(); updateHUD();
   }
   function updateCharacterDetails() {
     const c = game.character, weapon = game.weaponInfo(c.weapon);
     text('character-name', c.name + ' / ' + c.role); text('character-description', c.text);
     text('character-stats', game.player.maxHp + ' HP  /  ' + Math.round(game.speed) + ' СКОРОСТЬ  /  ' + game.dashCooldown.toFixed(2) + ' С РЫВОК');
     text('character-weapon', weapon.icon + ' ' + weapon.title);
-    for (const card of $('characters').children) card.setAttribute('aria-pressed', String(card.dataset.character === selectedCharacter));
+    for (const card of $('characters').children) {
+      const hero = NightCharacters.find(c => c.id === card.dataset.character), owned = progress.isHeroUnlocked(hero.id);
+      card.setAttribute('aria-pressed', String(hero.id === selectedCharacter)); card.classList.toggle('hero-locked', !owned);
+      let price = card.querySelector('.hero-price');
+      if (!price) { price = document.createElement('span'); price.className = 'hero-price'; card.append(price); }
+      price.textContent = owned ? 'ОТКРЫТ' : hero.cost + ' ЗОЛ.';
+      card.setAttribute('aria-label', hero.name + ', ' + hero.role + ', ' + (owned ? 'открыт' : hero.cost + ' золота'));
+    }
+    const locked = !progress.isHeroUnlocked(c.id), purchase = $('unlock-hero');
+    purchase.hidden = !locked || game.stressMode; purchase.disabled = progress.profile.meta.gold < c.cost || !progress.available;
+    text('unlock-hero', 'ОТКРЫТЬ ЗА ' + c.cost + ' ЗОЛОТА' + (progress.profile.meta.gold < c.cost ? ' · ЕСТЬ ' + progress.profile.meta.gold : ''));
+    $('start').disabled = locked && !game.stressMode;
   }
   function selectCharacter(id) {
     if (game.status !== 'ready' || !NightCharacters.some(c => c.id === id)) return;
@@ -218,6 +229,23 @@
   }
   function showReward() {
     const reward = game.reward; if (!reward) return;
+    if (reward.options) {
+      text('reward-title', 'Выбери одну из трёх наград'); const fragment = document.createDocumentFragment();
+      reward.options.forEach((option, index) => {
+        const item = option.type === 'evolution' ? NightCatalog.evolutions.find(r => r.id === option.id) : option.type === 'upgrade' ? NightUpgrades.find(u => u.id === option.id) : { icon: option.type === 'gold' ? '[$]' : option.type === 'xp' ? '*' : '[#]', title: option.type === 'gold' ? option.value + ' золота' : option.type === 'xp' ? option.value + ' опыта' : 'Три защитных заряда', text: option.type === 'shield' ? 'Поглощают три попадания в течение 30 секунд.' : 'Начисляется только после выбора.' };
+        const card = document.createElement('button'); card.type = 'button'; card.className = 'reward-item reward-choice' + (option.type === 'evolution' ? ' evolved' : ''); card.dataset.rewardChoice = index;
+        const icon = document.createElement('b'); icon.textContent = item.icon;
+        const title = document.createElement('span'); title.textContent = item.title;
+        const description = document.createElement('p'); description.textContent = item.text;
+        const rank = document.createElement('small'); rank.textContent = (index + 1) + ' · ' + (option.type === 'evolution' ? 'ЭВОЛЮЦИЯ' : option.type === 'upgrade' ? 'СТУПЕНЬ ' + option.rank + '/' + item.max : 'БОНУС');
+        card.append(icon, title, description, rank); fragment.append(card);
+      });
+      $('reward-loot').replaceChildren(fragment); $('claim-reward').hidden = true;
+      text('reward-summary', NightEnemies[reward.source].title + ' · Одна награда на выбор +10 золота за сундук.');
+      text('reward-hint', 'ВЫБОР МЫШЬЮ ИЛИ 1 / 2 / 3 · БОЙ НА ПАУЗЕ');
+      $('reward-loot').querySelector('button')?.focus({ preventScroll: true }); return;
+    }
+    $('claim-reward').hidden = false; text('reward-hint', 'ENTER / ПРОБЕЛ · БОЙ НА ПАУЗЕ');
     text('reward-title', reward.items.some(item => item.evolution) ? 'Эволюция оружия!' : reward.items.length && reward.count > 1 ? 'Сундук: ' + reward.count + (reward.count === 5 ? ' наград!' : ' награды!') : 'Сундук поверженного босса');
     const fragment = document.createDocumentFragment();
     for (const item of reward.items) {
@@ -232,8 +260,8 @@
     text('reward-summary', NightEnemies[reward.source].title + ' · +' + reward.xp + ' ОПЫТА · +' + Math.round(reward.heal) + ' HP' + (!reward.items.length ? ' · ВСЕ ДАРЫ УЖЕ МАКСИМАЛЬНЫ' : ''));
     $('claim-reward').focus({ preventScroll: true });
   }
-  function claimReward() {
-    if (!game.claimReward()) return;
+  function claimReward(index) {
+    if (!game.claimReward(index)) return;
     saveCheckpoint(); updateHUD(); if (game.status === 'running') canvas.focus({ preventScroll: true });
   }
   function updateHUD() {
@@ -309,6 +337,8 @@
   }
   function start() {
     if (game.status !== 'ready') return;
+    progress.profile = progress.loadProfile();
+    if (!game.stressMode && !progress.isHeroUnlocked(selectedCharacter)) { updateCharacterDetails(); return; }
     if (!game.stressMode && savedRun) { progress.finish(savedRun); savedRun = null; }
     game.start(); canvas.focus({ preventScroll: true }); updateHUD();
     preferences(); saveCheckpoint();
@@ -348,7 +378,15 @@
     else if (nativeFullscreen) { nativeFullscreen = false; setExpandedView(false); }
   });
   $('continue-run').addEventListener('click', resumeSavedRun);
-  $('claim-reward').addEventListener('click', claimReward);
+  $('claim-reward').addEventListener('click', () => claimReward());
+  $('reward-loot').addEventListener('click', e => { const button = e.target.closest('[data-reward-choice]'); if (button) claimReward(Number(button.dataset.rewardChoice)); });
+  $('unlock-hero').addEventListener('click', () => {
+    if (game.status !== 'ready' || game.stressMode) return;
+    const bought = progress.purchaseHero(selectedCharacter);
+    progress.profile = progress.loadProfile(); updateCharacterDetails(); progressSummary();
+    if (bought) { preferences(); notify(game.character.name + ': герой открыт, покупка сохранена.'); }
+    else notify('Покупка не выполнена. Баланс обновлён; проверь доступность хранилища.');
+  });
   $('meta-open').addEventListener('click', () => { showMeta(); $('meta-shop').showModal(); });
   $('meta-close').addEventListener('click', () => $('meta-shop').close());
   $('meta-grid').addEventListener('click', e => {
@@ -390,7 +428,14 @@
     if (!/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && (e.code === 'KeyG' && !e.ctrlKey && !e.altKey && !e.metaKey || e.code === 'Escape' && expandedView)) {
       e.preventDefault(); if (!e.repeat) toggleExpandedView(); return;
     }
-    if (game.status === 'reward' && ['Enter', 'Space'].includes(e.code)) { e.preventDefault(); if (!e.repeat) claimReward(); return; }
+    if (game.status === 'reward') {
+      const number = /^(Digit|Numpad)([123])$/.exec(e.code);
+      if (number && game.reward.options) { e.preventDefault(); if (!e.repeat) claimReward(Number(number[2]) - 1); return; }
+      if (['Enter', 'Space'].includes(e.code)) {
+        if (game.reward.options && e.target.closest('[data-reward-choice]')) return;
+        e.preventDefault(); if (!e.repeat && !game.reward.options) claimReward(); return;
+      }
+    }
     const movement = /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code);
     if (/^(INPUT|SELECT)$/.test(e.target.tagName)) return;
     if (movement) { e.preventDefault(); keys.add(e.code); syncInput(); }

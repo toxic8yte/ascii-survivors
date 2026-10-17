@@ -31,7 +31,7 @@ jobs:
           package-manager-cache: false
       - name: Check JavaScript syntax
         run: |
-          for file in catalog.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs benchmark.cjs; do
+          for file in catalog.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs verify-progression.cjs benchmark.cjs; do
             node --check "$file"
           done
       - name: Test gameplay and rendering
@@ -42,6 +42,7 @@ jobs:
           node verify-arena.cjs
           node verify-content.cjs
           node verify-evolution.cjs
+          node verify-progression.cjs
       - name: Package game files
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |

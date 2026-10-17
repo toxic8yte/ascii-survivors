@@ -85,7 +85,7 @@ assert.ok(endless.dash()); endless.time = 1800; tick(endless, .1); assert.equal(
 const longRun = new NightGame(2026); longRun.start();
 let maxEnemies = 0, maxParticles = 0, steps = 0;
 while ((longRun.time < 180 || longRun.status === 'upgrading') && steps++ < 14000) {
-  if (longRun.status === 'reward') longRun.claimReward();
+  if (longRun.status === 'reward') longRun.claimReward(0);
   if (longRun.status === 'upgrading') { const preferred = ['blades', 'pulse', 'haste', 'power', 'fork', 'magnet', 'pierce', 'stride', 'vital', 'regen']; let choice = 0; for (const id of preferred) { const i = longRun.offers.findIndex(u => u.id === id); if (i >= 0) { choice = i; break; } } longRun.choose(choice); }
   longRun.player.invulnerable = 1;
   let destination = null, distance = Infinity;
@@ -102,7 +102,7 @@ assert.equal(longRun.status, 'running'); assert.ok(longRun.time >= 180); assert.
 assert.ok(maxEnemies <= longRun.enemyLimit); assert.ok(maxParticles <= 450);
 const replayA = new NightGame(123), replayB = new NightGame(123); replayA.start(); replayB.start(); tick(replayA, 4); tick(replayB, 4);
 assert.deepEqual(replayA.enemies, replayB.enemies, 'Seeded simulation is reproducible');
-assert.equal(NightCharacters.length, 10); assert.equal(NightUpgrades.filter(u => u.weapon).length, 21);
+assert.equal(NightCharacters.length, 10); assert.equal(NightUpgrades.filter(u => u.weapon).length, 24);
 for (const hero of NightCharacters) {
   const character = new NightGame(123, hero.id);
   assert.equal(character.player.maxHp, hero.hp); assert.equal(character.speed, hero.speed);
@@ -189,7 +189,7 @@ const tap = fixture(); tap.setFireMode('manual'); tap.shootClock = 0; tap.reques
 assert.equal(tap.shots.length, 1, 'A quick press between two frames still fires once'); assert.equal(tap.queuedWeapon, null);
 tick(tap, 1.7); assert.equal(tap.shots.length, 0, 'A tap does not become a stuck trigger');
 const stress = new NightGame(99, 'hunter', { stressMode: true, enemyLimit: 1000 }); stress.start(); stress.hurtPlayer(1e9); assert.equal(stress.player.hp, 100);
-assert.equal(NightUpgrades.filter(u => u.weapon).filter(u => stress.levels[u.id] === u.max).length, 21);
+assert.equal(NightUpgrades.filter(u => u.weapon).filter(u => stress.levels[u.id] === u.max).length, 24);
 const beforePressure = stress.time; stress.pressureOffset += 1800; assert.equal(stress.time, beforePressure, 'Load preset does not pretend to advance elapsed play time');
 stress.enemies = []; for (let i = 0; i < 3; i++) stress.spawnWave(); assert.ok(stress.enemies.length > 100, 'Late waves exceed the old crowd size quickly');
 while (stress.enemies.length < stress.enemyLimit) stress.spawnWave(); assert.equal(stress.enemies.length, 1000); stress.spawnWave(); assert.equal(stress.enemies.length, 1000);
@@ -201,5 +201,5 @@ for (const u of NightUpgrades.filter(u => u.weapon)) {
   assert.equal(idle.shots.length + idle.boomerangs.length + idle.rings.length + idle.pools.length + idle.arcs.length + idle.meteors.length + idle.slashes.length, 0, u.id + ' waits for manual input');
 }
 console.log(`PASS: movement, combat, XP, upgrades and endless play. Three-minute run: ${longRun.kills} kills, level ${longRun.level}, peak ${maxEnemies} enemies.`);
-console.log('PASS: 10 heroes, 21 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
+console.log('PASS: 10 heroes, 24 weapons, first-level offers, chaining, returning sickle, frost, meteor, poison, cached glyphs and smooth interpolation.');
 console.log('PASS: slots 1–9, locked slots, manual aim/trigger/slash, auto mode, stress settings, population budget and merged XP.');

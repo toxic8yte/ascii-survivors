@@ -6,7 +6,7 @@ function fixture(options = {}) {
   const g = new NightGame(412, 'hunter', { terrain: false, fireMode: 'manual', ...options }); g.start();
   g.enemies = []; g.spawnClock = g.nextBossAt = 1e6; g.player.invulnerable = 1e8; return g;
 }
-assert.equal(NightUpgrades.filter(u => !u.weapon).length, 21);
+assert.equal(NightUpgrades.filter(u => !u.weapon).length, 22);
 assert.equal(new Set(NightUpgrades.map(u => u.id)).size, NightUpgrades.length);
 for (const w of NightCatalog.extraWeapons) {
   const g = fixture(); g.levels[w.id] = 1; g.selectedWeapon = w.id;
@@ -64,6 +64,6 @@ const resumedMega = NightSave.restore(clone(NightSave.capture(mega))); assert.ok
 mega.enemyShots = Array.from({ length: 256 }, () => ({ ink: 5 })); mega.enemySkill(dark);
 assert.equal(mega.enemyShots.length, 256); assert.equal(mega.enemyShots.filter(s => s.ink === 13).length, 40, 'A full shot budget still allows the red mega-boss burst');
 mega.hurtEnemy(dark, dark.hp + 1); assert.equal(mega.goldEarned, 125); assert.equal(mega.chests[0].source, 'darVetro');
-mega.openChest(mega.chests[0]); assert.equal(mega.reward.count, 5);
-console.log('PASS: 13 extra weapon behaviors, 21 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
+mega.openChest(mega.chests[0]); assert.equal(mega.reward.options.length, 3); assert.equal(mega.reward.count, 1);
+console.log('PASS: 16 extra weapon behaviors, 22 passives, pages, sci-fi heroes, gold banking, persistent purchases, failed writes, old saves and the ten-minute mega-boss.');
 

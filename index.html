@@ -55,9 +55,10 @@ ___|_____|___|__|___|_____|___</pre>
             <div class="picker-heading"><div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div><button id="meta-open" type="button" class="meta-open">НАСЛЕДИЕ · 50 ЗОЛОТА</button></div>
             <div class="characters" id="characters" role="group" aria-label="Персонажи"></div>
             <div class="character-details"><h3 id="character-name">Мара / Охотница</h3><p id="character-description"></p><div id="character-stats"></div><b id="character-weapon"></b></div>
+            <button class="primary-button" id="unlock-hero" type="button" hidden>ОТКРЫТЬ ГЕРОЯ</button>
             <div class="continue-box" id="continue-box" hidden><p id="continue-summary"></p><button class="primary-button" id="continue-run" type="button">ПРОДОЛЖИТЬ ЗАБЕГ →</button></div>
             <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
-            <div class="arsenal-note">21 ОРУЖИЕ · 21 ПАССИВКА · 20 ЭВОЛЮЦИЙ · РЕЦЕПТЫ В ГРИМУАРЕ</div>
+            <div class="arsenal-note">24 ОРУЖИЯ · 22 ПАССИВКИ · 22 ЭВОЛЮЦИИ · РЕЦЕПТЫ В ГРИМУАРЕ</div>
             <div id="progress-summary" class="progress-summary"></div>
           </section>
         </div>
@@ -82,7 +83,7 @@ ___|_____|___|__|___|_____|___</pre>
    /  ***  \
   /_________\
   |   &lt;*&gt;   |
-  |_________|</pre><div class="reward-loot" id="reward-loot"></div><p id="reward-summary"></p><button id="claim-reward" class="primary-button" type="button">ЗАБРАТЬ НАГРАДУ →</button><div class="overlay-hint">ENTER / ПРОБЕЛ · БОЙ НА ПАУЗЕ</div></div>
+  |_________|</pre><div class="reward-loot" id="reward-loot"></div><p id="reward-summary"></p><button id="claim-reward" class="primary-button" type="button">ЗАБРАТЬ НАГРАДУ →</button><div class="overlay-hint" id="reward-hint">ВЫБОР 1 / 2 / 3 · БОЙ НА ПАУЗЕ</div></div>
       </div>
 
       <div class="overlay" id="ending" hidden>
@@ -107,7 +108,7 @@ ___|_____|___|__|___|_____|___</pre>
   </main>
   <dialog id="bestiary" aria-labelledby="bestiary-title"><div class="bestiary-heading"><div><div class="eyebrow">ОБИТАТЕЛИ КЛАДБИЩА</div><h2 id="bestiary-title">Бестиарий</h2></div><button id="bestiary-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Перед рывком появляется линия, перед телепортацией — метка. Уходи с линии атаки.</p><div id="bestiary-list" class="bestiary-grid"></div></dialog>
   <dialog id="meta-shop" aria-labelledby="meta-title"><div class="bestiary-heading"><div><div class="eyebrow">ПОСТОЯННЫЕ УЛУЧШЕНИЯ</div><h2 id="meta-title">Наследие</h2><strong id="meta-gold">50 ЗОЛОТА</strong></div><button id="meta-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Каждые 5 убийств: 1 золото · мини-босс: +25 · мегабосс: +125 · сундук: +10 · минута жизни: +5. Первые 50 — стартовый запас. Старые достижения тоже учтены. Покупки действуют в новых забегах.</p><div id="meta-grid" class="meta-grid"></div><p id="meta-message" role="status"></p></dialog>
-  <dialog id="grimoire" aria-labelledby="grimoire-title"><div class="bestiary-heading"><div><div class="eyebrow">ОРУЖИЕ + ПАССИВКИ</div><h2 id="grimoire-title">Гримуар эволюций</h2></div><button id="grimoire-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Оружие — 4/4, пассивка — указанного ранга. Затем нужен сундук босса, появившегося с 10:00, или мегабосса. Ранний сундук не станет эволюционным от ожидания. Обычный сундук даёт одну эволюцию, мегабосс — до пяти. Пассивки остаются. Две птицы на максимуме объединяются в одну.</p><div id="recipe-list" class="recipe-grid"></div><p class="bestiary-hint">Наши рецепты и каламбуры основаны на <a href="https://vampire.survivors.wiki/w/Evolution" target="_blank" rel="noopener noreferrer">механике эволюций Vampire Survivors</a>. Цифры адаптированы под нашу арену.</p></dialog>
+  <dialog id="grimoire" aria-labelledby="grimoire-title"><div class="bestiary-heading"><div><div class="eyebrow">ОРУЖИЕ + ПАССИВКИ</div><h2 id="grimoire-title">Гримуар эволюций</h2></div><button id="grimoire-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Оружие — 4/4, пассивка — указанного ранга. Затем нужен сундук босса, появившегося с 10:00, или мегабосса. Ранний сундук не станет эволюционным от ожидания. Любой сундук предлагает три награды: выбери одну. Пассивки остаются. Объединения поглощают дополнительное оружие. Серп 4/4 + Молот 4/4 + Капитал 1+ = Миколенин.</p><div id="recipe-list" class="recipe-grid"></div><p class="bestiary-hint">Наши рецепты и каламбуры основаны на <a href="https://vampire.survivors.wiki/w/Evolution" target="_blank" rel="noopener noreferrer">механике эволюций Vampire Survivors</a>. Цифры адаптированы под нашу арену.</p></dialog>
   <script src="catalog.js"></script>
   <script src="core.js"></script>
   <script src="progress.js"></script>
