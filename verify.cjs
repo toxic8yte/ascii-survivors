@@ -102,7 +102,7 @@ assert.equal(longRun.status, 'running'); assert.ok(longRun.time >= 180); assert.
 assert.ok(maxEnemies <= longRun.enemyLimit); assert.ok(maxParticles <= 450);
 const replayA = new NightGame(123), replayB = new NightGame(123); replayA.start(); replayB.start(); tick(replayA, 4); tick(replayB, 4);
 assert.deepEqual(replayA.enemies, replayB.enemies, 'Seeded simulation is reproducible');
-assert.equal(NightCharacters.length, 30); assert.equal(NightUpgrades.filter(u => u.weapon).length, 24);
+assert.equal(NightCharacters.length, require('./data/heroes.json').length); assert.equal(NightUpgrades.filter(u => u.weapon).length, require('./data/weapons.json').length);
 for (const hero of NightCharacters) {
   const character = new NightGame(123, hero.id);
   assert.equal(character.player.maxHp, hero.hp); assert.equal(character.speed, hero.speed);

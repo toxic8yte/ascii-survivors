@@ -137,6 +137,10 @@ footer { flex-shrink: 0; padding: 16px 0 17px; }
 #grimoire { width: min(1040px, calc(100% - 28px)); max-height: calc(100svh - 28px); overflow: auto; padding: 24px; border: 1px solid #8b6b99; background: #131610; color: #ddd0b6; }
 #grimoire::backdrop { background: #060805df; backdrop-filter: blur(3px); }
 .recipe-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.reference-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.reference-tabs button { border: 1px solid #54583e; padding: 10px 14px; background: #20251a; color: #c7bc9e; font: inherit; font-size: 11px; cursor: pointer; }
+.reference-tabs button[aria-pressed="true"] { border-color: #dbb273; color: #f1d497; background: #39301d; }
+.reference-card p, .recipe-card p, .enemy-card p, #character-description, .upgrade-description { white-space: pre-line; overflow-wrap: anywhere; }
 .recipe-card { padding: 16px; border: 1px solid #454535; background: #1b2017; }
 .recipe-card h3 { margin: 0 0 12px; color: #e8c693; font-size: 14px; line-height: 1.5; }
 .recipe-card ul { list-style: none; padding: 0; margin: 0 0 12px; color: #9a8e78; font-size: 11px; line-height: 1.8; }
@@ -155,6 +159,7 @@ footer { flex-shrink: 0; padding: 16px 0 17px; }
 .wave-status { color: #abbc91; font-size: 9px; }
 .combat-metrics { margin-top: 14px; padding-top: 12px; border-top: 1px solid #414b36; }
 .combat-metrics > p { color: #a2aa91; font-size: 9px; line-height: 1.6; }
+.combat-metrics > .combat-mode { padding: 8px; border: 1px solid #79603c; color: #e4bf83; background: #302718; }
 .combat-weapons > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; line-height: 1.5; }
 .combat-weapons span { overflow-wrap: anywhere; color: #b3b79c; }
 .combat-weapons b { color: #dfc18c; font-weight: normal; }

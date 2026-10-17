@@ -6,12 +6,12 @@
     "role": "swarm",
     "firstSecond": 0,
     "stats": {
-      "maxHealth": 3.0,
-      "damage": 2.0,
+      "maxHealth": 3,
+      "damage": 2,
       "moveSpeed": 1.1,
-      "experience": 1.0,
-      "spawnCost": 1.0,
-      "knockbackResistance": 0.0,
+      "experience": 1,
+      "spawnCost": 1,
+      "knockbackResistance": 0,
       "collisionRadius": 10
     },
     "movement": {
@@ -30,7 +30,7 @@
       "glyph": "r",
       "ink": 3
     },
-    "text": "Слабый массовый враг. Окружает героя числом."
+    "description": "Слабый массовый враг. Окружает героя числом."
   },
   {
     "id": "coffin_crawler",
@@ -39,11 +39,11 @@
     "role": "swarm",
     "firstSecond": 60,
     "stats": {
-      "maxHealth": 8.0,
-      "damage": 4.0,
+      "maxHealth": 8,
+      "damage": 4,
       "moveSpeed": 0.9,
-      "experience": 1.0,
-      "spawnCost": 2.0,
+      "experience": 1,
+      "spawnCost": 2,
       "knockbackResistance": 0.1,
       "collisionRadius": 14
     },
@@ -63,7 +63,7 @@
       "glyph": "c",
       "ink": 3
     },
-    "text": "Слабый массовый враг. Окружает героя числом."
+    "description": "Слабый массовый враг. Окружает героя числом."
   },
   {
     "id": "screaming_skull",
@@ -72,12 +72,12 @@
     "role": "swarm",
     "firstSecond": 120,
     "stats": {
-      "maxHealth": 5.0,
-      "damage": 4.0,
+      "maxHealth": 5,
+      "damage": 4,
       "moveSpeed": 1.5,
-      "experience": 1.0,
-      "spawnCost": 2.0,
-      "knockbackResistance": 0.0,
+      "experience": 1,
+      "spawnCost": 2,
+      "knockbackResistance": 0,
       "collisionRadius": 10
     },
     "movement": {
@@ -96,7 +96,7 @@
       "glyph": "o",
       "ink": 3
     },
-    "text": "Слабый массовый враг. Окружает героя числом."
+    "description": "Слабый массовый враг. Окружает героя числом."
   },
   {
     "id": "mold_corpse",
@@ -105,11 +105,11 @@
     "role": "normal",
     "firstSecond": 180,
     "stats": {
-      "maxHealth": 18.0,
-      "damage": 6.0,
+      "maxHealth": 18,
+      "damage": 6,
       "moveSpeed": 0.55,
-      "experience": 2.0,
-      "spawnCost": 3.0,
+      "experience": 2,
+      "spawnCost": 3,
       "knockbackResistance": 0.3,
       "collisionRadius": 14
     },
@@ -127,7 +127,7 @@
       "glyph": "z",
       "ink": 4
     },
-    "text": "Преследует героя."
+    "description": "Преследует героя."
   },
   {
     "id": "grave_bat",
@@ -136,12 +136,12 @@
     "role": "swarm",
     "firstSecond": 240,
     "stats": {
-      "maxHealth": 4.0,
-      "damage": 3.0,
+      "maxHealth": 4,
+      "damage": 3,
       "moveSpeed": 1.35,
-      "experience": 1.0,
-      "spawnCost": 1.0,
-      "knockbackResistance": 0.0,
+      "experience": 1,
+      "spawnCost": 1,
+      "knockbackResistance": 0,
       "collisionRadius": 10
     },
     "movement": {
@@ -164,7 +164,7 @@
         "^"
       ]
     },
-    "text": "Приближается по извилистой траектории."
+    "description": "Приближается по извилистой траектории."
   },
   {
     "id": "boss_bellman",
@@ -173,10 +173,10 @@
     "role": "heavy",
     "firstSecond": 300,
     "stats": {
-      "maxHealth": 280.0,
-      "damage": 12.0,
+      "maxHealth": 280,
+      "damage": 12,
       "moveSpeed": 0.7,
-      "experience": 25.0,
+      "experience": 25,
       "spawnCost": 0,
       "knockbackResistance": 0.8,
       "collisionRadius": 38
@@ -198,7 +198,7 @@
       "glyph": "[O]",
       "ink": 13
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "chapel_moth",
@@ -207,11 +207,11 @@
     "role": "swarm",
     "firstSecond": 330,
     "stats": {
-      "maxHealth": 8.0,
-      "damage": 5.0,
+      "maxHealth": 8,
+      "damage": 5,
       "moveSpeed": 1.2,
-      "experience": 2.0,
-      "spawnCost": 2.0,
+      "experience": 2,
+      "spawnCost": 2,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -231,7 +231,7 @@
       "glyph": "m",
       "ink": 3
     },
-    "text": "Приближается по извилистой траектории."
+    "description": "Приближается по извилистой траектории."
   },
   {
     "id": "bone_walker",
@@ -240,11 +240,11 @@
     "role": "normal",
     "firstSecond": 360,
     "stats": {
-      "maxHealth": 20.0,
-      "damage": 7.0,
+      "maxHealth": 20,
+      "damage": 7,
       "moveSpeed": 0.9,
-      "experience": 2.0,
-      "spawnCost": 3.0,
+      "experience": 2,
+      "spawnCost": 3,
       "knockbackResistance": 0.2,
       "collisionRadius": 14
     },
@@ -262,7 +262,7 @@
       "glyph": "x",
       "ink": 4
     },
-    "text": "Преследует героя."
+    "description": "Преследует героя."
   },
   {
     "id": "black_hound",
@@ -271,11 +271,11 @@
     "role": "swarm",
     "firstSecond": 420,
     "stats": {
-      "maxHealth": 12.0,
-      "damage": 7.0,
+      "maxHealth": 12,
+      "damage": 7,
       "moveSpeed": 1.65,
-      "experience": 2.0,
-      "spawnCost": 3.0,
+      "experience": 2,
+      "spawnCost": 3,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -295,7 +295,7 @@
       "glyph": "h",
       "ink": 3
     },
-    "text": "Слабый массовый враг. Окружает героя числом."
+    "description": "Слабый массовый враг. Окружает героя числом."
   },
   {
     "id": "mourning_nun",
@@ -304,11 +304,11 @@
     "role": "heavy",
     "firstSecond": 480,
     "stats": {
-      "maxHealth": 45.0,
-      "damage": 10.0,
+      "maxHealth": 45,
+      "damage": 10,
       "moveSpeed": 0.6,
-      "experience": 4.0,
-      "spawnCost": 5.0,
+      "experience": 4,
+      "spawnCost": 5,
       "knockbackResistance": 0.55,
       "collisionRadius": 19
     },
@@ -326,7 +326,7 @@
       "glyph": "!|!",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "crooked_angel",
@@ -335,11 +335,11 @@
     "role": "special",
     "firstSecond": 540,
     "stats": {
-      "maxHealth": 16.0,
-      "damage": 8.0,
+      "maxHealth": 16,
+      "damage": 8,
       "moveSpeed": 1.2,
-      "experience": 3.0,
-      "spawnCost": 3.0,
+      "experience": 3,
+      "spawnCost": 3,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -357,7 +357,7 @@
       "glyph": "A",
       "ink": 4
     },
-    "text": "Проходит по прямой через карту: уступи дорогу строю."
+    "description": "Проходит по прямой через карту: уступи дорогу строю."
   },
   {
     "id": "boss_mother_pallor",
@@ -366,10 +366,10 @@
     "role": "heavy",
     "firstSecond": 600,
     "stats": {
-      "maxHealth": 650.0,
-      "damage": 15.0,
+      "maxHealth": 650,
+      "damage": 15,
       "moveSpeed": 0.8,
-      "experience": 40.0,
+      "experience": 40,
       "spawnCost": 0,
       "knockbackResistance": 0.85,
       "collisionRadius": 38
@@ -392,12 +392,12 @@
       "glyph": "M",
       "ink": 13
     },
-    "text": "Преследует героя и раз в шесть секунд призывает трёх могильных крыс.",
     "summon": {
       "kind": "grave_rat",
       "count": 3,
       "interval": 6
-    }
+    },
+    "description": "Преследует героя и раз в шесть секунд призывает трёх могильных крыс."
   },
   {
     "id": "gallows_crow",
@@ -406,11 +406,11 @@
     "role": "fast",
     "firstSecond": 630,
     "stats": {
-      "maxHealth": 14.0,
-      "damage": 7.0,
+      "maxHealth": 14,
+      "damage": 7,
       "moveSpeed": 1.55,
-      "experience": 2.0,
-      "spawnCost": 3.0,
+      "experience": 2,
+      "spawnCost": 3,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -428,7 +428,7 @@
       "glyph": "w",
       "ink": 4
     },
-    "text": "Быстро сокращает дистанцию: убей или замедли его до приближения."
+    "description": "Быстро сокращает дистанцию: убей или замедли его до приближения."
   },
   {
     "id": "corpse_bride",
@@ -437,11 +437,11 @@
     "role": "heavy",
     "firstSecond": 660,
     "stats": {
-      "maxHealth": 55.0,
-      "damage": 11.0,
+      "maxHealth": 55,
+      "damage": 11,
       "moveSpeed": 0.75,
-      "experience": 5.0,
-      "spawnCost": 6.0,
+      "experience": 5,
+      "spawnCost": 6,
       "knockbackResistance": 0.5,
       "collisionRadius": 19
     },
@@ -459,7 +459,7 @@
       "glyph": "B",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "knife_saint",
@@ -468,11 +468,11 @@
     "role": "special",
     "firstSecond": 720,
     "stats": {
-      "maxHealth": 25.0,
-      "damage": 12.0,
-      "moveSpeed": 1.0,
-      "experience": 4.0,
-      "spawnCost": 5.0,
+      "maxHealth": 25,
+      "damage": 12,
+      "moveSpeed": 1,
+      "experience": 4,
+      "spawnCost": 5,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -490,7 +490,7 @@
       "glyph": "K",
       "ink": 7
     },
-    "text": "Предупреждает перед рывком и отдыхает после атаки."
+    "description": "Предупреждает перед рывком и отдыхает после атаки."
   },
   {
     "id": "red_penitent",
@@ -499,11 +499,11 @@
     "role": "fast",
     "firstSecond": 780,
     "stats": {
-      "maxHealth": 34.0,
-      "damage": 10.0,
+      "maxHealth": 34,
+      "damage": 10,
       "moveSpeed": 1.3,
-      "experience": 4.0,
-      "spawnCost": 5.0,
+      "experience": 4,
+      "spawnCost": 5,
       "knockbackResistance": 0.25,
       "collisionRadius": 14
     },
@@ -521,7 +521,7 @@
       "glyph": "P",
       "ink": 4
     },
-    "text": "Быстро сокращает дистанцию: убей или замедли его до приближения."
+    "description": "Быстро сокращает дистанцию: убей или замедли его до приближения."
   },
   {
     "id": "rotting_choir",
@@ -530,11 +530,11 @@
     "role": "heavy",
     "firstSecond": 840,
     "stats": {
-      "maxHealth": 80.0,
-      "damage": 12.0,
+      "maxHealth": 80,
+      "damage": 12,
       "moveSpeed": 0.5,
-      "experience": 7.0,
-      "spawnCost": 8.0,
+      "experience": 7,
+      "spawnCost": 8,
       "knockbackResistance": 0.7,
       "collisionRadius": 26
     },
@@ -552,7 +552,7 @@
       "glyph": "###",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "lantern_wraith",
@@ -561,11 +561,11 @@
     "role": "normal",
     "firstSecond": 900,
     "stats": {
-      "maxHealth": 22.0,
-      "damage": 9.0,
+      "maxHealth": 22,
+      "damage": 9,
       "moveSpeed": 1.25,
-      "experience": 3.0,
-      "spawnCost": 4.0,
+      "experience": 3,
+      "spawnCost": 4,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -583,7 +583,7 @@
       "glyph": "[~]",
       "ink": 4
     },
-    "text": "Приближается по извилистой траектории."
+    "description": "Приближается по извилистой траектории."
   },
   {
     "id": "boss_procession",
@@ -592,10 +592,10 @@
     "role": "heavy",
     "firstSecond": 900,
     "stats": {
-      "maxHealth": 1200.0,
-      "damage": 18.0,
+      "maxHealth": 1200,
+      "damage": 18,
       "moveSpeed": 0.45,
-      "experience": 65.0,
+      "experience": 65,
       "spawnCost": 0,
       "knockbackResistance": 0.95,
       "collisionRadius": 38
@@ -617,7 +617,7 @@
       "glyph": "[WWW]",
       "ink": 13
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "ash_child",
@@ -626,11 +626,11 @@
     "role": "swarm",
     "firstSecond": 1020,
     "stats": {
-      "maxHealth": 12.0,
-      "damage": 8.0,
+      "maxHealth": 12,
+      "damage": 8,
       "moveSpeed": 1.4,
-      "experience": 2.0,
-      "spawnCost": 2.0,
+      "experience": 2,
+      "spawnCost": 2,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -650,7 +650,7 @@
       "glyph": "i",
       "ink": 3
     },
-    "text": "Слабый массовый враг. Окружает героя числом."
+    "description": "Слабый массовый враг. Окружает героя числом."
   },
   {
     "id": "chapel_butcher",
@@ -659,11 +659,11 @@
     "role": "heavy",
     "firstSecond": 1080,
     "stats": {
-      "maxHealth": 100.0,
-      "damage": 16.0,
+      "maxHealth": 100,
+      "damage": 16,
       "moveSpeed": 0.7,
-      "experience": 8.0,
-      "spawnCost": 10.0,
+      "experience": 8,
+      "spawnCost": 10,
       "knockbackResistance": 0.75,
       "collisionRadius": 26
     },
@@ -681,7 +681,7 @@
       "glyph": "C",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "widow_engine",
@@ -690,11 +690,11 @@
     "role": "special",
     "firstSecond": 1140,
     "stats": {
-      "maxHealth": 70.0,
-      "damage": 16.0,
+      "maxHealth": 70,
+      "damage": 16,
       "moveSpeed": 0.8,
-      "experience": 7.0,
-      "spawnCost": 9.0,
+      "experience": 7,
+      "spawnCost": 9,
       "knockbackResistance": 0.6,
       "collisionRadius": 19
     },
@@ -712,7 +712,7 @@
       "glyph": "X",
       "ink": 7
     },
-    "text": "Предупреждает перед рывком и отдыхает после атаки."
+    "description": "Предупреждает перед рывком и отдыхает после атаки."
   },
   {
     "id": "blind_confessor",
@@ -721,11 +721,11 @@
     "role": "special",
     "firstSecond": 1200,
     "stats": {
-      "maxHealth": 35.0,
-      "damage": 12.0,
+      "maxHealth": 35,
+      "damage": 12,
       "moveSpeed": 1.2,
-      "experience": 5.0,
-      "spawnCost": 6.0,
+      "experience": 5,
+      "spawnCost": 6,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -743,7 +743,7 @@
       "glyph": "?",
       "ink": 5
     },
-    "text": "Кружит вокруг героя, сужая пространство для манёвра."
+    "description": "Кружит вокруг героя, сужая пространство для манёвра."
   },
   {
     "id": "boss_cardinal_zero",
@@ -752,10 +752,10 @@
     "role": "special",
     "firstSecond": 1200,
     "stats": {
-      "maxHealth": 1800.0,
-      "damage": 20.0,
-      "moveSpeed": 1.0,
-      "experience": 90.0,
+      "maxHealth": 1800,
+      "damage": 20,
+      "moveSpeed": 1,
+      "experience": 90,
       "spawnCost": 0,
       "knockbackResistance": 0.9,
       "collisionRadius": 38
@@ -777,7 +777,7 @@
       "glyph": "0",
       "ink": 13
     },
-    "text": "Предупреждает перед рывком и отдыхает после атаки."
+    "description": "Предупреждает перед рывком и отдыхает после атаки."
   },
   {
     "id": "hollow_knight",
@@ -786,11 +786,11 @@
     "role": "heavy",
     "firstSecond": 1260,
     "stats": {
-      "maxHealth": 120.0,
-      "damage": 17.0,
+      "maxHealth": 120,
+      "damage": 17,
       "moveSpeed": 0.9,
-      "experience": 9.0,
-      "spawnCost": 12.0,
+      "experience": 9,
+      "spawnCost": 12,
       "knockbackResistance": 0.75,
       "collisionRadius": 26
     },
@@ -808,7 +808,7 @@
       "glyph": "H",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "choir_fly",
@@ -817,11 +817,11 @@
     "role": "fast",
     "firstSecond": 1320,
     "stats": {
-      "maxHealth": 18.0,
-      "damage": 9.0,
+      "maxHealth": 18,
+      "damage": 9,
       "moveSpeed": 1.7,
-      "experience": 3.0,
-      "spawnCost": 3.0,
+      "experience": 3,
+      "spawnCost": 3,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -839,7 +839,7 @@
       "glyph": "-f-",
       "ink": 4
     },
-    "text": "Быстро сокращает дистанцию: убей или замедли его до приближения."
+    "description": "Быстро сокращает дистанцию: убей или замедли его до приближения."
   },
   {
     "id": "iron_martyr",
@@ -848,11 +848,11 @@
     "role": "heavy",
     "firstSecond": 1380,
     "stats": {
-      "maxHealth": 180.0,
-      "damage": 20.0,
+      "maxHealth": 180,
+      "damage": 20,
       "moveSpeed": 0.5,
-      "experience": 12.0,
-      "spawnCost": 16.0,
+      "experience": 12,
+      "spawnCost": 16,
       "knockbackResistance": 0.9,
       "collisionRadius": 26
     },
@@ -870,7 +870,7 @@
       "glyph": "I",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "black_halo",
@@ -879,11 +879,11 @@
     "role": "special",
     "firstSecond": 1440,
     "stats": {
-      "maxHealth": 55.0,
-      "damage": 15.0,
+      "maxHealth": 55,
+      "damage": 15,
       "moveSpeed": 1.5,
-      "experience": 6.0,
-      "spawnCost": 7.0,
+      "experience": 6,
+      "spawnCost": 7,
       "knockbackResistance": 0,
       "collisionRadius": 19
     },
@@ -901,7 +901,7 @@
       "glyph": "O",
       "ink": 5
     },
-    "text": "Кружит вокруг героя, сужая пространство для манёвра."
+    "description": "Кружит вокруг героя, сужая пространство для манёвра."
   },
   {
     "id": "boss_skinless_saint",
@@ -910,10 +910,10 @@
     "role": "heavy",
     "firstSecond": 1500,
     "stats": {
-      "maxHealth": 2600.0,
-      "damage": 25.0,
+      "maxHealth": 2600,
+      "damage": 25,
       "moveSpeed": 1.05,
-      "experience": 120.0,
+      "experience": 120,
       "spawnCost": 0,
       "knockbackResistance": 0.92,
       "collisionRadius": 38
@@ -935,7 +935,7 @@
       "glyph": "S",
       "ink": 13
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "teeth_cloud",
@@ -944,11 +944,11 @@
     "role": "swarm",
     "firstSecond": 1530,
     "stats": {
-      "maxHealth": 10.0,
-      "damage": 10.0,
+      "maxHealth": 10,
+      "damage": 10,
       "moveSpeed": 1.55,
-      "experience": 2.0,
-      "spawnCost": 1.0,
+      "experience": 2,
+      "spawnCost": 1,
       "knockbackResistance": 0,
       "collisionRadius": 14
     },
@@ -968,7 +968,7 @@
       "glyph": ":",
       "ink": 3
     },
-    "text": "Приближается по извилистой траектории."
+    "description": "Приближается по извилистой траектории."
   },
   {
     "id": "cathedral_head",
@@ -977,11 +977,11 @@
     "role": "heavy",
     "firstSecond": 1560,
     "stats": {
-      "maxHealth": 200.0,
-      "damage": 22.0,
+      "maxHealth": 200,
+      "damage": 22,
       "moveSpeed": 0.65,
-      "experience": 14.0,
-      "spawnCost": 18.0,
+      "experience": 14,
+      "spawnCost": 18,
       "knockbackResistance": 0.9,
       "collisionRadius": 26
     },
@@ -999,7 +999,7 @@
       "glyph": "@",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "pale_hunter",
@@ -1008,11 +1008,11 @@
     "role": "heavy",
     "firstSecond": 1620,
     "stats": {
-      "maxHealth": 50.0,
-      "damage": 18.0,
+      "maxHealth": 50,
+      "damage": 18,
       "moveSpeed": 1.9,
-      "experience": 7.0,
-      "spawnCost": 8.0,
+      "experience": 7,
+      "spawnCost": 8,
       "knockbackResistance": 0,
       "collisionRadius": 19
     },
@@ -1030,7 +1030,7 @@
       "glyph": ">",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "funeral_machine",
@@ -1039,11 +1039,11 @@
     "role": "heavy",
     "firstSecond": 1680,
     "stats": {
-      "maxHealth": 320.0,
-      "damage": 24.0,
+      "maxHealth": 320,
+      "damage": 24,
       "moveSpeed": 0.45,
-      "experience": 18.0,
-      "spawnCost": 25.0,
+      "experience": 18,
+      "spawnCost": 25,
       "knockbackResistance": 0.98,
       "collisionRadius": 26
     },
@@ -1061,7 +1061,7 @@
       "glyph": "[F]",
       "ink": 4
     },
-    "text": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
+    "description": "Медленный заслон с большим запасом здоровья. Сопротивляется отбрасыванию и перекрывает пути отхода."
   },
   {
     "id": "last_witness",
@@ -1070,11 +1070,11 @@
     "role": "special",
     "firstSecond": 1740,
     "stats": {
-      "maxHealth": 90.0,
-      "damage": 25.0,
+      "maxHealth": 90,
+      "damage": 25,
       "moveSpeed": 1.1,
-      "experience": 10.0,
-      "spawnCost": 12.0,
+      "experience": 10,
+      "spawnCost": 12,
       "knockbackResistance": 0,
       "collisionRadius": 26
     },
@@ -1092,7 +1092,7 @@
       "glyph": "!",
       "ink": 7
     },
-    "text": "Предупреждает перед рывком и отдыхает после атаки."
+    "description": "Предупреждает перед рывком и отдыхает после атаки."
   },
   {
     "id": "the_administrator",
@@ -1104,9 +1104,9 @@
       "maxHealth": 9000,
       "damage": 40,
       "moveSpeed": 1.3,
-      "experience": 0.0,
+      "experience": 0,
       "spawnCost": 0,
-      "knockbackResistance": 1.0,
+      "knockbackResistance": 1,
       "collisionRadius": 38
     },
     "movement": {
@@ -1126,7 +1126,7 @@
       "glyph": "ROOT",
       "ink": 13
     },
-    "text": "Поздняя угроза с 30:00. Не отбрасывается, возвращается при отрыве. Его можно победить; забег продолжается."
+    "description": "Поздняя угроза с 30:00. Не отбрасывается, возвращается при отрыве. Его можно победить; забег продолжается."
   },
   {
     "id": "plague_rat",
@@ -1135,13 +1135,13 @@
     "role": "special",
     "firstSecond": 240,
     "stats": {
-      "maxHealth": 12.0,
-      "damage": 3.0,
+      "maxHealth": 12,
+      "damage": 3,
       "moveSpeed": 1.1,
-      "experience": 3.0,
-      "spawnCost": 3.0,
-      "knockbackResistance": 0.0,
-      "collisionRadius": 13.0
+      "experience": 3,
+      "spawnCost": 3,
+      "knockbackResistance": 0,
+      "collisionRadius": 13
     },
     "movement": {
       "type": "chase",
@@ -1159,8 +1159,8 @@
       "glyph": "R",
       "ink": 7
     },
-    "text": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя.",
-    "base": "grave_rat"
+    "base": "grave_rat",
+    "description": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя."
   },
   {
     "id": "screaming_crown",
@@ -1169,13 +1169,13 @@
     "role": "special",
     "firstSecond": 360,
     "stats": {
-      "maxHealth": 20.0,
-      "damage": 6.0,
+      "maxHealth": 20,
+      "damage": 6,
       "moveSpeed": 1.5,
-      "experience": 3.0,
-      "spawnCost": 6.0,
-      "knockbackResistance": 0.0,
-      "collisionRadius": 13.0
+      "experience": 3,
+      "spawnCost": 6,
+      "knockbackResistance": 0,
+      "collisionRadius": 13
     },
     "movement": {
       "type": "chase",
@@ -1193,8 +1193,8 @@
       "glyph": "O",
       "ink": 7
     },
-    "text": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя.",
-    "base": "screaming_skull"
+    "base": "screaming_skull",
+    "description": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя."
   },
   {
     "id": "mother_superior",
@@ -1203,11 +1203,11 @@
     "role": "special",
     "firstSecond": 720,
     "stats": {
-      "maxHealth": 180.0,
-      "damage": 15.0,
+      "maxHealth": 180,
+      "damage": 15,
       "moveSpeed": 0.6,
-      "experience": 12.0,
-      "spawnCost": 15.0,
+      "experience": 12,
+      "spawnCost": 15,
       "knockbackResistance": 0.55,
       "collisionRadius": 24.7
     },
@@ -1225,8 +1225,8 @@
       "glyph": "N",
       "ink": 7
     },
-    "text": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя.",
-    "base": "mourning_nun"
+    "base": "mourning_nun",
+    "description": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя."
   },
   {
     "id": "black_knight",
@@ -1235,11 +1235,11 @@
     "role": "special",
     "firstSecond": 1500,
     "stats": {
-      "maxHealth": 480.0,
+      "maxHealth": 480,
       "damage": 25.5,
       "moveSpeed": 0.9,
-      "experience": 27.0,
-      "spawnCost": 36.0,
+      "experience": 27,
+      "spawnCost": 36,
       "knockbackResistance": 0.75,
       "collisionRadius": 33.800000000000004
     },
@@ -1257,8 +1257,8 @@
       "glyph": "K",
       "ink": 7
     },
-    "text": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя.",
-    "base": "hollow_knight"
+    "base": "hollow_knight",
+    "description": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя."
   },
   {
     "id": "grand_martyr",
@@ -1267,11 +1267,11 @@
     "role": "special",
     "firstSecond": 1620,
     "stats": {
-      "maxHealth": 720.0,
-      "damage": 30.0,
+      "maxHealth": 720,
+      "damage": 30,
       "moveSpeed": 0.5,
-      "experience": 36.0,
-      "spawnCost": 48.0,
+      "experience": 36,
+      "spawnCost": 48,
       "knockbackResistance": 0.9,
       "collisionRadius": 33.800000000000004
     },
@@ -1289,7 +1289,7 @@
       "glyph": "M",
       "ink": 7
     },
-    "text": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя.",
-    "base": "iron_martyr"
+    "base": "iron_martyr",
+    "description": "Элита: вчетверо больше здоровья, усиленный урон и втрое больше опыта. Преследует героя."
   }
 ]

@@ -19,6 +19,7 @@
   const frameTimes = new Float32Array(180), records = [];
   let frameIndex = 0, sampleCount = 0, frameMean = 0, frameP95 = 0, simulationMS = 0, renderMS = 0, lastRecord = -1;
   let mouseFiring = false, touchFiring = false;
+  let referenceView = 'recipes';
   let expandedView = false, nativeFullscreen = false;
   const mouseAim = { x: .5, y: .2, active: false };
   const textCache = new Map(), equipment = new Map();
@@ -77,7 +78,7 @@
       const card = document.createElement('article'); card.className = 'enemy-card' + (enemy.boss ? ' boss' : ''); card.dataset.kind = kind;
       const sprite = document.createElement('pre'); sprite.textContent = enemy.sprite; sprite.setAttribute('aria-hidden', 'true');
       const title = document.createElement('h3'); title.textContent = enemy.title;
-      const description = document.createElement('p'); description.textContent = enemy.text;
+      const description = document.createElement('p'); description.textContent = enemy.description;
       const hint = document.createElement('small'); hint.textContent = (enemy.mega ? 'МЕГАБОСС · С ' + formatTime(enemy.at ?? 600) : enemy.boss ? 'БОСС' + (enemy.roster ? ' · С ' + formatTime(enemy.at) : '') : 'ВОЗРАСТ ВОЛН ' + formatTime(enemy.at)) + (enemy.roster ? ' · ' + Math.round(enemy.hp) + ' БАЗОВЫХ HP · СОПРОТИВЛЕНИЕ ' + Math.round(enemy.knockbackResistance * 100) + '%' : '') + ' · ' + (seen.has(kind) ? 'ВСТРЕЧЕН' : 'ЕЩЁ ВПЕРЕДИ');
       card.append(sprite, title, description, hint); fragment.append(card);
     }
@@ -89,7 +90,7 @@
     for (const upgrade of NightMeta) {
       const rank = progress.profile.meta.ranks[upgrade.id], cost = upgrade.cost * (rank + 1) ** 2, card = document.createElement('article'); card.className = 'meta-card';
       const title = document.createElement('h3'); title.textContent = upgrade.icon + ' ' + upgrade.title;
-      const info = document.createElement('p'); info.textContent = upgrade.text;
+      const info = document.createElement('p'); info.textContent = upgrade.description;
       const button = document.createElement('button'); button.type = 'button'; button.dataset.buy = upgrade.id; button.dataset.rank = rank;
       button.textContent = rank >= upgrade.max ? 'МАКСИМУМ · ' + rank + '/' + upgrade.max : 'РАНГ ' + rank + '/' + upgrade.max + ' → КУПИТЬ ЗА ' + cost;
       button.disabled = game.status !== 'ready' || rank >= upgrade.max || progress.profile.meta.gold < cost || !progress.available;
@@ -98,7 +99,7 @@
     for (const feature of NightCatalog.features) {
       const owned = progress.isFeatureUnlocked(feature.id), card = document.createElement('article'); card.className = 'meta-card feature-card';
       const title = document.createElement('h3'); title.textContent = feature.icon + ' ' + feature.title;
-      const description = document.createElement('p'); description.textContent = feature.text;
+      const description = document.createElement('p'); description.textContent = feature.description;
       const button = document.createElement('button'); button.type = 'button'; button.dataset.feature = feature.id;
       button.textContent = owned ? 'ОТКРЫТО НАВСЕГДА' : 'ОТКРЫТЬ ЗА ' + feature.cost;
       button.disabled = owned || game.status !== 'ready' || progress.profile.meta.gold < feature.cost || !progress.available;
@@ -124,11 +125,28 @@
         if (u.baseTitle) row.title = u.baseTitle;
         ingredients.append(row);
       }
-      const description = document.createElement('p'); description.textContent = recipe.text;
+      const description = document.createElement('p'); description.textContent = recipe.description;
       const state = document.createElement('small'); state.textContent = done ? 'ПОЛУЧЕНО В ЭТОМ ЗАБЕГЕ' : ready ? 'КОМПЛЕКТ ГОТОВ · НАЙДИ СУНДУК ЭВОЛЮЦИИ' : 'СОБЕРИ КОМПЛЕКТ';
       card.append(title, ingredients, description, state); fragment.append(card);
     }
-    $('recipe-list').replaceChildren(fragment); $('grimoire').showModal();
+    $('recipe-list').replaceChildren(fragment); showReference(referenceView); $('grimoire').showModal();
+  }
+  function showReference(view) {
+    if (!['recipes', 'weapons', 'passives'].includes(view)) return;
+    referenceView = view;
+    for (const id of ['recipes', 'weapons', 'passives']) $('reference-' + id).setAttribute('aria-pressed', String(id === view));
+    $('recipe-list').hidden = view !== 'recipes'; $('content-reference').hidden = view === 'recipes';
+    if (view === 'recipes') return;
+    const fragment = document.createDocumentFragment();
+    for (const item of NightUpgrades.filter(row => Boolean(row.weapon) === (view === 'weapons'))) {
+      const card = document.createElement('article'); card.className = 'recipe-card reference-card'; card.dataset.item = item.id;
+      const title = document.createElement('h3'); title.textContent = item.icon + ' ' + item.title;
+      const description = document.createElement('p'); description.textContent = item.description;
+      const rank = document.createElement('small'); rank.textContent = (item.weapon ? 'ОРУЖИЕ' : item.kind) + ' · ' + game.levels[item.id] + '/' + item.max + (game.isConsumed(item.id) ? ' · ОБЪЕДИНЕНО' : '');
+      if (item.baseTitle) title.title = item.baseTitle;
+      card.append(title, description, rank); fragment.append(card);
+    }
+    $('content-reference').replaceChildren(fragment);
   }
   function openMap() {
     if (!accessFeature('treasureMap')) return;
@@ -170,6 +188,7 @@
     if (game.status === 'running') canvas.focus({ preventScroll: true });
   }
   function buildCharacters() {
+    text('hero-count', 'ГЕРОИ: ' + NightCharacters.length);
     const fragment = document.createDocumentFragment();
     for (const c of NightCharacters) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'character-card'; button.dataset.character = c.id;
@@ -220,7 +239,9 @@
     const round = value => Math.round(value).toLocaleString('ru-RU');
     const from = sample.from ?? c.since + c.total.seconds - c.current.seconds, to = sample.to ?? c.since + c.total.seconds;
     text('combat-since', 'Замеры с ' + formatTime(c.since) + ' · срез ' + formatTime(from) + '–' + formatTime(to));
-    text('metric-wave', plan.title + ' / ' + plan.phaseTitle); text('metric-nearby', c.near + ' / ' + plan.target);
+    $('combat-mode').hidden = !game.stressMode;
+    text('combat-mode', 'НАГРУЗОЧНЫЙ ТЕСТ: неуязвимость и весь арсенал на максимуме. Это не баланс обычного забега.');
+    text('metric-wave', plan.title + ' / ' + plan.phaseTitle); text('metric-nearby', c.near + ' / ' + (game.stressMode ? 'предел ' + game.enemyLimit : plan.target));
     text('metric-dps', round(sample.damage / seconds)); text('metric-kps', (sample.kills / seconds).toFixed(1));
     text('metric-rewards', round(sample.xp) + ' / ' + round(sample.gold)); text('metric-health', round(sample.healing) + ' / ' + round(sample.hurt));
     text('metric-overkill', round(sample.overkill)); text('metric-hearts', sample.heartsSpawned + ' / ' + sample.heartsTaken);
@@ -244,7 +265,7 @@
   }
   function updateCharacterDetails() {
     const c = game.character, weapon = game.weaponInfo(c.weapon);
-    text('character-name', c.name + ' / ' + c.role); text('character-description', c.text);
+    text('character-name', c.name + ' / ' + c.role); text('character-description', c.description);
     text('character-stats', game.player.maxHp + ' HP  /  ' + Math.round(game.speed) + ' СКОРОСТЬ  /  ' + game.dashCooldown.toFixed(2) + ' С РЫВОК');
     text('character-weapon', weapon.icon + ' ' + weapon.title);
     for (const card of $('characters').children) {
@@ -280,7 +301,7 @@
     game.offers.forEach((u, i) => {
       const card = document.createElement('button'); card.className = 'upgrade-card'; card.type = 'button'; card.dataset.choice = i;
       const part = (className, content) => { const el = document.createElement('span'); el.className = className; el.textContent = content; card.append(el); };
-      part('upgrade-icon', u.icon); part('upgrade-kind', u.weapon ? (game.levels[u.id] ? 'УСИЛЕНИЕ ОРУЖИЯ' : 'НОВОЕ ОРУЖИЕ') : u.kind); part('upgrade-name', u.title); part('upgrade-description', u.text);
+      part('upgrade-icon', u.icon); part('upgrade-kind', u.weapon ? (game.levels[u.id] ? 'УСИЛЕНИЕ ОРУЖИЯ' : 'НОВОЕ ОРУЖИЕ') : u.kind); part('upgrade-name', u.title); part('upgrade-description', u.description);
       const recipe = NightCatalog.evolutions.find(r => r.weapon === u.id || r.weapons?.includes(u.id));
       if (recipe) part('upgrade-recipe', 'СВЯЗКА: ' + Object.entries(recipe.passives).map(([id, rank]) => NightUpgrades.find(p => p.id === id).title + (rank > 1 ? ' МАКС.' : '')).concat([recipe.weapon, ...(recipe.weapons || [])].filter(id => id !== u.id).map(id => NightUpgrades.find(p => p.id === id).title + ' МАКС.')).join(' + '));
       part('upgrade-rank', 'СТУПЕНЬ ' + (game.levels[u.id] + 1) + ' / ' + u.max); part('upgrade-key', i + 1);
@@ -295,11 +316,11 @@
     if (reward.options) {
       text('reward-title', 'Выбери одну из трёх наград'); const fragment = document.createDocumentFragment();
       reward.options.forEach((option, index) => {
-        const item = option.type === 'evolution' ? NightCatalog.evolutions.find(r => r.id === option.id) : option.type === 'upgrade' ? NightUpgrades.find(u => u.id === option.id) : { icon: option.type === 'gold' ? '[$]' : option.type === 'xp' ? '*' : '[#]', title: option.type === 'gold' ? option.value + ' золота' : option.type === 'xp' ? option.value + ' опыта' : 'Три защитных заряда', text: option.type === 'shield' ? 'Поглощают три попадания в течение 30 секунд.' : 'Начисляется только после выбора.' };
+        const item = option.type === 'evolution' ? NightCatalog.evolutions.find(r => r.id === option.id) : option.type === 'upgrade' ? NightUpgrades.find(u => u.id === option.id) : { icon: option.type === 'gold' ? '[$]' : option.type === 'xp' ? '*' : '[#]', title: option.type === 'gold' ? option.value + ' золота' : option.type === 'xp' ? option.value + ' опыта' : 'Три защитных заряда', description: option.type === 'shield' ? 'Поглощают три попадания в течение 30 секунд.' : 'Начисляется только после выбора.' };
         const card = document.createElement('button'); card.type = 'button'; card.className = 'reward-item reward-choice' + (option.type === 'evolution' ? ' evolved' : ''); card.dataset.rewardChoice = index;
         const icon = document.createElement('b'); icon.textContent = item.icon;
         const title = document.createElement('span'); title.textContent = item.title;
-        const description = document.createElement('p'); description.textContent = item.text;
+        const description = document.createElement('p'); description.textContent = item.description;
         const rank = document.createElement('small'); rank.textContent = (index + 1) + ' · ' + (option.type === 'evolution' ? 'ЭВОЛЮЦИЯ' : option.type === 'upgrade' ? 'СТУПЕНЬ ' + option.rank + '/' + item.max : 'БОНУС');
         card.append(icon, title, description, rank); fragment.append(card);
       });
@@ -316,7 +337,7 @@
       const icon = document.createElement('b'); icon.textContent = upgrade.icon;
       const title = document.createElement('span'); title.textContent = upgrade.title;
       const rank = document.createElement('small'); rank.textContent = item.evolution ? 'ЭВОЛЮЦИЯ' : 'СТУПЕНЬ ' + item.rank + ' / ' + upgrade.max;
-      card.title = upgrade.text;
+      card.title = upgrade.description;
       card.append(icon, title, rank); fragment.append(card);
     }
     $('reward-loot').replaceChildren(fragment);
@@ -481,6 +502,7 @@
   $('bestiary-close').addEventListener('click', () => $('bestiary').close());
   $('bestiary').addEventListener('close', () => { if (bestiaryWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } bestiaryWasRunning = false; });
   $('grimoire-open').addEventListener('click', openGrimoire);
+  for (const view of ['recipes', 'weapons', 'passives']) $('reference-' + view).addEventListener('click', () => showReference(view));
   $('grimoire-close').addEventListener('click', () => $('grimoire').close());
   $('grimoire').addEventListener('close', () => { if (grimoireWasRunning && game.status === 'paused') { game.pause(); last = 0; updateHUD(); canvas.focus({ preventScroll: true }); } grimoireWasRunning = false; });
   $('restart').addEventListener('click', restart); $('restart-pause').addEventListener('click', restart);

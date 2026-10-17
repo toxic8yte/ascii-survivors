@@ -1,9 +1,10 @@
 const assert = require('node:assert/strict');
 require('./core.js'); require('./progress.js');
 const clone = x => JSON.parse(JSON.stringify(x));
-const expected = ['Катод','Вектор-6','Руна','Мор','Тень','Клык','Ноль','Шрам','Ворон','Прах','Вольт','Светоч Зарпы','Стигма','Тлен','Болт','Луна','Такт','КриптаСкам','Мгла','Резонанс','Иней','Жнец','Око','Петля','Шёпот','Ковчег','Бездна','Сигма','Ошибка','ROOT'];
+const heroData = require('./data/heroes.json');
+const expected = heroData.map(hero => hero.name);
 assert.deepEqual(NightCharacters.map(c => c.name), expected);
-assert.equal(new Set(NightCharacters.map(c => c.id)).size, 30);
+assert.equal(new Set(NightCharacters.map(c => c.id)).size, heroData.length);
 for (const hero of NightCharacters) {
   assert.ok(Number.isInteger(hero.cost) && hero.cost >= 0);
   assert.match(hero.sprite, /^[\x20-\x7e\n]+$/);
@@ -19,7 +20,7 @@ for (const hero of NightCharacters) {
   assert.ok(resumed, hero.name + ' resumes'); assert.equal(resumed.character.id, hero.id);
   assert.equal(resumed.player.hp, g.player.hp); assert.deepEqual(resumed.levels, g.levels);
 }
-const renamed = { witch: 'Катод', warden: 'Вектор-6', hunter: 'Клык', ripley: 'Тлен', shepard: 'Сигма', samus: 'Болт', mando: 'Шрам', scout: 'Руна', plague: 'Мор', duelist: 'Тень' };
+const renamed = Object.fromEntries(['witch', 'warden', 'hunter', 'ripley', 'shepard', 'samus', 'mando', 'scout', 'plague', 'duelist'].map(id => [id, heroData.find(hero => hero.id === id).name]));
 for (const [id, name] of Object.entries(renamed)) {
   const g = new NightGame(427, id); g.start(); const save = clone(NightSave.capture(g)); save.version = 6;
   const restored = NightSave.restore(save); assert.ok(restored); assert.equal(restored.character.name, name);
