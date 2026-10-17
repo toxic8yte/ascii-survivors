@@ -47,6 +47,10 @@ canvas { display: block; width: 100%; height: 100%; position: absolute; inset: 0
 .intro-story .intro-keys { flex-wrap: wrap; gap: 10px; }
 .character-picker { text-align: left; min-width: 0; }
 .characters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0; }
+#characters { max-height: 230px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #8d7445 #171b13; padding: 3px; }
+.hero-search { display: flex; align-items: center; gap: 12px; margin: 10px 0 0; color: #a99875; font-size: 8px; }
+.hero-search input { min-width: 0; flex: 1; border: 1px solid #494333; color: #e4d6bb; background: #151a13; padding: 8px; font: inherit; font-size: 10px; }
+#hero-search-empty { color: #c4a47b; font-size: 10px; }
 .character-card { background: #1a1b15; border: 1px solid #413b2b; padding: 10px 6px; color: #b3a58a; text-align: center; min-width: 0; }
 .character-card:hover { background: #292419; border-color: #8d7445; }
 .character-card[aria-pressed="true"] { background: #31271b; border-color: #cba568; box-shadow: inset 0 -2px #cba568; color: #ebcd91; }

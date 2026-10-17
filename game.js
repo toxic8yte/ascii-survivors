@@ -476,6 +476,15 @@
   });
   $('save-metrics').addEventListener('click', exportMetrics);
   $('characters').addEventListener('click', e => { const card = e.target.closest('[data-character]'); if (card) selectCharacter(card.dataset.character); });
+  $('hero-search').addEventListener('input', e => {
+    const query = e.target.value.toLocaleLowerCase('ru').replaceAll('ё', 'е').trim(); let visible = 0;
+    for (const card of $('characters').children) {
+      const hero = NightCharacters.find(c => c.id === card.dataset.character);
+      card.hidden = !(hero.name + ' ' + hero.role).toLocaleLowerCase('ru').replaceAll('ё', 'е').includes(query);
+      if (!card.hidden) visible++;
+    }
+    $('hero-search-empty').hidden = visible > 0;
+  });
   $('upgrade-cards').addEventListener('click', e => { const card = e.target.closest('[data-choice]'); if (card) choose(Number(card.dataset.choice)); });
   document.addEventListener('keydown', e => {
     if ($('bestiary').open || $('meta-shop').open || $('grimoire').open || $('world-map').open) return;

@@ -31,13 +31,14 @@ jobs:
           package-manager-cache: false
       - name: Check JavaScript syntax
         run: |
-          for file in enemy-roster.js enemy-system.js build-enemies.cjs catalog.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs verify-progression.cjs verify-director.cjs benchmark.cjs; do
+          for file in enemy-roster.js enemy-system.js build-enemies.cjs catalog.js core.js progress.js renderer.js game.js verify.cjs verify-progress.cjs verify-enemies.cjs verify-arena.cjs verify-content.cjs verify-evolution.cjs verify-progression.cjs verify-director.cjs verify-heroes.cjs benchmark.cjs; do
             node --check "$file"
           done
       - name: Test gameplay and rendering
         run: |
           node build-enemies.cjs --check
           node verify-director.cjs
+          node verify-heroes.cjs
           node verify.cjs
           node verify-enemies.cjs
           node verify-progress.cjs

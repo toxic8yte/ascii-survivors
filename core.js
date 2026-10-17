@@ -102,7 +102,7 @@
     get armor() { return this.levels.armor * 2 + this.meta.armor + (this.character.traits?.armor || 0); }
     get growth() { return 1 + this.levels.growth * .1 + this.meta.growth * .03; }
     get luck() { return 1 + this.levels.luck * .1; }
-    get greed() { return 1 + this.levels.greed * .15 + this.levels.capital * .15 + this.levels.curse * .2 + (this.levels.goldRing + this.levels.rightSign) * .1; }
+    get greed() { return 1 + this.levels.greed * .15 + this.levels.capital * .15 + this.levels.curse * .2 + (this.levels.goldRing + this.levels.rightSign) * .1 + (this.character.traits?.greed || 0); }
     get damage() { return 20 * (1 + .25 * Math.max(0, this.levels.needle - 1)) * this.power; }
     get cooldown() { return .68 * BALANCE.weaponCooldown / this.haste / (1 + .12 * Math.max(0, this.levels.needle - 1)) * (this.isEvolved('needle') ? .4 : 1); }
     get speed() { return this.character.speed * (1 + .15 * this.levels.stride + .03 * this.meta.stride) * (this.player.slowTill > this.time ? .65 : 1); }
