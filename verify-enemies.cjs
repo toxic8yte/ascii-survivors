@@ -18,7 +18,7 @@ assert.ok(early.enemies.every(e => ['ghoul', 'grave_rat'].includes(e.kind)), 'Th
 const late = fixture({ enemyLimit: 24000 }); late.time = 600;
 for (let i = 0; i < 400; i++) late.spawnWave();
 assert.ok(late.enemies.every(e => late.wavePlan.entries.some(row => row.id === e.kind)), 'Waves draw from their current readable composition');
-assert.ok(late.encountered.size <= 5); assert.ok(late.enemies.length <= late.wavePlan.target);
+assert.ok(new Set(late.enemies.map(e => e.kind)).size <= 5); assert.ok(late.enemies.length <= late.wavePlan.target);
 
 for (const [kind, projectiles] of [['lich', 1], ['pumpkin', 3], ['lichLord', 3]]) {
   const g = fixture(), e = g.spawn(kind, g.player.x + 320, g.player.y); e.skillClock = 0;

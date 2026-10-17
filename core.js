@@ -332,9 +332,9 @@
       return enemy;
     }
     spawnWave() {
-      const plan = this.wavePlan, kind = EnemySystem.weighted(plan.entries, () => this.random());
+      const plan = this.wavePlan, kind = this.stressMode ? EnemySystem.weighted(plan.entries, () => this.random()) : null;
       const count = Math.min(this.stressMode ? 128 : plan.group, this.stressMode ? 2 + Math.floor(this.waveAge / 45) : Math.max(0, plan.target - this.enemies.length), this.enemyLimit - this.enemies.length - (this.encounter?.phase === 'warning' ? 1 : 0));
-      for (let i = 0; i < count; i++) this.spawn(kind);
+      for (let i = 0; i < count; i++) this.spawn(this.stressMode ? kind : EnemySystem.weighted(plan.entries, () => this.random()));
       this.spawnClock += this.stressMode ? Math.max(.12, .86 - this.waveAge * .0014) : plan.interval;
     }
     buildGrid() {

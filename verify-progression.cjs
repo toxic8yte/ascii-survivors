@@ -62,7 +62,7 @@ roll = .01; e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.
 roll = .6; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1, 'Boss healing is now a 50% drop');
 roll = .4; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 2);
 const waves = fixture(); waves.time = 480; waves.spawnClock = 0; waves.spawnWave();
-assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 4); assert.ok(waves.spawnClock > .4);
+assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 29); assert.ok(Math.abs(waves.spawnClock - .216) < 1e-9);
 assert.ok(waves.enemies.every(e => e.maxHp / NightEnemies[e.kind].hp < 2));
 waves.time = 600; assert.equal(waves.waveAge, 390); waves.time = 1800; assert.equal(waves.waveAge, 1410, 'Endless difficulty continues after the gentler opening');
 

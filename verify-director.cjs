@@ -36,8 +36,33 @@ for (const row of data) {
   assert.ok(Number.isFinite(e.x+e.y+e.hp)); assert.equal(JSON.stringify(NightEnemies[row.id]),definition);
   assert.ok(NightSave.restore(clone(NightSave.capture(sim))),row.id+' runtime saves');
 }
-for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=5); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=650); }
-const crowd=fixture(); crowd.time=480; for(let i=0;i<100;i++)crowd.spawnWave(); assert.ok(crowd.enemies.length<=crowd.wavePlan.target); assert.ok(crowd.enemies.length<100);
+for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=5); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=999); if(age>=300)assert.ok(plan.target>=666); }
+const opening = system.wave(NightEnemies, 0, false); assert.equal(opening.target, 24); assert.equal(opening.surge, false);
+for (const age of [150, 330, 510, 930, 1830]) {
+  const plan = system.wave(NightEnemies, age, false), oldTarget = Math.round(18 + Math.min(age, 1800) * .12 + Math.max(0, age - 1800) * .1);
+  assert.ok(plan.target >= oldTarget * 1.4, 'Later waves sustain more pressure');
+  assert.ok(plan.group / plan.interval > Math.min(8, 2 + Math.floor(age / 180)) / Math.max(.24, .85 - age / 4000), 'Cleared enemies are replenished faster');
+}
+const surge = system.wave(NightEnemies, 480, false), normal = system.wave(NightEnemies, 490, false);
+assert.equal(surge.surge, true); assert.equal(normal.surge, false); assert.ok(surge.target > normal.target); assert.ok(surge.group / surge.interval > normal.group / normal.interval);
+assert.equal(system.wave(NightEnemies, 300, false).target, 999, 'The five-minute surge can reach 999 enemies');
+assert.equal(system.wave(NightEnemies, 310, false).target, 670, 'Normal pressure stays above 666 after five minutes');
+assert.equal(system.wave(NightEnemies, 1200, false).target, 999, 'Endless population remains capped at 999');
+const specials = new Set(); for (let minute = 15; minute < 18; minute++) for (const entry of system.wave(NightEnemies, minute * 60, false).entries) specials.add(NightEnemies[entry.id].role);
+assert.ok(specials.has('special'), 'Special roles participate in the rotation alongside fast and heavy enemies');
+for (const age of [480, 490, 1800, 10000]) {
+  const crowd = fixture(); crowd.time = age; for (let i = 0; i < 400; i++) crowd.spawnWave();
+  assert.equal(crowd.enemies.length, crowd.wavePlan.target, 'Refill reaches its population target without exceeding it');
+  assert.ok(new Set(crowd.enemies.map(e => e.kind)).size > 1, 'Mixed waves avoid spawning entire batches of one ranged enemy');
+  assert.ok(NightSave.restore(clone(NightSave.capture(crowd))), 'Aggressive waves survive a checkpoint');
+}
+const cappedWave = fixture(); cappedWave.time = 480; cappedWave.enemyLimit = 80;
+for (let i = 0; i < 100; i++) cappedWave.spawnWave(); assert.equal(cappedWave.enemies.length, 80, 'Refill still respects the engine limit');
+const stressPlan = system.wave(NightEnemies, 480, true); assert.equal(stressPlan.target, 76); assert.equal(stressPlan.group, 4); assert.equal(stressPlan.surge, false);
+const refill = fixture(); refill.time = 300; refill.spawnClock = 0;
+for (let i = 0; i < 30 * 60; i++) { refill.player.invulnerable = 1; refill.update(1 / 60); }
+assert.ok(refill.enemies.length >= 666, 'Actual timed spawning reaches the requested crowd after five minutes');
+assert.ok(refill.enemies.length <= 999); assert.equal(refill.status, 'running');
 const direction=fixture(), drifter=direction.spawn('crooked_angel',direction.player.x-400,direction.player.y);
 const directionX=drifter.chargeX; direction.player.y+=250; direction.updateEnemy(drifter,.1); assert.equal(drifter.chargeX,directionX); assert.equal(drifter.y,direction.player.y-250,'Direct movement keeps its original path');
 const orbit=direction.spawn('black_halo',direction.player.x+180,direction.player.y), before=orbit.y; direction.updateEnemy(orbit,.1); assert.notEqual(orbit.y,before);
