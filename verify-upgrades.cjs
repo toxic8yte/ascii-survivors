@@ -39,8 +39,8 @@ for(const mutate of [s=>s.banishesLeft=3,s=>s.skipsLeft=-1,s=>s.skipsLeft=.5,s=>
 for(let i=0;i<2;i++)assert.ok(g.banishOffer(0));assert.equal(g.banishesLeft,0);assert.equal(g.banishOffer(0),false);
 assert.deepEqual(g.levels,initial);assert.equal(g.time,time);
 assert.ok(g.skipUpgrade());assert.equal(g.skipsLeft,2);assert.deepEqual(g.levels,initial);assert.equal(g.status,'running');
-for(let i=0;i<2;i++){g.grantXP(g.xpNeed);assert.ok(g.skipUpgrade());}
-g.grantXP(g.xpNeed);assert.equal(g.skipUpgrade(),false);assert.equal(g.status,'upgrading');
+for(let i=0;i<2;i++){g.grantXP(Math.ceil(g.xpNeed/g.growth/g.xpEfficiency));assert.ok(g.skipUpgrade());}
+g.grantXP(Math.ceil(g.xpNeed/g.growth/g.xpEfficiency));assert.equal(g.skipUpgrade(),false);assert.equal(g.status,'upgrading');
 assert.ok(g.offers.every(u=>!g.banished.has(u.id)));
 const overflow=fixture();overflow.grantXP(100);const level=overflow.level;assert.ok(overflow.skipUpgrade());assert.equal(overflow.level,level+1);assert.equal(overflow.status,'upgrading');assert.equal(overflow.offerSelection,-1);
 const chest=fixture();chest.banished.add('pistol');chest.banishesLeft=2;const drop={id:1,source:'lichLord',x:chest.player.x,y:chest.player.y,canEvolve:false};chest.chests.push(drop);assert.ok(chest.openChest(drop));assert.ok(chest.reward.options.every(o=>o.id!=='pistol'));
@@ -54,8 +54,8 @@ const freeman=fixture(44,'ark'), ripley=fixture(44,'ripley');assert.deepEqual(fr
 const fists=fixture();fists.levels.gauntlets=1;fists.aim={x:fists.player.x+500,y:fists.player.y,active:true};
 function victim(dx,dy=0){const e=fists.spawn('brute',fists.player.x+dx,fists.player.y+dy);e.hp=e.maxHp=10000;e.speed=0;return e;}
 const front=victim(65),back=victim(-65),far=victim(300);fists.buildGrid();fists.castRelic('gauntlets');
-assert.equal(front.hp,9960);assert.equal(back.hp,10000);assert.equal(far.hp,10000);assert.equal(fists.slashes.length,2);
-const hp=front.hp;fists.levels.fork=2;fists.castRelic('gauntlets');assert.equal(hp-front.hp,80);assert.equal(fists.slashes.length,6);
+assert.equal(front.hp,9966);assert.equal(back.hp,10000);assert.equal(far.hp,10000);assert.equal(fists.slashes.length,2);
+const hp=front.hp;fists.levels.fork=2;fists.castRelic('gauntlets');assert.equal(hp-front.hp,68);assert.equal(fists.slashes.length,6);
 assert.ok(NightSave.restore(clone(NightSave.capture(fists))),'Gauntlet levels and cooldowns survive saving');
 ripley.aim={x:ripley.player.x+500,y:ripley.player.y,active:true};ripley.castRelic('flamethrower');
 const drawn=[],renderer=Object.create(NightRenderer.prototype);

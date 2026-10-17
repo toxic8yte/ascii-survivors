@@ -25,10 +25,10 @@ const rune = fixture(); rune.levels.rune = 1; rune.aim = { x: rune.player.x + 40
 tick(rune, 1.7); assert.ok(rune.relics[0].vx < 0, 'Runes bounce at their flight bounds');
 const defense = fixture(); defense.player.invulnerable = 0; defense.levels.laurel = 1; defense.castRelic('laurel');
 defense.hurtPlayer(40); assert.equal(defense.player.hp, 100); assert.equal(defense.shieldCharges, 0);
-defense.player.invulnerable = 0; defense.levels.armor = 2; defense.hurtPlayer(20); assert.equal(defense.player.hp, 84);
+defense.player.invulnerable = 0; defense.levels.armor = 2; defense.hurtPlayer(20); assert.equal(defense.player.hp, 82);
 defense.player.invulnerable = 0; defense.levels.revive = 1; defense.hurtPlayer(1000); assert.equal(defense.status, 'running'); assert.equal(defense.player.hp, 50); assert.equal(defense.revivesUsed, 1);
 const reborn = NightSave.restore(clone(NightSave.capture(defense))); reborn.pause(); reborn.player.invulnerable = 0; reborn.hurtPlayer(1000); assert.equal(reborn.status, 'dead', 'A saved resurrection is not reusable');
-const growth = fixture(); growth.levels.growth = 1; for (let i = 0; i < 100; i++) growth.gainXP(1); assert.equal(growth.xp, 110, 'Fractional XP bonuses accumulate');
+const growth = fixture(); growth.levels.growth = 1; for (let i = 0; i < 100; i++) growth.gainXP(1); assert.equal(growth.xp, 105, 'Fractional XP bonuses accumulate');
 growth.levels.greed = 2; growth.awardGold(10); assert.equal(growth.goldEarned, 5);
 const area = fixture(); area.levels.area = area.levels.duration = area.levels.velocity = 2; area.levels.water = 1; area.castRelic('water');
 assert.ok(area.pools[0].radius > 69 && area.pools[0].life > 3.4); assert.ok(area.projectileSpeed > 1);

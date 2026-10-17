@@ -5,7 +5,7 @@
 | Файл | Содержимое |
 | --- | --- |
 | `heroes.json` | 30 героев: `name`, `role`, `description`, портрет `sprite`, стартовое `weapon`, характеристики, бонусы `traits` и цена `cost` |
-| `weapons.json` | 33 оружия: `title`, исходное имя `baseTitle`, `description`, ASCII-значок `icon`, редкость `rarity` (`common`, `uncommon`, `rare`, `epic`, `legendary`), максимум рангов `max`; для дополнительных механик — `cooldown` и `behavior` |
+| `weapons.json` | 33 оружия: `title`, исходное имя `baseTitle`, `description`, ASCII-значок `icon`, редкость `rarity` (`common`, `uncommon`, `rare`, `epic`, `legendary`), множитель фактического урона `damageMultiplier` (0 < значение ≤ 1), максимум рангов `max`; для дополнительных механик — `cooldown` и `behavior` |
 | `passives.json` | 22 пассивки и их описания |
 | `evolutions.json` | 22 рецепта: оружие, поглощаемые предметы, ранги пассивок, имя и описание результата |
 | `enemies.json` | 40 врагов нового ростера: `name`, `description`, характеристики `stats`, движение `movement`, визуализация `visual` и время появления `firstSecond` |

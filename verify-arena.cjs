@@ -114,9 +114,9 @@ assert.equal(migratedAgain.enemies.find(e => e.id === focusBoss.id).hp, migrated
 const brokenTimer = clone(NightSave.capture(migratedCage)); brokenTimer.encounter.lockedLeft = -1; assert.equal(NightSave.restore(brokenTimer), null);
 
 const playable = fixture({ terrain: false, fireMode: 'auto' }); playable.player.invulnerable = 1e8;
-playable.levels.needle = 2; playable.levels.power = playable.levels.haste = 1; playable.time = 60; playable.nextBossAt = 60;
+playable.levels.pistol = 2; playable.levels.needle = 2; playable.levels.power = playable.levels.haste = 1; playable.time = 60; playable.nextBossAt = 60;
 tick(playable, 5.1); const playableBoss = playable.enemies.find(e => e.boss), startingHP = playableBoss.hp;
 for (let i = 0; i < 60 * 150 && playableBoss.alive; i++) { playable.update(1 / 60); if (playable.status === 'upgrading') playable.choose(0); }
-assert.ok(playableBoss.hp < startingHP); assert.equal(playableBoss.alive, false, 'The tougher first boss remains killable with a modest needle build after the 15-second seal expires');
+assert.ok(playableBoss.hp < startingHP); assert.equal(playableBoss.alive, false, 'The tougher first boss remains killable with a modest two-weapon build after the 15-second seal expires');
 assert.equal(playable.chests.length, 1); assert.equal(playable.encounter, null);
 console.log('PASS: terrain, five-second warning, 15-second wall timeout, early boss release, boss targeting, capped summons, ordinary combat kill, chest rewards and old-save balance migration.');

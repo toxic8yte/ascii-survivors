@@ -8,10 +8,10 @@ function fixture() {
 }
 const g = fixture(), enemy = g.spawn('ghoul', g.player.x + 50, g.player.y); enemy.hp = enemy.maxHp = 18;
 g.hurtEnemy(enemy, 30, 0, 'needle'); g.hurtEnemy(enemy, 30, 0, 'needle');
-assert.equal(g.combat.total.damage, 18); assert.equal(g.combat.total.overkill, 12); assert.equal(g.combat.total.hits, 1); assert.equal(g.combat.total.kills, 1);
+assert.equal(g.combat.total.damage, 18); assert.equal(g.combat.total.overkill, 10.5); assert.equal(g.combat.total.hits, 1); assert.equal(g.combat.total.kills, 1);
 assert.equal(g.combat.weapons.needle.damage, 18); assert.equal(g.combat.weapons.needle.kills, 1);
 g.player.hp = 80; assert.equal(g.healPlayer(40), 20); g.healPlayer(20); assert.equal(g.combat.total.healing, 20);
-g.levels.armor = 2; g.hurtPlayer(15); g.hurtPlayer(15); assert.equal(g.combat.total.hurt, 11, 'Damage records actual HP loss after armor and invulnerability');
+g.levels.armor = 2; g.hurtPlayer(15); g.hurtPlayer(15); assert.equal(g.combat.total.hurt, 13, 'Damage records actual HP loss after armor and invulnerability');
 g.awardGold(100); g.gainXP(12); assert.equal(g.combat.total.gold, 45); assert.equal(g.combat.total.xp, 12); assert.equal(g.combat.total.xpDropped, g.gems.reduce((sum, gem) => sum + gem.value, 0));
 for (let i = 0; i < 600; i++) g.combat.sample(1 / 60, g);
 assert.equal(g.combat.history.length, 1); assert.ok(Math.abs(g.combat.history[0].seconds - 10) < 1e-8); assert.equal(g.combat.history[0].damage, 18);

@@ -41,7 +41,7 @@ assert.ok(strong.chargeLeft<weak.chargeLeft&&strong.radius>weak.radius&&strong.r
 const necro=fixture('whisper'), food=target(necro);necro.player.hp=40;necro.hurtEnemy(food,100,0,'poison');assert.equal(necro.player.hp,41,'Acid leech is capped at one HP per hit');
 necro.hurtEnemy(food,100,0,'needle');assert.equal(necro.player.hp,41,'Other weapons cannot leech');food.hp=1;necro.hurtEnemy(food,10000,0,'poison');assert.ok(Math.abs(necro.player.hp-41.02)<1e-8,'Leech excludes overkill');
 const swarm=target(necro); for(let i=0;i<20;i++)necro.hurtEnemy(swarm,100,0,'poison'); assert.ok(necro.player.hp<=42.000001,'Crowds cannot provide unbounded healing in one tick'); const leeched=NightSave.restore(clone(NightSave.capture(necro)));assert.ok(leeched);assert.equal(leeched.leechBudget,necro.leechBudget,'Reload cannot refill the healing budget');
-const magnet=fixture();const before=magnet.magnet;magnet.levels.magnet=1;assert.equal(magnet.magnet-before,30);
+const magnet=fixture();const before=magnet.magnet;magnet.levels.magnet=1;assert.equal(magnet.magnet-before,20);
 const previous={volt:'pistol',beacon:'meteor',ripley:'fireball',samus:'dagger',whisper:'garlic',ark:'water',shepard:'rune',error:'rune',raven:'ebony'};
 for(const [id,weapon] of Object.entries(previous)) {
   const old=fixture(id), save=clone(NightSave.capture(old));save.version=8;delete save.holyMarks;

@@ -23,7 +23,7 @@ assert.equal(resumed.selectedWeapon, 'boomerang'); assert.equal(resumed.weaponPa
 assert.equal(resumed.boomerangs.length, 0); assert.equal(resumed.meteors.filter(m => m.kind === 'hammer').length, 0);
 assert.equal(resumed.applyUpgrade(NightUpgrades.find(u => u.id === 'hammer')), false);
 const auraVictim = resumed.spawn('brute', resumed.player.x + 200, resumed.player.y); auraVictim.hp = auraVictim.maxHp = 10000;
-resumed.buildGrid(); resumed.castBoomerang(); assert.equal(auraVictim.hp, 9898, 'Aura reaches beyond garlic and deals 102 base damage');
+resumed.buildGrid(); resumed.castBoomerang(); assert.equal(auraVictim.hp, 9913.3, 'Aura reaches beyond garlic and deals 86.7 tuned damage');
 assert.equal(resumed.boomerangs.length, 0); assert.equal(resumed.greed, 1.15);
 assert.ok(NightSave.restore(clone(NightSave.capture(resumed))));
 const corrupt = clone(pending); corrupt.reward.options[1] = corrupt.reward.options[0]; assert.equal(NightSave.restore(corrupt), null);
@@ -58,9 +58,9 @@ for (const id of ['pistol', 'sling']) {
 const drops = fixture(); drops.burst = () => {}; drops.addGem = () => {};
 let roll = .02; drops.random = () => roll;
 let e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 0, 'Old 3.5% range is now halved');
-roll = .01; e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1);
-roll = .6; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1, 'Boss healing is now a 50% drop');
-roll = .4; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 2);
+roll = .004; e = drops.spawn('ghoul', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1);
+roll = .3; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 1, 'Boss healing is now a 25% drop');
+roll = .2; e = drops.spawn('lichLord', 500, 500); drops.hurtEnemy(e, 1e6); assert.equal(drops.hearts.length, 2);
 const waves = fixture(); waves.time = 480; waves.spawnClock = 0; waves.spawnWave();
 assert.equal(waves.waveAge, 312); assert.equal(waves.enemies.length, 17); assert.ok(Math.abs(waves.spawnClock - (5 / 12 * .8)) < 1e-9);
 assert.ok(waves.enemies.every(e => e.maxHp / NightEnemies[e.kind].hp > 2 && e.maxHp / NightEnemies[e.kind].hp < 3));

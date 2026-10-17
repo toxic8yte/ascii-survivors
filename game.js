@@ -428,7 +428,7 @@
     text('hp-text', game.stressMode ? 'НЕУЯЗВИМОСТЬ' : Math.ceil(p.hp) + ' / ' + p.maxHp);
     $('hp-bar').style.width = (p.hp / p.maxHp * 100) + '%';
     $('xp-bar').style.width = Math.min(100, game.xp / game.xpNeed * 100) + '%';
-    text('xp-text', 'ОПЫТ ' + game.xp + ' / ' + game.xpNeed);
+    text('xp-text', 'ОПЫТ ' + game.xp + ' / ' + game.xpNeed + ' · КРИСТАЛЛЫ ' + Math.round(game.xpEfficiency * 100) + '%');
     text('timer', formatTime(game.elapsed)); text('enemy-count', game.enemies.length.toLocaleString('ru-RU'));
     text('kills', String(game.kills).padStart(3, '0')); text('level', String(game.level).padStart(2, '0'));
     text('stage', (game.stressMode ? 'ТЕСТ ДВИЖКА / ' : '') + (status === 'ready' ? 'БЕСКОНЕЧНАЯ НОЧЬ' : 'ВОЛНА ' + game.wave));

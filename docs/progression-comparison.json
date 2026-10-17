@@ -1,0 +1,1287 @@
+{
+  "date": "2026-10-18",
+  "beforeCommit": "0a15f421e22627c73fa346f2124224c4f2a04648",
+  "scope": "Comparison uses invulnerable bots without terrain, not a survival difficulty or browser FPS measurement. Fixed seeds diverge in RNG and offered builds.",
+  "before": {
+    "scope": "Eight simulated minutes, three heroes, two seeds, zero/max Legacy; invulnerable XP-collecting bot without terrain and fixed upgrade preferences, not a survival or browser FPS result",
+    "results": [
+      {
+        "hero": "hunter",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 23,
+        "kills": 6128,
+        "bossKills": 3,
+        "gold": 684,
+        "xpCollected": 7148,
+        "xpDropped": 6937,
+        "weapons": [
+          "needle",
+          "blades",
+          "whip",
+          "crowbar",
+          "crossbow"
+        ],
+        "passives": [
+          "growth",
+          "rightSign",
+          "leftSign",
+          "stride",
+          "regen"
+        ],
+        "peak": 712,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 489,
+            "xp": 286
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1417,
+            "xp": 1318
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2833,
+            "xp": 2791
+          },
+          {
+            "minute": 8,
+            "level": 23,
+            "kills": 6128,
+            "xp": 7148
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 21,
+        "kills": 5162,
+        "bossKills": 3,
+        "gold": 534,
+        "xpCollected": 4873,
+        "xpDropped": 5273,
+        "weapons": [
+          "needle",
+          "sling",
+          "blades",
+          "pistol",
+          "ebony"
+        ],
+        "passives": [
+          "magnet",
+          "vital",
+          "fork",
+          "power",
+          "velocity"
+        ],
+        "peak": 330,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 329,
+            "xp": 188
+          },
+          {
+            "minute": 4,
+            "level": 14,
+            "kills": 1148,
+            "xp": 1025
+          },
+          {
+            "minute": 6,
+            "level": 18,
+            "kills": 2588,
+            "xp": 2225
+          },
+          {
+            "minute": 8,
+            "level": 21,
+            "kills": 5162,
+            "xp": 4873
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 23,
+        "kills": 5347,
+        "bossKills": 4,
+        "gold": 948,
+        "xpCollected": 6146,
+        "xpDropped": 5466,
+        "weapons": [
+          "needle",
+          "pistol",
+          "gauntlets",
+          "pulse",
+          "laurel"
+        ],
+        "passives": [
+          "greed",
+          "pierce",
+          "stride",
+          "fork",
+          "capital"
+        ],
+        "peak": 355,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 10,
+            "kills": 480,
+            "xp": 343
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1290,
+            "xp": 1368
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2697,
+            "xp": 2771
+          },
+          {
+            "minute": 8,
+            "level": 23,
+            "kills": 5347,
+            "xp": 6146
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 27,
+        "kills": 10465,
+        "bossKills": 5,
+        "gold": 1605,
+        "xpCollected": 15513,
+        "xpDropped": 15058,
+        "weapons": [
+          "needle",
+          "pistol",
+          "whip",
+          "crowbar",
+          "ebony"
+        ],
+        "passives": [
+          "curse",
+          "haste",
+          "goldRing",
+          "stride",
+          "vital"
+        ],
+        "peak": 1059,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 11,
+            "kills": 593,
+            "xp": 453
+          },
+          {
+            "minute": 4,
+            "level": 16,
+            "kills": 1512,
+            "xp": 1534
+          },
+          {
+            "minute": 6,
+            "level": 20,
+            "kills": 3455,
+            "xp": 3648
+          },
+          {
+            "minute": 8,
+            "level": 27,
+            "kills": 10465,
+            "xp": 15513
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 20,
+        "kills": 5133,
+        "bossKills": 4,
+        "gold": 700,
+        "xpCollected": 4024,
+        "xpDropped": 5164,
+        "weapons": [
+          "flamethrower",
+          "dagger",
+          "crowbar",
+          "clock",
+          "whip"
+        ],
+        "passives": [
+          "silverRing",
+          "haste",
+          "fork",
+          "capital",
+          "velocity"
+        ],
+        "peak": 384,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 529,
+            "xp": 268
+          },
+          {
+            "minute": 4,
+            "level": 14,
+            "kills": 1337,
+            "xp": 1081
+          },
+          {
+            "minute": 6,
+            "level": 17,
+            "kills": 2729,
+            "xp": 2013
+          },
+          {
+            "minute": 8,
+            "level": 20,
+            "kills": 5133,
+            "xp": 4024
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 21,
+        "kills": 5287,
+        "bossKills": 3,
+        "gold": 540,
+        "xpCollected": 4550,
+        "xpDropped": 5262,
+        "weapons": [
+          "flamethrower",
+          "pulse",
+          "poison",
+          "pistol",
+          "electropistol"
+        ],
+        "passives": [
+          "pierce",
+          "velocity",
+          "silverRing",
+          "regen",
+          "power"
+        ],
+        "peak": 381,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 538,
+            "xp": 292
+          },
+          {
+            "minute": 4,
+            "level": 14,
+            "kills": 1405,
+            "xp": 1105
+          },
+          {
+            "minute": 6,
+            "level": 17,
+            "kills": 2758,
+            "xp": 2195
+          },
+          {
+            "minute": 8,
+            "level": 21,
+            "kills": 5287,
+            "xp": 4550
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 22,
+        "kills": 5424,
+        "bossKills": 4,
+        "gold": 568,
+        "xpCollected": 5953,
+        "xpDropped": 5555,
+        "weapons": [
+          "flamethrower",
+          "needle",
+          "birds",
+          "gauntlets",
+          "pulse"
+        ],
+        "passives": [
+          "power",
+          "leftSign",
+          "haste",
+          "stride",
+          "pierce"
+        ],
+        "peak": 317,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 10,
+            "kills": 460,
+            "xp": 350
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1241,
+            "xp": 1259
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2668,
+            "xp": 2750
+          },
+          {
+            "minute": 8,
+            "level": 22,
+            "kills": 5424,
+            "xp": 5953
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 23,
+        "kills": 5572,
+        "bossKills": 4,
+        "gold": 586,
+        "xpCollected": 6182,
+        "xpDropped": 5666,
+        "weapons": [
+          "flamethrower",
+          "whip",
+          "blades",
+          "sling",
+          "needle"
+        ],
+        "passives": [
+          "fork",
+          "haste",
+          "regen",
+          "magnet",
+          "power"
+        ],
+        "peak": 267,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 456,
+            "xp": 251
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1333,
+            "xp": 1293
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2836,
+            "xp": 2740
+          },
+          {
+            "minute": 8,
+            "level": 23,
+            "kills": 5572,
+            "xp": 6182
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 24,
+        "kills": 7119,
+        "bossKills": 3,
+        "gold": 835,
+        "xpCollected": 7999,
+        "xpDropped": 9286,
+        "weapons": [
+          "crowbar",
+          "dagger",
+          "frost",
+          "electropistol",
+          "axe"
+        ],
+        "passives": [
+          "vital",
+          "power",
+          "rightSign",
+          "velocity",
+          "pierce"
+        ],
+        "peak": 588,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 469,
+            "xp": 286
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1380,
+            "xp": 1217
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 3095,
+            "xp": 2727
+          },
+          {
+            "minute": 8,
+            "level": 24,
+            "kills": 7119,
+            "xp": 7999
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 21,
+        "kills": 5164,
+        "bossKills": 2,
+        "gold": 513,
+        "xpCollected": 4712,
+        "xpDropped": 5199,
+        "weapons": [
+          "crowbar",
+          "dagger",
+          "flamethrower",
+          "pulse",
+          "blades"
+        ],
+        "passives": [
+          "haste",
+          "velocity",
+          "luck",
+          "vital",
+          "pierce"
+        ],
+        "peak": 384,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 504,
+            "xp": 257
+          },
+          {
+            "minute": 4,
+            "level": 14,
+            "kills": 1370,
+            "xp": 1066
+          },
+          {
+            "minute": 6,
+            "level": 18,
+            "kills": 2682,
+            "xp": 2243
+          },
+          {
+            "minute": 8,
+            "level": 21,
+            "kills": 5164,
+            "xp": 4712
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 22,
+        "kills": 5443,
+        "bossKills": 3,
+        "gold": 863,
+        "xpCollected": 5943,
+        "xpDropped": 5723,
+        "weapons": [
+          "crowbar",
+          "pistol",
+          "sling",
+          "whip",
+          "flamethrower"
+        ],
+        "passives": [
+          "capital",
+          "regen",
+          "power",
+          "greed",
+          "fork"
+        ],
+        "peak": 306,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 408,
+            "xp": 273
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1304,
+            "xp": 1378
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2736,
+            "xp": 2726
+          },
+          {
+            "minute": 8,
+            "level": 22,
+            "kills": 5443,
+            "xp": 5943
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 25,
+        "kills": 6548,
+        "bossKills": 3,
+        "gold": 737,
+        "xpCollected": 9439,
+        "xpDropped": 8220,
+        "weapons": [
+          "crowbar",
+          "pulse",
+          "water",
+          "needle",
+          "blades"
+        ],
+        "passives": [
+          "regen",
+          "velocity",
+          "stride",
+          "magnet",
+          "goldRing"
+        ],
+        "peak": 622,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 9,
+            "kills": 463,
+            "xp": 295
+          },
+          {
+            "minute": 4,
+            "level": 15,
+            "kills": 1311,
+            "xp": 1178
+          },
+          {
+            "minute": 6,
+            "level": 19,
+            "kills": 2876,
+            "xp": 2980
+          },
+          {
+            "minute": 8,
+            "level": 25,
+            "kills": 6548,
+            "xp": 9439
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "scope": "Eight simulated minutes, three heroes, two seeds, zero/max Legacy; invulnerable XP-collecting bot without terrain and fixed upgrade preferences, not a survival or browser FPS result",
+    "results": [
+      {
+        "hero": "hunter",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 17,
+        "kills": 3884,
+        "bossKills": 0,
+        "gold": 367,
+        "xpCollected": 2190,
+        "xpDropped": 3876,
+        "weapons": [
+          "needle",
+          "axe",
+          "pistol",
+          "lightning",
+          "blades"
+        ],
+        "passives": [
+          "growth",
+          "stride",
+          "velocity",
+          "fork",
+          "regen"
+        ],
+        "peak": 384,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 5,
+            "kills": 143,
+            "xp": 64
+          },
+          {
+            "minute": 4,
+            "level": 9,
+            "kills": 439,
+            "xp": 274
+          },
+          {
+            "minute": 6,
+            "level": 13,
+            "kills": 1437,
+            "xp": 842
+          },
+          {
+            "minute": 8,
+            "level": 17,
+            "kills": 3884,
+            "xp": 2190
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 22,
+        "kills": 11374,
+        "bossKills": 4,
+        "gold": 1733,
+        "xpCollected": 6516,
+        "xpDropped": 16455,
+        "weapons": [
+          "needle",
+          "whip",
+          "boomerang",
+          "garlic",
+          "flamethrower"
+        ],
+        "passives": [
+          "rightSign",
+          "goldRing",
+          "armor",
+          "fork",
+          "haste"
+        ],
+        "peak": 1059,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 568,
+            "xp": 237
+          },
+          {
+            "minute": 4,
+            "level": 13,
+            "kills": 1640,
+            "xp": 841
+          },
+          {
+            "minute": 6,
+            "level": 17,
+            "kills": 4238,
+            "xp": 2325
+          },
+          {
+            "minute": 8,
+            "level": 22,
+            "kills": 11374,
+            "xp": 6516
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 18,
+        "kills": 5064,
+        "bossKills": 4,
+        "gold": 536,
+        "xpCollected": 2714,
+        "xpDropped": 5017,
+        "weapons": [
+          "needle",
+          "sling",
+          "chozo",
+          "crossbow",
+          "pulse"
+        ],
+        "passives": [
+          "fork",
+          "pierce",
+          "power",
+          "duration",
+          "vital"
+        ],
+        "peak": 381,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 465,
+            "xp": 236
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1215,
+            "xp": 678
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2557,
+            "xp": 1364
+          },
+          {
+            "minute": 8,
+            "level": 18,
+            "kills": 5064,
+            "xp": 2714
+          }
+        ]
+      },
+      {
+        "hero": "hunter",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 18,
+        "kills": 5314,
+        "bossKills": 4,
+        "gold": 563,
+        "xpCollected": 3020,
+        "xpDropped": 5351,
+        "weapons": [
+          "needle",
+          "whip",
+          "blades",
+          "pulse",
+          "sling"
+        ],
+        "passives": [
+          "fork",
+          "growth",
+          "silverRing",
+          "regen",
+          "pierce"
+        ],
+        "peak": 367,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 528,
+            "xp": 255
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1345,
+            "xp": 780
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2740,
+            "xp": 1547
+          },
+          {
+            "minute": 8,
+            "level": 18,
+            "kills": 5314,
+            "xp": 3020
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 21,
+        "kills": 8657,
+        "bossKills": 4,
+        "gold": 1272,
+        "xpCollected": 5136,
+        "xpDropped": 12712,
+        "weapons": [
+          "flamethrower",
+          "water",
+          "whip",
+          "blades",
+          "garlic"
+        ],
+        "passives": [
+          "silverRing",
+          "pierce",
+          "fork",
+          "curse",
+          "haste"
+        ],
+        "peak": 890,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 513,
+            "xp": 198
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1510,
+            "xp": 691
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 3497,
+            "xp": 1620
+          },
+          {
+            "minute": 8,
+            "level": 21,
+            "kills": 8657,
+            "xp": 5136
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 15,
+        "kills": 2882,
+        "bossKills": 0,
+        "gold": 366,
+        "xpCollected": 1638,
+        "xpDropped": 3042,
+        "weapons": [
+          "flamethrower",
+          "clock",
+          "dagger",
+          "rune",
+          "blades"
+        ],
+        "passives": [
+          "rightSign",
+          "silverRing",
+          "pierce",
+          "capital",
+          "magnet"
+        ],
+        "peak": 723,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 6,
+            "kills": 283,
+            "xp": 134
+          },
+          {
+            "minute": 4,
+            "level": 10,
+            "kills": 803,
+            "xp": 421
+          },
+          {
+            "minute": 6,
+            "level": 13,
+            "kills": 1648,
+            "xp": 896
+          },
+          {
+            "minute": 8,
+            "level": 15,
+            "kills": 2882,
+            "xp": 1638
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 22,
+        "kills": 9023,
+        "bossKills": 4,
+        "gold": 1213,
+        "xpCollected": 7021,
+        "xpDropped": 13419,
+        "weapons": [
+          "flamethrower",
+          "whip",
+          "sling",
+          "rune",
+          "clock"
+        ],
+        "passives": [
+          "regen",
+          "rightSign",
+          "growth",
+          "stride",
+          "fork"
+        ],
+        "peak": 1059,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 505,
+            "xp": 251
+          },
+          {
+            "minute": 4,
+            "level": 13,
+            "kills": 1404,
+            "xp": 917
+          },
+          {
+            "minute": 6,
+            "level": 17,
+            "kills": 3471,
+            "xp": 2174
+          },
+          {
+            "minute": 8,
+            "level": 22,
+            "kills": 9023,
+            "xp": 7021
+          }
+        ]
+      },
+      {
+        "hero": "ripley",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 19,
+        "kills": 5526,
+        "bossKills": 0,
+        "gold": 632,
+        "xpCollected": 3563,
+        "xpDropped": 6520,
+        "weapons": [
+          "flamethrower",
+          "dagger",
+          "gauntlets",
+          "fireball",
+          "sling"
+        ],
+        "passives": [
+          "rightSign",
+          "armor",
+          "power",
+          "fork",
+          "stride"
+        ],
+        "peak": 722,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 462,
+            "xp": 255
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1280,
+            "xp": 794
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2799,
+            "xp": 1611
+          },
+          {
+            "minute": 8,
+            "level": 19,
+            "kills": 5526,
+            "xp": 3563
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "none",
+        "seed": 811,
+        "seconds": 480,
+        "level": 19,
+        "kills": 6717,
+        "bossKills": 0,
+        "gold": 817,
+        "xpCollected": 3887,
+        "xpDropped": 8634,
+        "weapons": [
+          "crowbar",
+          "dagger",
+          "sling",
+          "pulse",
+          "whip"
+        ],
+        "passives": [
+          "area",
+          "regen",
+          "haste",
+          "curse",
+          "leftSign"
+        ],
+        "peak": 721,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 7,
+            "kills": 352,
+            "xp": 155
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1233,
+            "xp": 667
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2796,
+            "xp": 1374
+          },
+          {
+            "minute": 8,
+            "level": 19,
+            "kills": 6717,
+            "xp": 3887
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "none",
+        "seed": 427,
+        "seconds": 480,
+        "level": 17,
+        "kills": 5315,
+        "bossKills": 0,
+        "gold": 633,
+        "xpCollected": 2583,
+        "xpDropped": 5163,
+        "weapons": [
+          "crowbar",
+          "meteor",
+          "garlic",
+          "poison",
+          "needle"
+        ],
+        "passives": [
+          "haste",
+          "regen",
+          "pierce",
+          "capital",
+          "power"
+        ],
+        "peak": 373,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 7,
+            "kills": 422,
+            "xp": 172
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1279,
+            "xp": 643
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2707,
+            "xp": 1308
+          },
+          {
+            "minute": 8,
+            "level": 17,
+            "kills": 5315,
+            "xp": 2583
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "max",
+        "seed": 811,
+        "seconds": 480,
+        "level": 18,
+        "kills": 5306,
+        "bossKills": 2,
+        "gold": 526,
+        "xpCollected": 2930,
+        "xpDropped": 5217,
+        "weapons": [
+          "crowbar",
+          "garlic",
+          "poison",
+          "sling",
+          "crossbow"
+        ],
+        "passives": [
+          "silverRing",
+          "haste",
+          "magnet",
+          "pierce",
+          "fork"
+        ],
+        "peak": 335,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 7,
+            "kills": 374,
+            "xp": 181
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1178,
+            "xp": 665
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2675,
+            "xp": 1425
+          },
+          {
+            "minute": 8,
+            "level": 18,
+            "kills": 5306,
+            "xp": 2930
+          }
+        ]
+      },
+      {
+        "hero": "ark",
+        "meta": "max",
+        "seed": 427,
+        "seconds": 480,
+        "level": 21,
+        "kills": 7124,
+        "bossKills": 0,
+        "gold": 1023,
+        "xpCollected": 4994,
+        "xpDropped": 9628,
+        "weapons": [
+          "crowbar",
+          "electropistol",
+          "blades",
+          "rune",
+          "axe"
+        ],
+        "passives": [
+          "duration",
+          "greed",
+          "curse",
+          "magnet",
+          "velocity"
+        ],
+        "peak": 890,
+        "checkpoints": [
+          {
+            "minute": 2,
+            "level": 8,
+            "kills": 427,
+            "xp": 208
+          },
+          {
+            "minute": 4,
+            "level": 12,
+            "kills": 1200,
+            "xp": 700
+          },
+          {
+            "minute": 6,
+            "level": 15,
+            "kills": 2813,
+            "xp": 1609
+          },
+          {
+            "minute": 8,
+            "level": 21,
+            "kills": 7124,
+            "xp": 4994
+          }
+        ]
+      }
+    ]
+  }
+}

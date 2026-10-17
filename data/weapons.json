@@ -11,7 +11,8 @@
     "baseTitle": "Кнут",
     "description": "Хлёсткие дуги справа и слева от героя. Новая надежда обычно заканчивается старой доброй поркой. Дарит врагам надежду. Затем методично её выбивает.",
     "appearanceNotes": "Сининый изогнутый след справа и слева от игрока",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.85
   },
   {
     "id": "axe",
@@ -25,7 +26,8 @@
     "baseTitle": "Топор",
     "description": "Бабкины топорики. Топорики летят по дуге, пробивая толпу. Не спрашивай, откуда у бабки столько топоров.",
     "appearanceNotes": "оставляем так же как есть",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.8
   },
   {
     "id": "water",
@@ -39,7 +41,8 @@
     "baseTitle": "Святая вода",
     "description": "«Освящена, газирована, губительна для нечисти.»",
     "appearanceNotes": "Синие следы от бутылок оставляют освящённые лужи в выбранной области.",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.75
   },
   {
     "id": "rune",
@@ -53,7 +56,8 @@
     "baseTitle": "Рунный след",
     "description": "Руны скачут по округе, рикошетят от всего подряд и пробивают тех, кому не повезло оказаться грамотными.",
     "appearanceNotes": "какие-то специфические знаки из ASCII",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.8
   },
   {
     "id": "pentagram",
@@ -65,9 +69,10 @@
     "weapon": true,
     "max": 4,
     "baseTitle": "Пентаграмма",
-    "description": "Игрушка 666+. Открывать только под присмотром экзорциста Обычные враги исчезают, боссы начинают нервничать. Опыт остаётся — демон забирает только мясо.",
+    "description": "Игрушка 666+. Открывать только под присмотром экзорциста. Мощный удар по большой области добивает слабую нечисть, но не стирает врагов с любым запасом здоровья. Опыт убитых остаётся; сама активация опыта не создаёт.",
     "appearanceNotes": "На области появшается пентрагрма нарисованая ASCII и тогда все врагих исчезают",
-    "rarity": "legendary"
+    "rarity": "legendary",
+    "damageMultiplier": 1
   },
   {
     "id": "garlic",
@@ -80,7 +85,8 @@
     "max": 4,
     "baseTitle": "Чеснок",
     "description": "Отталкивает врагов силой веры, инерции и тяжёлого металлического шара на цепи",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.85
   },
   {
     "id": "dagger",
@@ -93,7 +99,8 @@
     "max": 4,
     "baseTitle": "Ножи",
     "description": "Первый аргумент летит в спину, остальные 46 аргументов уже не понадобились.",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.9
   },
   {
     "id": "fireball",
@@ -106,7 +113,8 @@
     "max": 4,
     "baseTitle": "Огненный жезл",
     "description": "Балрог вложил в него весь огонь, но забыл про аэродинамику. Медленные огненные шары с большим уроном и пробитием.",
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 0.85
   },
   {
     "id": "clock",
@@ -119,7 +127,8 @@
     "max": 4,
     "baseTitle": "Часовой ланцет",
     "description": "Замораживает врагов вдоль луча. Побочные эффекты: озноб, ступор, смерть.",
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 1
   },
   {
     "id": "laurel",
@@ -132,7 +141,8 @@
     "max": 4,
     "baseTitle": "Лавр",
     "description": "Каждый заряд покрывает одно попадание. После исчерпания лимита Господь рекомендует обращаться в обычную страховую.",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.85
   },
   {
     "id": "bible",
@@ -145,7 +155,8 @@
     "max": 4,
     "baseTitle": "Королевская Библия",
     "description": "Книги вращаются вокруг героя и убеждают врагов принять последнее причастие.",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.75
   },
   {
     "id": "birds",
@@ -159,7 +170,8 @@
     "baseTitle": "Белая птица",
     "description": "Маленькая, быстрая и вызывает слишком много вопросов у эпидемиологов. Красная летучая мышь бомбит вращающийся сектор.",
     "appearanceNotes": "Сделать не голубей а красных летучих мышей",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.85
   },
   {
     "id": "ebony",
@@ -172,7 +184,8 @@
     "max": 4,
     "baseTitle": "Чёрная птица",
     "description": "Синяя летучая мышь бомбит встречный сектор. Тёмный рыцарь просил его в это не впутывать.",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.85
   },
   {
     "id": "hammer",
@@ -185,7 +198,8 @@
     "max": 4,
     "baseTitle": "Молот",
     "description": "Один веский аргумент лучше тысячи слов.\nКороткий замах и тяжёлый удар по области вблизи героя. Дубликатор добавляет удары. Серп + Молот на максимуме и Капитал дают Миколенина.",
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 0.8
   },
   {
     "id": "pistol",
@@ -198,7 +212,8 @@
     "max": 4,
     "baseTitle": "Пистоль",
     "description": "Лицензия на ношение каламбура не требуется.\nБыстрые пули в ближайшую цель или к прицелу. Дубликатор добавляет пули; Карманный рандом открывает эволюцию.",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.95
   },
   {
     "id": "sling",
@@ -211,7 +226,8 @@
     "max": 4,
     "baseTitle": "Праща",
     "description": "Камни отталкивают врагов. Гематоген из девственниц открывает эволюцию с взрывами и двойным уроном по боссам.",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.95
   },
   {
     "id": "needle",
@@ -222,7 +238,8 @@
     "max": 4,
     "baseTitle": "Огненная игла",
     "description": "Сам выбирает ближайшую проблему и делает её теплее. Огненные снаряды летят в ближайшую цель.",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.95
   },
   {
     "id": "blades",
@@ -233,7 +250,8 @@
     "max": 4,
     "baseTitle": "Лунные клинки",
     "description": "Враги проходят обработку по периметру и превращаются в фарш. Повторный выбор добавляет вращающийся клинок.",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.75
   },
   {
     "id": "pulse",
@@ -244,7 +262,8 @@
     "max": 4,
     "baseTitle": "Мёртвый колокол",
     "description": "Стигийский мегафон — «Орёт голосами подземного мира. Враги получают урон и немедленно освобождают проход.»",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.85
   },
   {
     "id": "lightning",
@@ -255,7 +274,8 @@
     "max": 4,
     "baseTitle": "Цепная молния",
     "description": "Карманная катушка Теслы — «Бьёт ближайшего врага током. Дальше электричество само разбирается, кто там стоял рядом.»",
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 0.85
   },
   {
     "id": "boomerang",
@@ -266,7 +286,8 @@
     "max": 4,
     "baseTitle": "Серп возврата",
     "description": "Серп, просто Серп обычный советский серп.",
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.85
   },
   {
     "id": "frost",
@@ -277,7 +298,8 @@
     "max": 4,
     "baseTitle": "Ледяная печать",
     "description": "Сигил Деда Мороза — «Ледяное кольцо замораживает толпу. Подарки получают только выжившие.»",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.9
   },
   {
     "id": "meteor",
@@ -288,7 +310,8 @@
     "max": 4,
     "baseTitle": "Звездопад",
     "description": "Цель отмечена. Осталось дождаться, пока космос разберётся. Метеориты взрываются по области.",
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 0.85
   },
   {
     "id": "poison",
@@ -299,7 +322,8 @@
     "max": 4,
     "baseTitle": "Чумной след",
     "description": "Язва Чужого След из кислоты и нарушений техники безопасности. Всё по корпоративному стандарту.",
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.8
   },
   {
     "id": "crossbow",
@@ -312,7 +336,7 @@
     "projectile": {
       "speed": 650,
       "damage": 24,
-      "rankDamage": 12,
+      "rankDamage": 8,
       "life": 1.8,
       "radius": 6,
       "pierce": 2,
@@ -327,7 +351,8 @@
     "kind": "ОРУЖИЕ",
     "weapon": true,
     "max": 4,
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.9
   },
   {
     "id": "gauss",
@@ -340,7 +365,7 @@
     "projectile": {
       "speed": 2000,
       "damage": 56,
-      "rankDamage": 18,
+      "rankDamage": 12,
       "life": 0.65,
       "radius": 9,
       "pierce": 8,
@@ -355,7 +380,8 @@
     "kind": "ОРУЖИЕ",
     "weapon": true,
     "max": 4,
-    "rarity": "legendary"
+    "rarity": "legendary",
+    "damageMultiplier": 0.9
   },
   {
     "id": "plasmaMinigun",
@@ -368,7 +394,7 @@
     "projectile": {
       "speed": 520,
       "damage": 5,
-      "rankDamage": 2,
+      "rankDamage": 1,
       "life": 1.4,
       "radius": 9,
       "pierce": 1,
@@ -383,7 +409,8 @@
     "kind": "ОРУЖИЕ",
     "weapon": true,
     "max": 4,
-    "rarity": "epic"
+    "rarity": "epic",
+    "damageMultiplier": 0.8
   },
   {
     "id": "lightStaff",
@@ -396,7 +423,8 @@
     "weapon": true,
     "max": 4,
     "baseTitle": "Жезл Светоча Зарты",
-    "rarity": "legendary"
+    "rarity": "legendary",
+    "damageMultiplier": 0.7
   },
   {
     "id": "crowbar",
@@ -409,7 +437,8 @@
     "weapon": true,
     "max": 4,
     "baseTitle": "Монтировка Фримена",
-    "rarity": "common"
+    "rarity": "common",
+    "damageMultiplier": 0.9
   },
   {
     "id": "chozo",
@@ -425,7 +454,7 @@
     "projectile": {
       "speed": 650,
       "damage": 34,
-      "rankDamage": 20,
+      "rankDamage": 13,
       "life": 1.5,
       "radius": 12,
       "pierce": 3,
@@ -438,7 +467,8 @@
       "splashScale": 0,
       "charge": 0.8
     },
-    "rarity": "legendary"
+    "rarity": "legendary",
+    "damageMultiplier": 0.85
   },
   {
     "id": "flamethrower",
@@ -454,7 +484,7 @@
     "projectile": {
       "speed": 300,
       "damage": 6,
-      "rankDamage": 3,
+      "rankDamage": 2,
       "life": 0.55,
       "radius": 20,
       "pierce": 2,
@@ -466,7 +496,8 @@
       "splashRadius": 0,
       "splashScale": 0
     },
-    "rarity": "rare"
+    "rarity": "rare",
+    "damageMultiplier": 0.85
   },
   {
     "id": "electropistol",
@@ -481,8 +512,8 @@
     "baseTitle": "Электропистоль Вольта",
     "projectile": {
       "speed": 800,
-      "damage": 12,
-      "rankDamage": 8,
+      "damage": 15,
+      "rankDamage": 5,
       "life": 1,
       "radius": 7,
       "pierce": 1,
@@ -494,7 +525,8 @@
       "splashRadius": 0,
       "splashScale": 0
     },
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.9
   },
   {
     "id": "gauntlets",
@@ -506,6 +538,7 @@
     "kind": "БЛИЖНИЙ БОЙ",
     "weapon": true,
     "max": 4,
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "damageMultiplier": 0.85
   }
 ]

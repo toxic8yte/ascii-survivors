@@ -72,6 +72,6 @@ const bosses = fixture(); bosses.nextBossAt = 60; bosses.nextMegaAt = 1e6; bosse
 for (let i = 0; i < 12; i++) { bosses.enemies = []; bosses.time = bosses.nextBossAt; bosses.update(.01); tick(bosses, 5.05); const boss = bosses.enemies.find(e => e.boss); order.push(boss.kind); bosses.hurtEnemy(boss, boss.hp + 1); }
 assert.equal(new Set(order.slice(0, 6)).size, 6); assert.deepEqual(order.slice(0, 6), order.slice(6));
 assert.equal(bosses.bossKills, 12); assert.equal(bosses.hearts[0].value, 60);
-const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .442) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
-quicker.levels.haste = 1; assert.ok(quicker.cooldown < .442);
+const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .578) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
+quicker.levels.haste = 1; assert.ok(quicker.cooldown < .578);
 console.log('PASS: 58 enemies, six rotating mini-bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');

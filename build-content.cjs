@@ -30,6 +30,7 @@ function validateContent(data, roster = []) {
     if (icons.has(row.icon)) fail(row.id + ': duplicate upgrade icon');
     icons.add(row.icon);
     if (row.weapon && !['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(row.rarity)) fail(row.id + ': invalid weapon rarity');
+    if (row.weapon && (!positive(row.damageMultiplier) || row.damageMultiplier > 1)) fail(row.id + ': invalid damage multiplier');
     if (ids.weapons.has(row.id) !== (row.weapon === true)) fail(row.id + ': weapon flag does not match its file');
     if (row.cooldown !== undefined && (!positive(row.cooldown) || !text(row.behavior, 40))) fail(row.id + ': invalid cooldown or behavior');
     if (row.projectile !== undefined) {
