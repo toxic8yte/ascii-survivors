@@ -24,7 +24,7 @@
       <div class="stat-block level-block"><span class="stat-label">УРОВЕНЬ</span><strong id="level">01</strong></div>
     </section>
     <div class="xp-track" aria-label="Опыт до следующего уровня"><div id="xp-bar"></div><span id="xp-text">ОПЫТ 0 / 6</span></div>
-    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ИГЛА ПРЕСТОЛОВ</span><span id="boss-name"></span><span id="wave-status" class="wave-status"></span><button id="map-open" type="button">КАРТА · 350</button><button id="grimoire-open" type="button">НЕКРОНОМИКОН</button><button id="bestiary-open" type="button">БЕСТИАРИЙ</button><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
+    <div class="combat-bar"><button id="fire-mode" type="button" aria-pressed="false">АВТОАТАКА <kbd>M</kbd></button><span id="selected-weapon">1 / ИГЛА ПРЕСТОЛОВ</span><span id="boss-name"></span><span id="wave-status" class="wave-status"></span><button id="sandbox-open-live" type="button" hidden>ПЕСОЧНИЦА</button><button id="map-open" type="button">КАРТА · 350</button><button id="grimoire-open" type="button">НЕКРОНОМИКОН</button><button id="bestiary-open" type="button">БЕСТИАРИЙ</button><button id="metrics-toggle" type="button" aria-expanded="false">ДВИЖОК</button></div>
 
     <section class="arena" id="arena" aria-label="Игровое поле">
       <canvas id="screen" role="img" aria-label="Бесконечная ASCII-арена. WASD или стрелки — движение, пробел — рывок, 1–5 — оружие, M — авто или ручной огонь, ЛКМ или F — ручная атака.">Для игры нужен браузер с поддержкой Canvas и JavaScript.</canvas>
@@ -49,7 +49,7 @@ __|_____|_____|___|_____|_____|__</pre>
           <p>Бесконечная ночь. Всё больше врагов.<br>Собирай души. Усиливай оружие. Двигайся.</p>
           <div class="intro-keys"><span><kbd>1–5</kbd> оружие</span><span><kbd>M</kbd> авто / ручной</span><span><kbd>ЛКМ / F</kbd> атака</span></div>
           <div class="best">ЛУЧШИЙ ЗАБЕГ <b id="best">—</b></div>
-          <div class="run-options"><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>В тесте: неуязвимость и весь арсенал. Выживание — без ограничения времени.</small></div>
+          <div class="run-options"><label><input id="sandbox-mode" type="checkbox"> Песочница: любой герой и оружие</label><button id="sandbox-open" class="quiet-button" type="button" hidden>НАСТРОИТЬ ТЕСТ →</button><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>Песочница — отдельное оружие и выбранные цели. Нагрузочный тест — весь арсенал и нарастающие волны. Оба режима без наград и сохранения забега.</small></div>
           </div>
           <section class="character-picker" aria-label="Выбор персонажа">
             <div class="picker-heading"><div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div><button id="meta-open" type="button" class="meta-open">НАСЛЕДИЕ · 50 ЗОЛОТА</button></div>
@@ -109,6 +109,22 @@ _|_|_</pre><div class="eyebrow" id="ending-caption">КЛАДБИЩЕ ПОЛУЧ�
       <div class="legend"><span><i class="soul">*</i> опыт</span><span><i class="heart">+</i> лечение</span><span id="save-status" role="status">АВТОСОХРАНЕНИЕ</span><span class="desktop-help">WASD · ПРОБЕЛ рывок · Q/E страницы · 1–5 оружие · M режим · ЛКМ / F атака · P пауза · G весь экран</span></div>
     </footer>
   </main>
+  <dialog id="sandbox-settings" aria-labelledby="sandbox-title">
+    <div class="bestiary-heading"><h2 id="sandbox-title">Песочница</h2><button id="sandbox-close" type="button" class="quiet-button">ЗАКРЫТЬ ×</button></div>
+    <p class="bestiary-hint">Любой герой доступен бесплатно для теста. Неуязвимость, без случайных волн и прокачки. Обычный забег и кошелёк сохраняются.</p>
+    <div class="sandbox-grid">
+      <label>Герой<select id="sandbox-hero"></select></label>
+      <label>Оружие<select id="sandbox-weapon"><option value="starter">Стартовое оружие героя</option></select></label>
+      <label>Ранг оружия<select id="sandbox-rank"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+      <label class="sandbox-check"><input id="sandbox-evolved" type="checkbox"> Эволюция, если есть рецепт</label>
+      <label>Пассивка<select id="sandbox-passive"><option value="none">Без пассивки</option></select></label>
+      <label>Ранг пассивки<select id="sandbox-passive-rank"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      <label>Противник<select id="sandbox-enemy"><option value="dummy">Неподвижный манекен · 10 000 HP</option></select></label>
+      <label>Количество целей<select id="sandbox-count"><option>1</option><option>5</option><option>20</option></select></label>
+    </div>
+    <div class="sandbox-preview"><pre id="sandbox-enemy-art" aria-hidden="true"></pre><p id="sandbox-enemy-description"></p></div>
+    <button id="sandbox-apply" type="button" class="primary-button">НАЧАТЬ ТЕСТ →</button>
+  </dialog>
   <dialog id="bestiary" aria-labelledby="bestiary-title"><div class="bestiary-heading"><div><div class="eyebrow">ОБИТАТЕЛИ КЛАДБИЩА</div><h2 id="bestiary-title">Бестиарий</h2></div><button id="bestiary-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">Перед рывком появляется линия, перед телепортацией — метка. Уходи с линии атаки.</p><div id="bestiary-list" class="bestiary-grid"></div></dialog>
   <dialog id="meta-shop" aria-labelledby="meta-title"><div class="bestiary-heading"><div><div class="eyebrow">ПОСТОЯННЫЕ УЛУЧШЕНИЯ</div><h2 id="meta-title">Наследие</h2><strong id="meta-gold">50 ЗОЛОТА</strong></div><button id="meta-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">До бонусов: каждые 5 убийств +0,45 · мини-босс +11,25 · мегабосс +56,25 · сундук +4,5 · минута +2,25. Дробное золото накапливается. Разделы покупаются навсегда. Первые 50 — стартовый запас. Старые достижения тоже учтены. Покупки действуют в новых забегах.</p><div id="meta-grid" class="meta-grid"></div><p id="meta-message" role="status"></p></dialog>
   <dialog id="world-map" aria-labelledby="map-title"><div class="bestiary-heading"><div><div class="eyebrow">БОЛЬШОЕ КЛАДБИЩЕ</div><h2 id="map-title">Карта сокровищ</h2></div><button id="map-close" type="button" class="quiet-button">ВЕРНУТЬСЯ ×</button></div><p class="bestiary-hint">@ — герой · X — тайник · $ — сундук. Подойди к тайнику, чтобы выбрать награду. Каждый тайник открывается один раз за забег. Бой на паузе.</p><svg id="treasure-map" role="img" aria-label="Карта кладбища с положением героя и сокровищ"></svg><p id="map-summary"></p></dialog>

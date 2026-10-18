@@ -59,6 +59,7 @@ function validateContent(data, roster = []) {
   for (const row of data.permanents) if (!uint(row.max) || !row.max) fail('permanents/' + row.id + ': invalid max');
   const enemyIds = new Set(roster.map(row => row.id));
   for (const row of data.legacyEnemies) {
+    if (row.frames !== undefined && (!Array.isArray(row.frames) || !row.frames.length || !row.frames.every(ascii))) fail('legacyEnemies/' + row.id + ': invalid animation frames');
     if (enemyIds.has(row.id) || !['hp', 'speed', 'radius', 'damage', 'xp'].every(key => positive(row[key])) || !ascii(row.sprite) || !ascii(row.glyph) || !uint(row.ink) || row.ink > 14 || !row.boss && (!Number.isFinite(row.at) || row.at < 0)) fail('legacyEnemies/' + row.id + ': invalid enemy or ID collision');
     for (const key of ['projectileSpeed', 'projectileDamageScale']) if (row[key] !== undefined && !positive(row[key])) fail('legacyEnemies/' + row.id + ': invalid ' + key);
     enemyIds.add(row.id);

@@ -39,9 +39,9 @@ const legacyReward = NightSave.restore(oldReward); assert.ok(legacyReward);
 const legacyGold = legacyReward.goldEarned; assert.ok(legacyReward.claimReward()); assert.equal(legacyReward.goldEarned, legacyGold, 'Old already-applied rewards never pay twice');
 
 const full = fixture(); full.stressMode = true; for (const u of NightUpgrades) while (full.levels[u.id] < u.max) full.applyUpgrade(u);
-full.stressMode = false; open(full, 'lichLord', 0); assert.deepEqual(full.reward.options.map(o => o.type), ['gold', 'xp', 'shield']);
+full.stressMode = false; open(full, 'lichLord', 0); assert.deepEqual(full.reward.options.map(o => o.type).sort(), ['gold', 'shield', 'xp']);
 assert.equal(full.goldEarned, 0); const fullReloaded = NightSave.restore(clone(NightSave.capture(full))); assert.ok(fullReloaded);
-fullReloaded.claimReward(0); assert.equal(fullReloaded.goldEarned, Math.floor(60 * .45 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
+fullReloaded.claimReward(fullReloaded.reward.options.findIndex(o=>o.type==='gold')); assert.equal(fullReloaded.goldEarned, Math.floor(60 * .45 * fullReloaded.greed), 'Only selected gold plus chest gold is applied, including greed');
 const afterGold = fullReloaded.goldEarned; assert.equal(fullReloaded.claimReward(1), false); assert.equal(fullReloaded.goldEarned, afterGold);
 assert.equal(fullReloaded.shieldCharges, 0); assert.equal(fullReloaded.xp, 0);
 

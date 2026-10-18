@@ -113,6 +113,10 @@
       const p = game.player, direction = Math.abs(p.dirX) >= Math.abs(p.dirY) ? p.dirX < 0 ? 'left' : 'right' : p.dirY < 0 ? 'up' : 'down';
       return game.character.facingSprites?.[direction] || game.character.sprite;
     }
+    enemySprite(game,e) {
+      if(game.enemies.length>180&&!e.boss&&e.rank!=='elite'&&Math.hypot(e.x-game.player.x,e.y-game.player.y)>230)return e.glyph;
+      return e.frames?e.frames[Math.floor(game.time*6+e.phase)%e.frames.length]:e.sprite;
+    }
     render(game, camera, alpha = 1) {
       if (this.worldWidth !== game.width || this.worldHeight !== game.height) { this.worldWidth = game.width; this.worldHeight = game.height; this.chunks.clear(); }
       this.camera = camera; this.alpha = Math.max(0, Math.min(1, alpha)); this.scenery();
@@ -181,13 +185,13 @@
           this.enemyCells[key] = 1;
         }
         this.renderedEnemies++;
-        const sprite = e.frames ? e.frames[Math.floor(game.time * 6 + e.phase) % e.frames.length] : e.kind === 'bat' ? (Math.sin(game.time * 12 + e.phase) > 0 ? '\\v/' : '<v>') : e.sprite;
-        if (e.mega) megaBodies.push({ p, sprite, ink });
+        const sprite = this.enemySprite(game,e), top=sprite.split('\n').length*8;
+        if (e.ai === 'darklord') megaBodies.push({ p, sprite, ink });
         this.world(p.x, p.y, sprite, ink);
-        if (game.holyMarks.has(e.id)) this.world(p.x,p.y-25,'+',this.weaponInk('lightStaff',7));
-        if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - 38, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
+        if (game.holyMarks.has(e.id)) this.world(p.x,p.y-top-10,'+',this.weaponInk('lightStaff',7));
+        if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - top - 12, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
         if (e.windup > 0) {
-          this.world(p.x, p.y - 52, '!', 7);
+          this.world(p.x, p.y - top - 26, '!', 7);
           if (e.ai === 'charge') this.line(p, { x: p.x + e.chargeX * 180, y: p.y + e.chargeY * 180 }, 6, ':');
         }
       }
@@ -196,7 +200,7 @@
         this.world(p.x + 2, p.y, sprite, 4);
         this.world(p.x, p.y, sprite, ink);
         this.world(p.x, p.y - 9, '::', 13);
-        this.world(p.x, p.y - 48, 'DAR VETROV', 13);
+        this.world(p.x, p.y - sprite.split('\n').length*8 - 12, 'DAR VETROV', 13);
       }
       for (const shot of game.enemyShots) { const p = this.position(shot); this.world(p.x, p.y, shot.glyph, shot.ink); }
       for (const s of game.relics) {
