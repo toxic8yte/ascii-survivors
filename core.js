@@ -2,6 +2,10 @@
   'use strict';
   const TAU = Math.PI * 2;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  function segmentDistance(x, y, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y, t = clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+    return Math.hypot(x - a.x - dx * t, y - a.y - dy * t);
+  }
   const { enemies: ENEMIES, upgrades: UPGRADES, heroes: CHARACTERS, permanents: META, extraWeapons: EXTRA_WEAPONS, evolutions: EVOLUTIONS } = root.NightCatalog || require('./catalog.js');
   const EVOLUTION_BY_WEAPON = Object.fromEntries(EVOLUTIONS.map(e => [e.weapon, e]));
   const CASTS = { lightning: ['castLightning', 2.4], boomerang: ['castBoomerang', 1.7], frost: ['castFrost', 4.2], meteor: ['castMeteor', 3.2] };
@@ -652,11 +656,11 @@
         return;
       }
       if (id === 'crowbar') {
-        const radius = (105 + level * 12) * this.area, count = 1 + this.levels.fork;
-        for (let i=0;i<count;i++) this.slashes.push({x:p.x,y:p.y,angle:angle+(i-(count-1)/2)*.25,radius,life:.25,ink:12,glyph:'J',weapon:id});
+        const radius = (48 + level * 4) * Math.min(this.area, 1.5), count = 1 + this.levels.fork;
+        for (let i=0;i<count;i++) this.slashes.push({x:p.x,y:p.y,angle,radius,life:.2,maxLife:.2,halfAngle:.85,ink:12,glyph:'J',weapon:id});
         for (const e of this.nearby(p.x,p.y,radius+50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y)<radius+e.radius) {
           const delta = Math.atan2(e.y-p.y,e.x-p.x)-angle;
-          if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < 1.2) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
+          if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < .85) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
         }
         return;
       }
@@ -689,34 +693,47 @@
           this.meteors.push({ x: clamp(x + i * 30, 28, this.width - 28), y: clamp(y, 28, this.height - 28), wait: .6, radius: (65 + level * 8) * this.area * (evolved ? 1.35 : 1), damage: (20 + level * 10) * this.power * (evolved ? 1.6 : 1), kind: id === 'ebony' ? 'ebony' : 'bird' }); }
         return;
       }
-      if (['whip', 'garlic', 'pentagram', 'clock'].includes(id)) {
-        const radius = (id === 'pentagram' ? 650 : id === 'clock' ? 480 : id === 'garlic' ? 75 + level * 15 : 155 + level * 20) * this.area * (evolved && id === 'garlic' ? 1.4 : 1);
-        const facing = id === 'clock' && this.fireMode === 'auto' ? this.clockStep * Math.PI / 6 : angle;
-        const whipAngles = id === 'whip' ? [facing, facing + Math.PI, ...Array.from({ length: this.levels.fork }, (_, i) => facing + (i + 1) * .35)] : [];
+      if (id === 'whip') {
+        const radius = (155 + level * 20) * this.area, thickness = 14 * this.area, paths = [];
+        for (let i = 0; i < 2 + this.levels.fork; i++) {
+          const side = i % 2 ? -1 : 1, offset = i < 2 ? 0 : (i % 2 ? 1 : -1) * Math.ceil((i - 1) / 2) * 24 * this.area;
+          const points = Array.from({ length: 9 }, (_, j) => { const t = j / 8; return { x:p.x + side * radius * t, y:p.y + offset - Math.sin(Math.PI * t) * radius * .18 }; });
+          paths.push(points); this.slashes.push({ x:p.x, y:p.y, points, radius, life:.28, maxLife:.28, ink:9, glyph:'~', weapon:id });
+        }
         let healing = 0;
-        this.rings.push({ x: p.x, y: p.y, radius, life: .45, maxLife: .45, ink: id === 'clock' || id === 'whip' ? 9 : 7, kind: id === 'pentagram' ? 'pentagram' : '', glyph: id === 'pentagram' ? '*' : '.', weapon:id });
-        if (id === 'whip') {
-          for (const a of whipAngles) this.slashes.push({ x: p.x, y: p.y, angle: a, radius, life: .25, ink:9, glyph:'~', weapon:id });
+        for (const e of this.nearby(p.x, p.y, radius + (this.levels.fork + 1) * 24 * this.area + 50)) if (e.alive) {
+          const hits = paths.filter(points => points.some((b, i) => i && segmentDistance(e.x, e.y, points[i - 1], b) <= e.radius + thickness)).length;
+          if (!hits) continue;
+          const critical = evolved && this.random() < Math.min(.8, .3 * this.luck);
+          this.hurtEnemy(e, (25 + 15 * level) * this.power * (evolved ? 1.5 : 1) * (critical ? 2.5 : 1) * hits, 25, id);
+          if (critical) healing += 5;
         }
-        if (id === 'clock') this.arcs.push({ points: [{ x: p.x, y: p.y }, { x: p.x + Math.cos(facing) * radius, y: p.y + Math.sin(facing) * radius }], life: .3, maxLife: .3, weapon:id });
+        this.healPlayer(Math.min(healing, 3)); return;
+      }
+      if (id === 'clock') {
+        const radius = 480 * this.area, facing = this.fireMode === 'auto' ? this.clockStep * Math.PI / 6 : angle;
+        const start = { x:p.x, y:p.y }, end = { x:p.x + Math.cos(facing) * radius, y:p.y + Math.sin(facing) * radius };
+        this.arcs.push({ points:[start,end], life:.3, maxLife:.3, weapon:id });
+        for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive && segmentDistance(e.x, e.y, start, end) <= e.radius + 22) {
+          this.freezes.set(e.id, this.time + (e.mega ? .35 : e.boss ? .8 : (1.2 + level * .2) * this.effectDuration));
+        }
+        if (++this.clockStep % 12 === 0 && evolved) {
+          this.rings.push({ x:p.x, y:p.y, radius:650 * this.area, life:.8, maxLife:.8, ink:9, glyph:'0', weapon:id });
+          for (const e of this.nearby(p.x,p.y,650 * this.area + 50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y) < 650 * this.area + e.radius) this.hurtEnemy(e,e.boss ? Math.min(450,e.hp*.05) : e.hp*.5,0,id);
+        }
+        return;
+      }
+      if (id === 'garlic' || id === 'pentagram') {
+        const radius = (id === 'pentagram' ? 650 : 75 + level * 15) * this.area * (evolved && id === 'garlic' ? 1.4 : 1);
+        let healing = 0;
+        this.rings.push({ x:p.x, y:p.y, radius, life:.45, maxLife:.45, ink:7, kind:id === 'pentagram' ? 'pentagram' : '', glyph:id === 'pentagram' ? '*' : '.', weapon:id });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive) {
-          const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy);
-          const hits = id === 'whip' ? whipAngles.filter(a => Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - a), Math.cos(Math.atan2(dy, dx) - a))) < 1.2).length : 1;
-          if (d > radius + e.radius || !hits) continue;
-          if (id === 'clock') { if (Math.abs(dx * Math.sin(facing) - dy * Math.cos(facing)) < e.radius + 22 && dx * Math.cos(facing) + dy * Math.sin(facing) > 0) this.freezes.set(e.id, this.time + (e.mega ? .35 : e.boss ? .8 : (1.2 + level * .2) * this.effectDuration)); }
-          else {
-            const critical = evolved && id === 'whip' && this.random() < Math.min(.8, .3 * this.luck);
-            this.hurtEnemy(e, id === 'pentagram' ? (e.boss ? 110 + 40 * level : 60 + 35 * level) * this.power * (evolved ? 1.5 : 1) : (id === 'garlic' ? 4 + 4 * level : 25 + 15 * level) * this.power * (evolved ? 1.5 : 1) * (critical ? 2.5 : 1) * hits, id === 'garlic' ? 14 : 25, id);
-            if (critical) healing += 5;
-            if (evolved && id === 'garlic') healing += 1;
-          }
+          if (Math.hypot(e.x-p.x,e.y-p.y) > radius + e.radius) continue;
+          this.hurtEnemy(e, (id === 'pentagram' ? e.boss ? 110 + 40 * level : 60 + 35 * level : 4 + 4 * level) * this.power * (evolved ? 1.5 : 1), id === 'garlic' ? 14 : 25, id);
+          if (evolved && id === 'garlic') healing += 1;
         }
-        this.healPlayer(Math.min(healing, id === 'whip' ? 3 : .5));
+        this.healPlayer(Math.min(healing, .5));
         if (id === 'pentagram' && evolved) for (const gem of this.gems) gem.magnetized = true;
-        if (id === 'clock' && ++this.clockStep % 12 === 0 && evolved) {
-          this.rings.push({ x: p.x, y: p.y, radius: 650 * this.area, life: .8, maxLife: .8, ink: 9, glyph: '0', weapon:id });
-          for (const e of this.nearby(p.x, p.y, 650 * this.area + 50)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < 650 * this.area + e.radius) this.hurtEnemy(e, e.boss ? Math.min(450, e.hp * .05) : e.hp * .5, 0, 'clock');
-        }
         return;
       }
       const count = Math.min(12, 1 + Math.floor(level / 2) + this.levels.fork + (evolved && id === 'axe' ? 5 : evolved ? 2 : 0));

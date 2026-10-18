@@ -26,6 +26,28 @@ for(const [direction,x,y] of [['right',1,0],['left',-1,0],['up',0,-1],['down',0,
 const whip=fixture();whip.levels.whip=1;whip.aim={x:whip.player.x+400,y:whip.player.y,active:true};
 const front=target(whip,70),back=target(whip,-70);whip.buildGrid();whip.castRelic('whip');
 assert.ok(front.hp<10000&&back.hp<10000,'Rank-one whip attacks both sides');assert.ok(whip.slashes.every(s=>s.ink===9));
+const horizontal=fixture();horizontal.levels.whip=1;horizontal.aim={x:horizontal.player.x,y:horizontal.player.y-400,active:true};
+const left=target(horizontal,-100),right=target(horizontal,100),above=target(horizontal,0),below=target(horizontal,0),outside=target(horizontal,260);
+above.y-=110;below.y+=110;horizontal.buildGrid();horizontal.castRelic('whip');
+assert.ok(left.hp<10000&&right.hp<10000,'Whip remains horizontal even when aiming vertically');
+assert.ok([above,below,outside].every(e=>e.hp===10000),'Whip cannot damage a circular area around the player');
+assert.equal(horizontal.rings.length,0,'Whip has no misleading circular wave');assert.equal(horizontal.slashes.length,2);
+horizontal.slashes=[];horizontal.levels.fork=3;horizontal.castRelic('whip');assert.equal(horizontal.slashes.length,5,'Duplicator adds horizontal whip paths rather than radial sectors');
+assert.ok(horizontal.slashes.every(s=>s.points.every(point=>Math.abs(point.y-horizontal.player.y)<90)));
+const beam=fixture();beam.levels.clock=1;beam.aim={x:beam.player.x+600,y:beam.player.y,active:true};
+const inline=target(beam,300),offAxis=target(beam,300),behind=target(beam,-90),tooFar=target(beam,560);offAxis.y+=100;
+beam.buildGrid();beam.castRelic('clock');assert.ok(beam.freezes.has(inline.id));assert.ok([offAxis,behind,tooFar].every(e=>!beam.freezes.has(e.id)),'Beam freezes only its finite forward line');
+assert.equal(beam.rings.length,0,'Ordinary clock casts do not draw a circle');assert.equal(beam.arcs.length,1);
+beam.setFireMode('auto');beam.castRelic('clock');const rotated=beam.arcs[1].points;assert.ok(rotated[1].x>rotated[0].x&&rotated[1].y>rotated[0].y,'Automatic beam changes direction between straight casts');
+const bar=fixture('ark');bar.aim={x:bar.player.x+300,y:bar.player.y,active:true};
+const close=target(bar,45),distant=target(bar,110),rear=target(bar,-45);bar.buildGrid();bar.castRelic('crowbar');
+assert.ok(close.hp<10000);assert.ok([distant,rear].every(e=>e.hp===10000),'Crowbar hits only in close quarters in front');assert.equal(bar.slashes[0].radius,52);
+bar.levels.crowbar=4;bar.levels.area=5;bar.slashes=[];bar.castRelic('crowbar');assert.ok(bar.slashes[0].radius<=96,'Area upgrades retain a short melee reach');
+const lines=[],circles=[],glyphs=[],shapeRenderer=Object.create(NightRenderer.prototype);
+Object.assign(shapeRenderer,{width:1000,height:600,scaleX:1,scaleY:1,chunks:new Map(),enemyCells:new Uint8Array(100),ctx:{fillRect(){}},scenery(){},world(x,y,glyph,ink){glyphs.push({x,y,glyph,ink});},line(a,b,ink,glyph,zigzag=false){lines.push({a,b,ink,glyph,zigzag});},circle(...args){circles.push(args);}});
+beam.arcs=[beam.arcs[0]];shapeRenderer.render(beam,{x:beam.player.x,y:beam.player.y});assert.equal(circles.length,0);assert.equal(lines.length,1);assert.equal(lines[0].glyph,'=');assert.equal(lines[0].zigzag,false,'Clock is a straight beam, not a lightning zigzag');
+lines.length=circles.length=glyphs.length=0;for(const s of horizontal.slashes)s.life=.14;shapeRenderer.render(horizontal,{x:horizontal.player.x,y:horizontal.player.y});assert.equal(circles.length,0);assert.equal(lines.length,40,'Five whips render their eight curved horizontal segments');
+lines.length=circles.length=glyphs.length=0;bar.slashes[0].life=.1;shapeRenderer.render(bar,{x:bar.player.x,y:bar.player.y});assert.equal(lines.length,1);assert.ok(Math.hypot(lines[0].b.x-lines[0].a.x,lines[0].b.y-lines[0].a.y)<=84);assert.ok(glyphs.some(g=>g.glyph==='J'),'Crowbar has a short shaft and one hooked tip');
 whip.levels.pentagram=1;whip.castRelic('pentagram');assert.ok(whip.rings.some(r=>r.kind==='pentagram'));
 const staff=fixture('beacon'), marked=target(staff,180);staff.buildGrid();staff.castRelic('lightStaff');assert.ok(staff.holyMarks.has(marked.id));
 marked.x+=900;const hp=marked.hp;tick(staff,.3);const staffSave=NightSave.restore(clone(NightSave.capture(staff)));assert.ok(staffSave);staffSave.pause();
@@ -53,4 +75,4 @@ for(const [id,weapon] of Object.entries(previous)) {
   assert.equal(restored.levels[weapon],2);assert.equal(restored.goldEarned,37);assert.equal(restored.goldCarry,.4);assert.deepEqual(restored.inventory(true),[weapon]);
   assert.ok(NightSave.restore(clone(NightSave.capture(restored))),'Migrated builds can be saved again');
 }
-console.log('PASS: sheet content, four facing directions and idle/save behavior, blue two-sided whip, pentagram, sacred DoT, charging Chozo with Samus bonus, capped acid leech, magnet tuning and old hero builds/HP/gold.');
+console.log('PASS: sheet content, facing and saves, horizontal curved whip hitboxes, straight finite freezing beam, short crowbar geometry, pentagram, sacred DoT, charging Chozo, capped acid leech, magnet tuning and old hero builds/HP/gold.');

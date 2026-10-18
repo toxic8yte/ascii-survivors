@@ -140,6 +140,20 @@
       if (game.levels.garlic && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, (75 + game.levels.garlic * 15) * game.area, this.weaponInk('garlic',3), '.');
       if (game.isEvolved('boomerang') && game.fireMode === 'auto') { this.circle(game.player.x, game.player.y, game.mikoleninRadius, 13, '+'); this.world(game.player.x, game.player.y - 52, '{M}', this.weaponInk('boomerang',7)); }
       for (const s of game.slashes) {
+        if (s.weapon === 'whip' && s.points) {
+          const reveal = Math.min(1, (1 - s.life / s.maxLife) * 4 + .25) * (s.points.length - 1);
+          for (let i = 1; i <= Math.ceil(reveal); i++) {
+            const a = s.points[i - 1], b = s.points[i], t = Math.min(1, reveal - i + 1);
+            this.line(a, {x:a.x + (b.x-a.x)*t,y:a.y + (b.y-a.y)*t}, this.weaponInk(s.weapon,s.ink), '~');
+          }
+          continue;
+        }
+        if (s.weapon === 'crowbar') {
+          const angle = s.angle + (2 * (1 - s.life / s.maxLife) - 1) * s.halfAngle;
+          const tip = {x:s.x + Math.cos(angle)*s.radius,y:s.y + Math.sin(angle)*s.radius};
+          this.line({x:s.x + Math.cos(angle)*12,y:s.y + Math.sin(angle)*12},tip,this.weaponInk(s.weapon,s.ink),'/');
+          this.world(tip.x,tip.y,'J',this.weaponInk(s.weapon,s.ink)); continue;
+        }
         if (s.glyph === '[=]') {
           const reach = s.radius * (.3 + .7 * Math.sin(Math.PI * Math.max(0, Math.min(1, 1 - s.life / .28))));
           this.world(s.x + Math.cos(s.angle) * reach, s.y + Math.sin(s.angle) * reach, '[=]', this.weaponInk(s.weapon,s.ink)); continue;
@@ -199,7 +213,11 @@
       for (const whip of game.bossWhips) this.line(whip, { x: whip.x + Math.cos(whip.angle) * whip.radius, y: whip.y + Math.sin(whip.angle) * whip.radius }, 13, '~', true);
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', this.weaponInk('needle',6)); this.world(p.x, p.y, '*', this.weaponInk('needle',7)); }
       for (const b of game.boomerangs) { const p = this.position(b); this.world(p.x, p.y, ['<)>', '/|\\', '<(>', '\\|/'][Math.floor(b.age * 16) % 4], this.weaponInk('boomerang',7)); }
-      for (const arc of game.arcs) for (let i = 1; i < arc.points.length; i++) this.line(arc.points[i - 1], arc.points[i], this.weaponInk(arc.weapon,arc.life > .12 ? 8 : 5), i % 2 ? '~' : '/', true);
+      for (const arc of game.arcs) for (let i = 1; i < arc.points.length; i++) {
+        const a = arc.points[i - 1], b = arc.points[i], beam = arc.weapon === 'clock';
+        const glyph = beam ? Math.abs(b.y-a.y) < Math.abs(b.x-a.x)*.4 ? '=' : Math.abs(b.x-a.x) < Math.abs(b.y-a.y)*.4 ? '|' : (b.x-a.x)*(b.y-a.y)>0 ? '\\' : '/' : i % 2 ? '~' : '/';
+        this.line(a,b,this.weaponInk(arc.weapon,beam ? 9 : arc.life > .12 ? 8 : 5),glyph,!beam);
+      }
       for (const p of game.particles) this.world(p.x, p.y, p.life > .25 ? '+' : '.', this.weaponInk(p.weapon,p.ink));
       for (const b of game.bladePositions()) this.world(b.x, b.y, game.isEvolved('blades') ? '/+' : Math.sin(b.angle * 2) > 0 ? '/' : '\\', this.weaponInk('blades',game.isEvolved('blades') ? 9 : 8));
       // Pickups use their own brighter inks and remain readable over combat effects.
