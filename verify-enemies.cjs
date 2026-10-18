@@ -61,7 +61,7 @@ tick(blinking, .2); assert.ok(Math.hypot(freddy.x - mark.x, freddy.y - mark.y) <
 assert.ok(Math.hypot(freddy.x - blinking.player.x, freddy.y - blinking.player.y) > 100, 'Teleport never lands on the player');
 const charging = fixture(), jason = charging.spawn('jason', charging.player.x - 400, charging.player.y); jason.skillClock = 0;
 tick(charging, .02); const windupX = jason.x; tick(charging, .5); assert.equal(jason.x, windupX);
-tick(charging, .6); assert.ok(jason.x - windupX > 80, 'Jason charges after warning');
+tick(charging, .85); assert.ok(jason.x - windupX > 80, 'Jason charges after warning');
 const slowed = fixture(), mummy = slowed.spawn('mummy', slowed.player.x, slowed.player.y);
 tick(slowed, .02); assert.ok(slowed.speed < slowed.character.speed); slowed.enemies = []; tick(slowed, 2);
 assert.equal(slowed.speed, slowed.character.speed, 'Mummy curse expires');

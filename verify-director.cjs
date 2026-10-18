@@ -36,7 +36,7 @@ for (const row of data) {
   assert.ok(Number.isFinite(e.x+e.y+e.hp)); assert.equal(JSON.stringify(NightEnemies[row.id]),definition);
   assert.ok(NightSave.restore(clone(NightSave.capture(sim))),row.id+' runtime saves');
 }
-for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=5); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=2000); assert.ok(plan.target>=24); }
+for(let age=0;age<=3600;age+=30){ const plan=system.wave(NightEnemies,age,false); assert.ok(plan.entries.length<=7); assert.ok(plan.entries.every(e=>NightEnemies[e.id].at<=age || !NightEnemies[e.id].roster)); assert.ok(plan.target<=2000); assert.ok(plan.target>=24); }
 const opening = system.wave(NightEnemies, 0, false); assert.equal(opening.target, 24); assert.equal(opening.surge, false);
 for (const age of [150, 330, 510, 930, 1830]) {
   const plan = system.wave(NightEnemies, age, false), oldTarget = Math.round(18 + Math.min(age, 1800) * .12 + Math.max(0, age - 1800) * .1);

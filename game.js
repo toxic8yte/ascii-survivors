@@ -10,7 +10,7 @@
   let selectedCharacter = progress.profile.character;
   let fireModePreference = progress.profile.fireMode;
   $('enemy-limit').value = progress.profile.enemyLimit;
-  function options() { return { map:$('stage-select').value,fireMode:fireModePreference, stressMode:$('stress-mode').checked, sandboxMode:$('sandbox-mode').checked, sandbox:{weapon:$('sandbox-weapon').value,rank:Number($('sandbox-rank').value),passive:$('sandbox-passive').value,passiveRank:Number($('sandbox-passive-rank').value),evolved:$('sandbox-evolved').checked,enemy:$('sandbox-enemy').value,count:Number($('sandbox-count').value)}, enemyLimit:Number($('enemy-limit').value),meta:progress.profile.meta.ranks }; }
+  function options() { return { map:$('stage-select').value,fireMode:fireModePreference, stressMode:$('stress-mode').checked, sandboxMode:$('sandbox-mode').checked, sandbox:{weapon:$('sandbox-weapon').value,rank:Number($('sandbox-rank').value),passive:$('sandbox-passive').value,passiveRank:Number($('sandbox-passive-rank').value),evolved:$('sandbox-evolved').checked,enemy:$('sandbox-enemy').value,count:Number($('sandbox-count').value),invulnerable:$('sandbox-invulnerable').checked,arena:$('sandbox-arena').checked}, enemyLimit:Number($('enemy-limit').value),meta:progress.profile.meta.ranks }; }
   let game = new NightGame(Date.now(), selectedCharacter, options()), keys = new Set();
   const equipmentTooltip = document.createElement('div'); equipmentTooltip.id = 'equipment-tooltip'; equipmentTooltip.className = 'equipment-tooltip'; equipmentTooltip.setAttribute('role', 'tooltip'); equipmentTooltip.hidden = true; shell.append(equipmentTooltip);
   let tooltipAnchor = null, previewWeapon = null;
@@ -325,6 +325,7 @@
     $('sandbox-evolution-description').hidden=!$('sandbox-evolved').checked;
     text('sandbox-evolution-description',recipe?recipe.title+' · '+recipe.description+' Все ингредиенты рецепта выдаются для теста.':'Для выбранного оружия нет рецепта.');
     const enemy=NightEnemies[$('sandbox-enemy').value],passive=NightUpgrades.find(u=>u.id===$('sandbox-passive').value);
+    $('sandbox-arena').disabled=!enemy?.boss;$('sandbox-count').disabled=Boolean(enemy?.boss&&$('sandbox-arena').checked);
     text('sandbox-enemy-art',enemy?.sprite || ' ._.\n[+|+]\n / \\');text('sandbox-enemy-description',enemy?.description || 'Неподвижная цель с 10 000 HP. После зачистки выбранные цели появятся снова.');
     for(const option of $('sandbox-passive-rank').options)option.disabled=Number(option.value)>(passive?.max||1);
     if(Number($('sandbox-passive-rank').value)>(passive?.max||1))$('sandbox-passive-rank').value='1';
@@ -464,7 +465,7 @@
     $('fire-touch').hidden = !manual; $('stress-controls').hidden = !game.stressMode || game.sandboxMode;
     text('hero-label', game.character.name.toUpperCase() + ' / ЖИЗНЬ');
     text('fps', status === 'running' && displayFPS ? displayFPS + ' FPS / AUTO' : 'РЕНДЕР / AUTO');
-    text('hp-text', game.stressMode ? 'НЕУЯЗВИМОСТЬ' : Math.ceil(p.hp) + ' / ' + p.maxHp);
+    text('hp-text', (game.sandboxMode ? game.sandboxInvulnerable : game.stressMode) ? 'НЕУЯЗВИМОСТЬ' : Math.ceil(p.hp) + ' / ' + p.maxHp);
     $('hp-bar').style.width = (p.hp / p.maxHp * 100) + '%';
     $('xp-bar').style.width = Math.min(100, game.xp / game.xpNeed * 100) + '%';
     text('xp-text', 'ОПЫТ ' + game.xp + ' / ' + game.xpNeed + ' · КРИСТАЛЛЫ ' + Math.round(game.xpEfficiency * 100) + '%');
@@ -529,7 +530,7 @@
         saveBest(); const won = status === 'won';
         text('ending-title', won ? 'Ты встретил рассвет' : 'Ночь победила');
         text('ending-caption', won ? 'СОЛНЦЕ ВЗОШЛО НАД КЛАДБИЩЕМ' : 'КЛАДБИЩЕ ПОЛУЧИЛО ЕЩЁ ОДНУ ДУШУ');
-        text('ending-text', 'Сохранено ' + game.goldAvailable + ' золота. На рероллы потрачено ' + game.rerollGoldSpent + '. Постоянные улучшения ждут в «Наследии» на стартовом экране.');
+        text('ending-text', game.sandboxMode ? 'Тест окончен. Обычный забег, золото и покупки не изменились.' : 'Сохранено ' + game.goldAvailable + ' золота. На рероллы потрачено ' + game.rerollGoldSpent + '. Постоянные улучшения ждут в «Наследии» на стартовом экране.');
         text('ending-art', won ? ' \\ | /\n-- * --\n / | \\' : ' .-.\n(x x)\n |=|\n_|_|_');
         text('result-time', formatTime(game.elapsed)); text('result-kills', game.kills); text('result-level', game.level);
         $('restart').focus({ preventScroll: true });
@@ -550,7 +551,7 @@
     game.start(); canvas.focus({ preventScroll: true }); updateHUD();
     preferences(); saveCheckpoint();
     if (game.stressMode && !game.sandboxMode) { $('engine-panel').hidden = false; $('metrics-toggle').setAttribute('aria-expanded', 'true'); }
-    notify(game.sandboxMode?'ПЕСОЧНИЦА: меняй героя, оружие и цели кнопкой сверху.':game.stressMode?'ТЕСТ: весь арсенал, неуязвимость, нарастающая нагрузка.':'Бесконечная арена · M — авто / ручной огонь.');
+    notify(game.sandboxMode?'ПЕСОЧНИЦА: '+(game.sandboxInvulnerable?'НЕУЯЗВИМОСТЬ ВКЛЮЧЕНА. ':'УРОН ГЕРОЮ ВКЛЮЧЁН. ')+'Настройки — кнопкой сверху.':game.stressMode?'ТЕСТ: весь арсенал, неуязвимость, нарастающая нагрузка.':'Бесконечная арена · M — авто / ручной огонь.');
   }
   function restart() {
     saveBest();
@@ -627,7 +628,7 @@
   $('enemy-limit').addEventListener('change', configureRun);$('stage-select').addEventListener('change',()=>configureRun());
   $('sandbox-open').addEventListener('click',openSandbox);$('sandbox-open-live').addEventListener('click',openSandbox);
   $('sandbox-close').addEventListener('click',()=>$('sandbox-settings').close());
-  for(const id of ['sandbox-enemy','sandbox-passive','sandbox-weapon','sandbox-hero','sandbox-evolved'])$(id).addEventListener('change',updateSandboxPreview);
+  for(const id of ['sandbox-enemy','sandbox-passive','sandbox-weapon','sandbox-hero','sandbox-evolved','sandbox-arena'])$(id).addEventListener('change',updateSandboxPreview);
   $('sandbox-apply').addEventListener('click',()=>{
     if(!game.sandboxMode)return;
     sandboxWasRunning=false;selectedCharacter=$('sandbox-hero').value;$('sandbox-settings').close();
@@ -739,7 +740,7 @@
       const room = game.encounter?.phase === 'locked' ? game.encounter : null;
       camera.x += ((room ? room.x : p.prevX + (p.x - p.prevX) * alpha) - camera.x) * factor;
       camera.y += ((room ? room.y : p.prevY + (p.y - p.prevY) * alpha) - camera.y) * factor;
-      if (game.wave !== lastWave) { lastWave = game.wave; notify('ВОЛНА ' + game.wave + ' — НЕ ОСТАНАВЛИВАЙСЯ'); }
+      if (game.wave !== lastWave) { lastWave = game.wave; if(!game.sandboxMode)notify('ВОЛНА ' + game.wave + ' — НЕ ОСТАНАВЛИВАЙСЯ'); }
     } else accumulator = 0;
     simulationMS += (performance.now() - simulationStart - simulationMS) * .1;
     if (game.events.includes('boss')) notify('БОСС: ' + game.lastBoss.toUpperCase());

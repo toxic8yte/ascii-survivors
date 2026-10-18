@@ -121,6 +121,7 @@
         const recipe=EVOLUTION_BY_WEAPON[this.selectedWeapon] || EVOLUTIONS.find(r=>r.weapons?.includes(this.selectedWeapon));
         if(config.evolved&&recipe){for(const id of [recipe.weapon,...(recipe.weapons||[])])this.levels[id]=UPGRADES.find(u=>u.id===id).max;for(const [id,rank]of Object.entries(recipe.passives))while(this.levels[id]<rank)this.applyUpgrade(UPGRADES.find(u=>u.id===id));this.evolve(recipe);}
         this.sandboxEnemy=Object.hasOwn(ENEMIES,config.enemy)?config.enemy:'dummy';this.sandboxCount=clamp(Math.floor(Number(config.count)||1),1,20);this.sandboxClock=0;
+        this.sandboxInvulnerable = config.invulnerable === true; this.sandboxArena = config.arena !== false;
         this.treasures=[];
       }
     }
@@ -141,10 +142,17 @@
     }
     spawnSandboxTargets() {
       if(!this.sandboxMode)return;
-      for(let i=0;i<this.sandboxCount;i++){
+      const ring = this.sandboxArena && ENEMIES[this.sandboxEnemy]?.boss;
+      if (ring) { this.player.x=this.player.prevX=clamp(this.player.x,this.arenaRadius+90,this.width-this.arenaRadius-90); this.player.y=this.player.prevY=clamp(this.player.y,this.arenaRadius+90,this.height-this.arenaRadius-90); }
+      for(let i=0;i<(ring?1:this.sandboxCount);i++){
         const angle=this.sandboxCount===1?0:i*TAU/this.sandboxCount, distance=this.sandboxCount===1?150:180;
         const e=this.spawn(this.sandboxEnemy==='dummy'?'ghoul':this.sandboxEnemy,this.player.x+Math.cos(angle)*distance,this.player.y+Math.sin(angle)*distance);
         if(this.sandboxEnemy==='dummy')Object.assign(e,{title:'Манекен',sprite:' ._.\n[+|+]\n / \\',frames:undefined,trainingDummy:true,hp:10000,maxHp:10000,speed:0,damage:0,skill:undefined,xp:0,ink:9,knockbackResistance:1});
+        if (ring) {
+          this.encounter = { phase:'locked', x:this.player.x, y:this.player.y, radius:this.arenaRadius, warningLeft:0, lockedLeft:BALANCE.arenaSeconds, bossId:e.id, kind:e.kind };
+          e.arenaMember=1; this.resolveArena(e); e.prevX=e.x;e.prevY=e.y;
+          this.player.invulnerable=1; this.lastBoss=e.title; this.events.push('boss');
+        }
       }
       this.buildGrid();
     }
@@ -204,7 +212,7 @@
       this.drawOffers(this.rerollCandidates()); this.rerollsUsed++; return true;
     }
     get weaponPages() { return Math.max(1, Math.ceil(this.inventory(true).length / 5)); }
-    get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode,this.map,this.elapsed); }
+    get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode,this.map,this.elapsed,this.seed); }
     isEvolved(id) { return this.evolutions.has(EVOLUTION_BY_WEAPON[id]?.id); }
     isConsumed(id) { return EVOLUTIONS.some(e => this.evolutions.has(e.id) && e.weapons?.includes(id)); }
     weaponInfo(id) { return this.isEvolved(id) ? EVOLUTION_BY_WEAPON[id] : UPGRADES.find(u => u.id === id); }
@@ -428,17 +436,19 @@
     spawnWave() {
       const plan = this.wavePlan, kind = this.stressMode ? EnemySystem.weighted(plan.entries, () => this.random()) : null;
       const count = Math.min(this.stressMode ? 128 : plan.group, this.stressMode ? 2 + Math.floor(this.waveAge / 45) : Math.max(0, plan.target - this.enemies.length), this.enemyLimit - this.enemies.length - (this.encounter?.phase === 'warning' ? 1 : 0));
-      const counts = { ranged: 0, special: 0, elite: 0 };
+      const counts = { ranged: 0, charge: 0, special: 0, elite: 0 };
       if (!this.stressMode) for (const e of this.enemies) if (e.alive && !e.boss) {
         if (e.ai === 'ranged') counts.ranged++;
+        if (e.ai === 'charge') counts.charge++;
         if (EnemySystem.roleOf(e) === 'special') counts.special++;
         if (e.rank === 'elite') counts.elite++;
       }
       for (let i = 0; i < count; i++) {
-        const candidates = this.stressMode ? plan.entries : plan.entries.filter(row => (!row.ranged || counts.ranged < plan.quotas.ranged) && (row.role !== 'special' || counts.special < plan.quotas.special) && (!row.elite || counts.elite < plan.quotas.elite));
+        const candidates = this.stressMode ? plan.entries : plan.entries.filter(row => (!row.ranged || counts.ranged < plan.quotas.ranged) && (!row.charge || counts.charge < plan.quotas.charge) && (row.role !== 'special' || counts.special < plan.quotas.special) && (!row.elite || counts.elite < plan.quotas.elite));
         if (!candidates.length) break;
         const enemy = this.spawn(this.stressMode ? kind : EnemySystem.weighted(candidates, () => this.random()));
         if (enemy.ai === 'ranged') counts.ranged++;
+        if (enemy.ai === 'charge') counts.charge++;
         if (EnemySystem.roleOf(enemy) === 'special') counts.special++;
         if (enemy.rank === 'elite') counts.elite++;
       }
@@ -506,7 +516,7 @@
       }
       if (e.hp > 0) return;
       e.alive = false; this.holyMarks.delete(e.id); this.waterHits.delete(e.id); this.burnMarks.delete(e.id); this.kills++;
-      if(this.sandboxMode){this.burst(e.x,e.y,e.ink,8,weapon);return;}
+      if(this.sandboxMode){if(this.encounter?.bossId===e.id)this.releaseArena('sandbox-clear');this.burst(e.x,e.y,e.ink,8,weapon);return;}
       if (this.kills % 5 === 0) this.awardGold(1);
       if (e.boss) this.bossKills++;
       if (e.boss) {
@@ -526,7 +536,7 @@
     }
     hurtPlayer(damage, source) {
       const p = this.player;
-      if (this.stressMode || p.invulnerable > 0 || this.status !== 'running') return;
+      if (damage <= 0 || (this.sandboxMode ? this.sandboxInvulnerable : this.stressMode) || p.invulnerable > 0 || this.status !== 'running') return;
       if (this.isEvolved('laurel')) damage = Math.min(10, damage);
       if (this.shieldCharges > 0 && this.shieldUntil > this.time) {
         this.shieldCharges--; p.invulnerable = .4; this.events.push('shield');
@@ -986,7 +996,7 @@
         this.resolveTerrain(e); this.resolveArena(e); e.prevX = e.x; e.prevY = e.y;
         this.burst(e.x, e.y, e.ink, 10);
       } else if (e.ai === 'charge') {
-        e.chargeTime = e.roster ? e.movement.chargeDuration : e.boss ? .65 : .45;
+        e.chargeTime = EnemySystem.chargeAttack(e).duration;
         if (e.kind === 'alienQueen') this.queueSummons(e, 'alien', 2);
       }
     }
@@ -1011,10 +1021,10 @@
         speed = 0; e.windup = Math.max(0, e.windup - dt);
         if (e.windup === 0) this.enemySkill(e);
       } else if (e.chargeTime > 0) {
-        e.chargeTime = Math.max(0, e.chargeTime - dt); vx = e.chargeX; vy = e.chargeY; speed = (e.boss ? 380 : 340) * slow;
+        e.chargeTime = Math.max(0, e.chargeTime - dt); vx = e.chargeX; vy = e.chargeY; speed = EnemySystem.chargeAttack(e).speed * slow;
         if (e.roster && e.chargeTime === 0) e.skillClock = e.movement.recoveryDuration + e.movement.trackingDuration;
       } else if (e.skill && e.skillClock <= 0 && d < (e.ai === 'charge' ? 620 : 850)) {
-        e.skillClock = this.isFirstBoss(e) ? BALANCE.firstBossSkill : e.skill; e.windup = e.roster ? e.movement.windupDuration : e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
+        e.skillClock = this.isFirstBoss(e) ? BALANCE.firstBossSkill : e.skill; e.windup = e.ai === 'charge' ? EnemySystem.chargeAttack(e).windup : e.roster ? e.movement.windupDuration : e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
         e.chargeX = ex / d; e.chargeY = ey / d;
         const angle = this.random() * TAU;
         e.targetX = clamp(p.x + Math.cos(angle) * 150, 28, this.width - 28);
@@ -1070,9 +1080,11 @@
       if (!this.encounter && megaAge >= rosterAt && !this.enemies.some(e => e.alive && e.boss) && this.enemies.length < this.enemyLimit) {
         const boss = this.spawn(rosterBoss); this.rosterBossIndex++; this.lastBoss = boss.title; this.events.push(boss.mega ? 'mega-boss' : 'boss');
       }
-      } else if(!this.enemies.some(e=>e.alive)) {
-        this.sandboxClock+=dt;if(this.sandboxClock>=1){this.spawnSandboxTargets();this.sandboxClock=0;}
-      } else this.sandboxClock=0;
+      } else {
+        this.updateEncounter(dt);
+        if(!this.enemies.some(e=>e.alive)){this.sandboxClock+=dt;if(this.sandboxClock>=1){this.spawnSandboxTargets();this.sandboxClock=0;}}
+        else this.sandboxClock=0;
+      }
       this.peakEnemies = Math.max(this.peakEnemies, this.enemies.length);
       for (const e of this.enemies) if (e.alive) {
         e.prevX = e.x; e.prevY = e.y;
@@ -1115,7 +1127,7 @@
         }
       }
       this.updateWeapons(dt);
-      for (const e of this.enemies) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < p.radius + e.radius) this.hurtPlayer(e.damage, e);
+      for (const e of this.enemies) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < p.radius + e.radius) this.hurtPlayer(e.damage * (e.chargeTime > 0 ? 1.35 : 1), e);
       this.enemies = this.enemies.filter(e => e.alive);
 
       for (const gem of this.gems) {

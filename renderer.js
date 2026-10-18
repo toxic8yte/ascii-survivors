@@ -204,7 +204,14 @@
         if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - top - 12, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
         if (e.windup > 0) {
           this.world(p.x, p.y - top - 26, '!', 7);
-          if (e.ai === 'charge') this.line(p, { x: p.x + e.chargeX * 180, y: p.y + e.chargeY * 180 }, 6, ':');
+          if (e.ai === 'charge') {
+            const attack = root.NightEnemySystem.chargeAttack(e), distance = attack.speed * attack.duration * (e.chilledTill > game.time ? .4 : 1), half = e.radius + game.player.radius;
+            for (const offset of [-half,0,half]) {
+              const start = {x:p.x-e.chargeY*offset,y:p.y+e.chargeX*offset};
+              this.line(start,{x:start.x+e.chargeX*distance,y:start.y+e.chargeY*distance},12,offset?':':'=');
+            }
+            this.world(p.x+e.chargeX*distance,p.y+e.chargeY*distance,Math.abs(e.chargeX)>Math.abs(e.chargeY)?e.chargeX>0?'>>':'<<':e.chargeY>0?'vv':'^^',12);
+          }
         }
       }
       for (const { p, sprite, ink } of megaBodies) {

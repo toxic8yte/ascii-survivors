@@ -55,6 +55,8 @@ jobs:
           node verify-supplies.cjs
           node --check verify-sandbox.cjs
           node verify-sandbox.cjs
+          node --check verify-threats.cjs
+          node verify-threats.cjs
           node --check verify-forest.cjs
           node verify-forest.cjs
           node verify-director.cjs
