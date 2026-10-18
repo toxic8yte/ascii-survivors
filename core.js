@@ -100,7 +100,7 @@
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
       this.slashes = []; this.gemBins = new Map(); this.cellPool = [];
-      this.offers = []; this.offerSelection = -1; this.banished = new Set(); this.banishesLeft = 3; this.skipsLeft = 3;
+      this.offers = []; this.offerSelection = -1; this.banished = new Set(); this.banishesLeft = 3; this.skipsLeft = 3; this.rerollsUsed = 0;
       this.shootClock = .15; this.spawnClock = .35; this.pulseClock = 1.2;
       this.spawnRadius = 650; this.bossSpawned = false; this.damageFlash = 0; this.events = [];
       this.grid = new Map();
@@ -179,15 +179,20 @@
     }
     drawOffers(candidates = UPGRADES.filter(u => this.canUpgrade(u))) {
       const pool = [...candidates], offers = [];
-      while (offers.length < 3 && pool.length) {
-        const u = this.pickUpgrade(pool); offers.push(u); pool.splice(pool.indexOf(u), 1);
-      }
-      // Keep the first level useful without making its guaranteed weapon uniform.
-      if (this.level === 2 && !offers.some(u => u.weapon && !this.levels[u.id])) {
-        const fresh = this.pickUpgrade(candidates.filter(u => u.weapon && !this.levels[u.id]));
-        if (fresh) offers[Math.min(2, offers.length)] = fresh;
-      }
+      const take = choices => { const u = this.pickUpgrade(choices); if (u) { offers.push(u); pool.splice(pool.indexOf(u), 1); } };
+      // Reserve a discovery slot while the build still has room for new weapons.
+      take(pool.filter(u => u.weapon && !this.levels[u.id]));
+      while (offers.filter(u => u.weapon).length < 2 && pool.some(u => u.weapon)) take(pool.filter(u => u.weapon));
+      take(pool.filter(u => !u.weapon));
+      while (offers.length < 3 && pool.length) take(pool);
       this.offers = offers; this.offerSelection = -1;
+    }
+    get rerollCost() { return 5 * (this.rerollsUsed + 1); }
+    rerollCandidates() { return UPGRADES.filter(u => this.canUpgrade(u) && !this.offers.includes(u)); }
+    get canReroll() { return this.status === 'upgrading' && this.rerollsUsed < 1000000 && this.offers.length > 0 && this.rerollCandidates().length >= this.offers.length; }
+    rerollOffers() {
+      if (!this.canReroll) return false;
+      this.drawOffers(this.rerollCandidates()); this.rerollsUsed++; return true;
     }
     get weaponPages() { return Math.max(1, Math.ceil(this.inventory(true).length / 5)); }
     get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode,this.map,this.elapsed); }
@@ -573,7 +578,9 @@
     banishOffer(index = this.offerSelection) {
       if (this.status !== 'upgrading' || !Number.isInteger(index) || !this.offers[index] || !this.banishesLeft) return false;
       const u = this.offers[index]; this.banished.add(u.id); this.banishesLeft--;
-      const replacement = this.pickUpgrade(UPGRADES.filter(candidate => this.canUpgrade(candidate) && !this.offers.includes(candidate)));
+      const candidates = UPGRADES.filter(candidate => this.canUpgrade(candidate) && !this.offers.includes(candidate));
+      const sameType = candidates.filter(candidate => Boolean(candidate.weapon) === Boolean(u.weapon));
+      const replacement = this.pickUpgrade(sameType.length ? sameType : candidates);
       if (replacement) this.offers[index] = replacement; else this.offers.splice(index, 1);
       this.offerSelection = -1;
       if (!this.offers.length) this.finishUpgrade();

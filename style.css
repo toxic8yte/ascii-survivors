@@ -135,6 +135,7 @@ h2 span { display: inline-block; padding: 6px 11px; margin-left: 14px; border: 1
 .upgrade-actions > button:hover:enabled, .upgrade-actions > button:focus-visible { background: #344233; outline: 2px solid #e8d7b7; outline-offset: 2px; }
 #upgrade-confirm { background: #d5573f; border-color: #ff8e71; color: #1b100c; font-weight: bold; }
 #upgrade-selection { min-height: 18px; margin: 18px 0; color: #d8d3bc; }
+#upgrade-wallet { margin: 0 0 8px; font-size: 10px; color: #e4bf75; }
 #upgrade .overlay-hint { line-height: 1.8; margin-top: 17px; }
 #upgrade:focus { outline: none; }
 #upgrade { position: fixed; inset: 12px; width: calc(100% - 24px); height: calc(100dvh - 24px); max-width: none; max-height: none; margin: 0; padding: 24px; overflow: hidden; border: 1px solid #46503c; background: #101710f5; color: #d6cec0; }

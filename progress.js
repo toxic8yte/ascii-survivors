@@ -29,7 +29,7 @@
     if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return null;
     const save = {
       version: 10, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
-      banished: [...game.banished], banishesLeft: game.banishesLeft, skipsLeft: game.skipsLeft, offerSelection: game.offerSelection,
+      banished: [...game.banished], banishesLeft: game.banishesLeft, skipsLeft: game.skipsLeft, offerSelection: game.offerSelection, rerollsUsed: game.rerollsUsed,
       weaponOrder: game.inventory(true), passiveOrder: game.inventory(false), legacyInventory: game.legacyInventory || game.inventory(true).length > 5 || game.inventory(false).length > 5,
       treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       leechBudget: game.leechBudget,
@@ -66,9 +66,11 @@
       if (!plain(save) || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(save.version) || typeof save.runId !== 'string' || save.runId.length > 120 || !save.runId || ['__proto__', 'constructor', 'prototype'].includes(save.runId)) return null;
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
+      if (save.rerollsUsed !== undefined && (!uint(save.rerollsUsed) || save.rerollsUsed > 1000000)) return null;
       if (save.version >= 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
       if(save.mapId!==undefined&&!NightCatalog.stages.some(s=>s.id===save.mapId))return null;
       const game = new NightGame(save.seed, save.characterId, { map:save.mapId||'graveyard',enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version >= 3 ? save.meta : {} });
+      game.rerollsUsed = save.rerollsUsed || 0;
       if (save.version >= 10) {
         const banned = list(save.banished, 3);
         if (banned.some(id => !NightUpgrades.some(u => u.id === id)) || new Set(banned).size !== banned.length || !uint(save.banishesLeft) || save.banishesLeft !== 3 - banned.length || !uint(save.skipsLeft) || save.skipsLeft > 3 || !Number.isInteger(save.offerSelection) || save.offerSelection < -1 || save.offerSelection > 2) return null;
@@ -279,7 +281,7 @@
       const legacyHeroes = [previous, this.read(RUN_KEY)?.characterId].filter(known);
       const heroes = { version: 1, unlocked: [...new Set(['hunter', ...(source.heroes?.version === 1 && Array.isArray(source.heroes.unlocked) ? source.heroes.unlocked.filter(known) : legacyHeroes)])] };
       return {
-        version: 2, meta, heroes, unlocks: [...new Set(Array.isArray(source.unlocks) ? source.unlocks.filter(id => NightCatalog.features.some(f => f.id === id)) : [])], runs: count(source.runs), kills: count(source.kills), bossKills: count(source.bossKills), chestsOpened: count(source.chestsOpened),
+        version: 2, meta, heroes, reroll: this.rerollReceipt(source.reroll), unlocks: [...new Set(Array.isArray(source.unlocks) ? source.unlocks.filter(id => NightCatalog.features.some(f => f.id === id)) : [])], runs: count(source.runs), kills: count(source.kills), bossKills: count(source.bossKills), chestsOpened: count(source.chestsOpened),
         seconds,
         maxLevel: count(source.maxLevel), best: best && Number.isFinite(best.time) && best.time >= 0 ? { time: best.time, kills: count(best.kills) } : null,
         character: heroes.unlocked.includes(previous) ? previous : 'hunter',
@@ -333,7 +335,30 @@
       if (written && this.write(PROFILE_KEY, p)) this.profile = p;
       return written;
     }
-    loadRun() { return restore(this.read(RUN_KEY)); }
+    rerollReceipt(receipt) {
+      return plain(receipt) && typeof receipt.runId === 'string' && receipt.runId.length > 0 && receipt.runId.length <= 120 && uint(receipt.level) && receipt.level >= 2 && uint(receipt.count) && receipt.count > 0 && receipt.count <= 1000000 && uint(receipt.randomState) && receipt.randomState <= 0xffffffff && Array.isArray(receipt.offers) && receipt.offers.length > 0 && receipt.offers.length <= 3 && new Set(receipt.offers).size === receipt.offers.length && receipt.offers.every(id => NightUpgrades.some(u => u.id === id)) ? receipt : null;
+    }
+    reroll(game) {
+      if (game.stressMode || !game.canReroll || game.rerollsUsed >= 1000000) return false;
+      const p = this.loadProfile(); this.bank(game, p);
+      if (p.meta.gold < game.rerollCost || !this.checkpoint(game)) return false;
+      const previous = { offers: game.offers, offerSelection: game.offerSelection, randomState: game.randomState, rerollsUsed: game.rerollsUsed };
+      const cost = game.rerollCost;
+      if (!game.rerollOffers()) return false;
+      p.meta.gold -= cost;
+      // Save the paid cards with the debit so an interrupted checkpoint cannot lose a purchase.
+      p.reroll = { runId: game.runId, level: game.level, count: game.rerollsUsed, randomState: game.randomState >>> 0, offers: game.offers.map(u => u.id) };
+      if (!this.write(PROFILE_KEY, p)) { Object.assign(game, previous); return false; }
+      this.profile = p; this.checkpoint(game); return true;
+    }
+    loadRun() {
+      const save = this.read(RUN_KEY), receipt = this.loadProfile().reroll;
+      if (save && receipt?.runId === save.runId && receipt.count > (save.rerollsUsed || 0)) {
+        if (save.status !== 'upgrading' || save.level !== receipt.level) return null;
+        Object.assign(save, { offers: receipt.offers, randomState: receipt.randomState, rerollsUsed: receipt.count, offerSelection: -1 });
+      }
+      return restore(save);
+    }
     clearRun(runId) {
       try { if (this.read(RUN_KEY)?.runId === runId) this.storage?.removeItem(RUN_KEY); } catch (_) {}
     }

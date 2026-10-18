@@ -49,6 +49,8 @@ jobs:
           node verify-sheet-edits.cjs
           node --check verify-upgrades.cjs
           node verify-upgrades.cjs
+          node --check verify-reroll.cjs
+          node verify-reroll.cjs
           node --check verify-sandbox.cjs
           node verify-sandbox.cjs
           node --check verify-forest.cjs

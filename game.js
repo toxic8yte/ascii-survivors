@@ -396,9 +396,11 @@
     const selected = game.offers[game.offerSelection];
     $('upgrade-confirm').disabled = !selected;
     $('upgrade-banish').disabled = !selected || !game.banishesLeft;
-    $('upgrade-skip').disabled = !game.skipsLeft;
+    const wallet = progress.profile.meta.gold + Math.max(0, game.goldEarned - (progress.profile.meta.credited[game.runId] || 0));
+    $('upgrade-reroll').disabled = !game.canReroll || wallet < game.rerollCost;
     text('upgrade-banish', 'ИЗГНАТЬ · ' + game.banishesLeft);
-    text('upgrade-skip', 'ПРОПУСТИТЬ · ' + game.skipsLeft);
+    text('upgrade-reroll', 'РЕРОЛЛ · ' + game.rerollCost + ' ЗОЛ.');
+    text('upgrade-wallet', 'КОШЕЛЁК НАСЛЕДИЯ: ' + wallet + ' ЗОЛ.' + (!game.canReroll ? ' · Нет полного набора новых вариантов' : wallet < game.rerollCost ? ' · Не хватает золота на реролл' : ''));
     text('upgrade-selection', selected ? 'ВЫДЕЛЕНО: ' + selected.title : 'Сначала выдели карточку.');
   }
   function selectOffer(index) {
@@ -659,7 +661,10 @@
   $('upgrade-confirm').addEventListener('click', () => choose(game.offerSelection));
   $('upgrade').addEventListener('cancel', e => e.preventDefault());
   $('upgrade-banish').addEventListener('click', () => changeOffer(() => game.banishOffer()));
-  $('upgrade-skip').addEventListener('click', () => changeOffer(() => game.skipUpgrade()));
+  $('upgrade-reroll').addEventListener('click', () => changeOffer(() => {
+    if (progress.reroll(game)) return true;
+    updateOfferSelection(); text('upgrade-wallet', 'Реролл не оплачен. Проверь золото и доступность сохранения.'); return false;
+  }));
   document.addEventListener('keydown', e => {
     if (e.code === 'Escape') hideEquipmentTooltip();
     if ($('bestiary').open || $('meta-shop').open || $('grimoire').open || $('world-map').open || $('sandbox-settings').open) return;
