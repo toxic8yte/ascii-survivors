@@ -22,7 +22,7 @@ assert.equal(cage.encounter.phase, 'warning'); assert.equal(cage.enemies.length,
 const warning = cage.encounter.warningLeft; cage.pause(); tick(cage, 2); assert.equal(cage.encounter.warningLeft, warning); cage.pause();
 tick(cage, 4.5); assert.equal(cage.encounter.phase, 'warning'); tick(cage, .6);
 const arena = cage.encounter, boss = cage.enemies.find(e => e.id === arena.bossId);
-assert.equal(arena.phase,'locked');assert.ok(boss.maxHp>=NightEnemies[boss.kind].hp*NightBalance.firstBossHealth&&boss.maxHp<NightEnemies[boss.kind].hp*.3);
+assert.equal(arena.phase,'locked');assert.equal(boss.maxHp,1500);
 assert.equal(boss.damage,NightEnemies[boss.kind].damage*NightBalance.firstBossDamage);
 for (const b of cage.visibleObstacles(arena.x - arena.radius, arena.y - arena.radius, arena.x + arena.radius, arena.y + arena.radius)) assert.ok(Math.hypot(b.x - arena.x, b.y - arena.y) > arena.radius);
 cage.input.x = 1; tick(cage, 3); cage.dash(); tick(cage, .3);
@@ -116,15 +116,26 @@ const brokenTimer = clone(NightSave.capture(migratedCage)); brokenTimer.encounte
 const {firstBossTrial}=require('./audit-weapons.cjs');
 for(const hero of ['hunter','ripley','ark','plague'])for(const seed of [811,427]) {
   const trial=firstBossTrial(hero,seed,true);
-  assert.ok(trial.bossKilled&&trial.playerHP>0,hero+' defeats first boss with normal health, ordinary waves and no Legacy');
-  assert.ok(trial.seconds<30);assert.ok(trial.damageReceived>0,'Survival trial does not suppress enemy damage');
+  assert.equal(trial.bossHP,1900,'First boss at hero level 3 has 1500 + 2 × 200 HP');
+  assert.ok(trial.bossRemainingHP<trial.bossHP,hero+' can damage the boss with an early build');
+  assert.ok(trial.damageReceived>0,'Survival trial does not suppress enemy damage');
+  if(hero==='ripley')assert.ok(trial.bossKilled&&trial.playerHP>0,'First boss remains beatable with ordinary HP and no Legacy');
 }
 const later=fixture({terrain:false});later.bossIndex=1;later.nextBossAt=0;tick(later,5.1);const laterBoss=later.enemies.find(e=>e.boss);
-assert.ok(laterBoss.maxHp>NightEnemies.british.hp*NightBalance.arenaBossHealth);assert.equal(laterBoss.damage,NightEnemies.british.damage*NightBalance.arenaBossDamage,'Later bosses retain full difficulty');
+assert.equal(laterBoss.maxHp,3200);assert.equal(laterBoss.damage,NightEnemies.british.damage*NightBalance.arenaBossDamage,'Health tuning retains boss damage');
+for(const [index,base] of [[1,1500],[2,3200],[3,4200],[4,5200],[7,8200]])for(const level of [1,3,10]) {
+  const scheduled=fixture({terrain:false});scheduled.bossIndex=index-1;scheduled.level=level;scheduled.time=900;scheduled.nextBossAt=0;scheduled.nextMegaAt=1e8;scheduled.rosterBossIndex=1e6;tick(scheduled,5.1);
+  const b=scheduled.enemies.find(e=>e.boss);assert.equal(b.maxHp,base+(level-1)*200,'Boss HP follows its encounter number and hero level, without a hidden time multiplier');
+}
 const prior=clone(NightSave.capture(focus));prior.arenaBalance=2;const priorBoss=prior.enemies.find(row=>row[1]===focusBoss.id);
 priorBoss[hpColumn]*=NightBalance.arenaBossHealth/NightBalance.firstBossHealth;priorBoss[hpColumn+1]*=NightBalance.arenaBossHealth/NightBalance.firstBossHealth;priorBoss[hpColumn+2]*=NightBalance.arenaBossDamage/NightBalance.firstBossDamage;
 const adjusted=NightSave.restore(prior);assert.ok(adjusted);assert.ok(Math.abs(adjusted.enemies.find(e=>e.id===focusBoss.id).hp-focusBoss.hp)<1e-8,'Existing first boss health is adjusted proportionally');
 focus.releaseArena('arena-timeout');const oldOutside=clone(NightSave.capture(focus));delete oldOutside.arenaBalance;
 const outsideRow=oldOutside.enemies.find(row=>row[1]===focusBoss.id);outsideRow[hpColumn]*=2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth;outsideRow[hpColumn+1]*=2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth;outsideRow[hpColumn+2]/=NightBalance.firstBossDamage;
 const resumedOutside=NightSave.restore(oldOutside);assert.ok(resumedOutside);assert.ok(Math.abs(resumedOutside.enemies.find(e=>e.id===focusBoss.id).hp-focusBoss.hp)<1e-8,'Old first bosses are adjusted even after the wall has opened');
+const v3=clone(NightSave.capture(focus));v3.arenaBalance=3;const v3Boss=v3.enemies.find(row=>row[1]===focusBoss.id);v3Boss[hpColumn]=309;v3Boss[hpColumn+1]=618;
+const rescaled=NightSave.restore(v3);assert.ok(rescaled);assert.equal(rescaled.enemies.find(e=>e.id===focusBoss.id).maxHp,1500);assert.equal(rescaled.enemies.find(e=>e.id===focusBoss.id).hp,750,'Old fight retains its remaining health percentage');
+rescaled.level=8;const reloaded=NightSave.restore(clone(NightSave.capture(rescaled)));assert.ok(reloaded);assert.equal(reloaded.enemies.find(e=>e.id===focusBoss.id).maxHp,1500,'Level-ups and repeated loading do not heal or scale an already spawned boss');
+const oldSecond=clone(NightSave.capture(later));oldSecond.arenaBalance=3;const secondRow=oldSecond.enemies.find(row=>row[1]===laterBoss.id);secondRow[hpColumn]=2500;secondRow[hpColumn+1]=5000;
+const resumedSecond=NightSave.restore(oldSecond);assert.ok(resumedSecond);assert.equal(resumedSecond.enemies.find(e=>e.id===laterBoss.id).maxHp,3200);assert.equal(resumedSecond.enemies.find(e=>e.id===laterBoss.id).hp,1600,'The existing second boss also receives the new health curve');
 console.log('PASS: terrain, wall warning/timeout and kill release, targeting, intro boss combat with real HP and waves, later bosses retained, chest rewards and one-time save migration.');

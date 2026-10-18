@@ -18,6 +18,12 @@ assert.ok(counts.common>counts.legendary*12);
 const legendary=item('gauss'), before=lottery.upgradeWeight(legendary); lottery.levels.luck=5;
 assert.ok(lottery.upgradeWeight(legendary)>before);assert.ok(lottery.upgradeWeight(legendary)<lottery.upgradeWeight(item('pistol')),'Luck improves rarity without reversing the tier order');
 assert.equal(NightMeta.some(u=>u.id==='luck'),false,'Luck is currently an in-run passive, not a Legacy purchase');
+const catalysts=['silverRing','goldRing','leftSign','rightSign'];
+for(const u of NightUpgrades.filter(u=>!u.weapon))assert.equal(lottery.upgradeWeight(u),catalysts.includes(u.id)?25:100,'Only the four evolution catalysts have reduced offer weights');
+const rare=item('silverRing'),ordinary=item('power');let rarePicks=0;
+for(let i=0;i<20000;i++)if(lottery.pickUpgrade([rare,ordinary])===rare)rarePicks++;
+assert.ok(rarePicks>3600&&rarePicks<4400,'Rare catalyst has one-quarter the weight of an ordinary passive');
+for(const invalid of [0,-1,101,'25',NaN]){const data=readContent();data.passives[0].offerWeight=invalid;assert.throws(()=>validateContent(data,require('./data/enemies.json')),/offer weight/);}
 for(let seed=1;seed<=300;seed++) {
   const g=fixture(seed);g.grantXP(6);assert.equal(g.offers.length,3);assert.equal(new Set(g.offers).size,3);
   assert.ok(g.offers.some(u=>u.weapon&&!g.levels[u.id]));assert.equal(g.offerSelection,-1);

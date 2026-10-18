@@ -40,7 +40,7 @@
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
       offers: game.offers.map(u => u.id), encountered: Array.from(game.encountered),
-      terrainEnabled: game.terrainEnabled, arenaBalance: 3, encounter: game.encounter ? { ...game.encounter } : null,
+      terrainEnabled: game.terrainEnabled, arenaBalance: 4, encounter: game.encounter ? { ...game.encounter } : null,
       chests: game.chests.map(chest => ({ ...chest })), reward: game.reward ? { ...game.reward, items: game.reward.items.map(item => ({ ...item })), ...(game.reward.options ? { options: game.reward.options.map(option => ({ ...option })) } : {}) } : null,
       enemies: game.enemies.filter(e => e.alive).map(e => [e.kind, ...enemyKeys.map(key => e[key])]),
       gems: game.gems.map(g => ({ x: g.x, y: g.y, value: g.value, bin: g.bin, magnetized: Boolean(g.magnetized) }))
@@ -167,6 +167,9 @@
           boss.damage *= NightBalance.firstBossDamage/NightBalance.arenaBossDamage; boss.skillClock=Math.max(2,boss.skillClock);
           let minions=0;
           for (const enemy of game.enemies) if (enemy.arenaMember && !enemy.boss && ++minions>NightBalance.firstBossMinions) {enemy.arenaMember=0;game.resolveArena(enemy);enemy.prevX=enemy.x;enemy.prevY=enemy.y;}
+        }
+        if (!(save.arenaBalance>=4)) for (const boss of game.enemies) if (game.isEncounterBoss(boss)) {
+          const fraction=boss.hp/boss.maxHp;boss.maxHp=game.encounterBossHealth(game.bossIndex);boss.hp=boss.maxHp*fraction;
         }
         game.chests = list(save.chests, 64).map(c => {
           if (!Object.hasOwn(NightEnemies, c.source) || !NightEnemies[c.source].boss || !uint(c.id) || c.id < 1 || c.id >= game.nextChestId) throw new Error('Invalid chest');

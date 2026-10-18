@@ -31,6 +31,7 @@ function validateContent(data, roster = []) {
     icons.add(row.icon);
     if (row.weapon && !['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(row.rarity)) fail(row.id + ': invalid weapon rarity');
     if (row.weapon && (!positive(row.damageMultiplier) || row.damageMultiplier > 1)) fail(row.id + ': invalid damage multiplier');
+    if (row.offerWeight!==undefined && (!positive(row.offerWeight)||row.offerWeight>100)) fail(row.id+': invalid offer weight');
     if (ids.weapons.has(row.id) !== (row.weapon === true)) fail(row.id + ': weapon flag does not match its file');
     if (row.cooldown !== undefined && (!positive(row.cooldown) || !text(row.behavior, 40))) fail(row.id + ': invalid cooldown or behavior');
     if (row.projectile !== undefined) {

@@ -130,7 +130,7 @@
     canUpgrade(u) { return Boolean(u && !this.banished.has(u.id) && !this.isConsumed(u.id) && this.levels[u.id] < u.max && (this.levels[u.id] > 0 || this.stressMode || this.inventory(Boolean(u.weapon)).length < 5)); }
     upgradeWeight(u) {
       const rarity = (root.NightCatalog || require('./catalog.js')).rarities[u.rarity];
-      return rarity ? rarity.weight * (1 + (this.luck - 1) * rarity.tier) : 100;
+      return u.offerWeight ?? (rarity ? rarity.weight * (1 + (this.luck - 1) * rarity.tier) : 100);
     }
     pickUpgrade(pool) {
       if (!pool.length) return null;
@@ -236,6 +236,10 @@
       this.events.push('arena-warning');
     }
     isFirstBoss(enemy) { return this.bossIndex === 1 && enemy.boss && enemy.kind === BOSSES[0]; }
+    isEncounterBoss(enemy) { return this.bossIndex>0 && enemy.boss && enemy.kind===BOSSES[(this.bossIndex-1)%BOSSES.length]; }
+    encounterBossHealth(index=this.bossIndex+1,level=this.level) {
+      return (index===1 ? 1500 : 3200+Math.max(0,index-2)*1000)+Math.max(0,level-1)*200;
+    }
     updateEncounter(dt) {
       const arena = this.encounter; if (!arena) return;
       if (arena.phase === 'locked') {
@@ -252,7 +256,7 @@
       const angle = this.random() * TAU, distance = arena.radius * .56;
       const boss = this.spawn(arena.kind, arena.x + Math.cos(angle) * distance, arena.y + Math.sin(angle) * distance, 1);
       const first = this.bossIndex === 0;
-      boss.hp *= first ? BALANCE.firstBossHealth : BALANCE.arenaBossHealth; boss.maxHp = boss.hp; boss.damage *= first ? BALANCE.firstBossDamage : BALANCE.arenaBossDamage;
+      boss.hp = boss.maxHp = this.encounterBossHealth(); boss.damage *= first ? BALANCE.firstBossDamage : BALANCE.arenaBossDamage;
       boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
       this.player.invulnerable = Math.max(this.player.invulnerable, 1);
       arena.bossId = boss.id; this.bossIndex++; this.bossSpawned = true; this.lastBoss = boss.title;

@@ -137,6 +137,7 @@
   },
   {
     "id": "silverRing",
+    "offerWeight": 25,
     "title": "Минутная стрелка",
     "icon": "(s)",
     "kind": "ОБЛАСТЬ / ВРЕМЯ",
@@ -145,6 +146,7 @@
   },
   {
     "id": "goldRing",
+    "offerWeight": 25,
     "title": "Часовая стрелка",
     "icon": "(G)",
     "kind": "ПРОКЛЯТИЕ",
@@ -153,6 +155,7 @@
   },
   {
     "id": "leftSign",
+    "offerWeight": 25,
     "title": "Полис «Жизнь»",
     "icon": "[<]",
     "kind": "ЖИЗНЬ / РЕГЕНЕРАЦИЯ",
@@ -161,6 +164,7 @@
   },
   {
     "id": "rightSign",
+    "offerWeight": 25,
     "title": "Полис «Франшиза»",
     "icon": "[>]",
     "kind": "ПРОКЛЯТИЕ",
