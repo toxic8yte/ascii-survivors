@@ -208,8 +208,9 @@
     }
     for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) marker(cache.x, cache.y, 'X', '#edc77d', 'Тайник ' + (cache.id + 1));
     for (const chest of game.chests) marker(chest.x, chest.y, '$', '#c49be2', 'Оставленный сундук');
+    for (const crate of game.supplyCrates) if (!game.supplyTaken.has(crate.id)) marker(crate.x, crate.y, crate.kind === 'heal' ? '+' : crate.kind === 'level' ? '^' : 'U', crate.kind === 'heal' ? '#b6dfad' : crate.kind === 'level' ? '#edc77d' : '#6fbbff', crate.kind === 'heal' ? 'Ящик: 30 здоровья' : crate.kind === 'level' ? 'Ящик: бесплатный уровень' : 'Ящик: собрать все кристаллы');
     marker(game.player.x, game.player.y, '@', '#f47561', 'Ты здесь');
-    text('map-summary', 'ТАЙНИКОВ: ' + (12 - game.treasuresTaken.size) + '/12 · СУНДУКОВ БОССОВ: ' + game.chests.filter(c => !c.treasure).length + ' · ТВОЯ ПОЗИЦИЯ: ' + Math.round(game.player.x) + ' : ' + Math.round(game.player.y));
+    text('map-summary', 'ТАЙНИКОВ: ' + (12 - game.treasuresTaken.size) + '/12 · ПРИПАСОВ: ' + (game.supplyCrates.length - game.supplyTaken.size) + ' · СУНДУКОВ БОССОВ: ' + game.chests.filter(c => !c.treasure).length + ' · ТВОЯ ПОЗИЦИЯ: ' + Math.round(game.player.x) + ' : ' + Math.round(game.player.y));
     $('world-map').showModal();
   }
   function resize() {
@@ -396,11 +397,11 @@
     const selected = game.offers[game.offerSelection];
     $('upgrade-confirm').disabled = !selected;
     $('upgrade-banish').disabled = !selected || !game.banishesLeft;
-    const wallet = progress.profile.meta.gold + Math.max(0, game.goldEarned - (progress.profile.meta.credited[game.runId] || 0));
+    const wallet = game.goldAvailable;
     $('upgrade-reroll').disabled = !game.canReroll || wallet < game.rerollCost;
     text('upgrade-banish', 'ИЗГНАТЬ · ' + game.banishesLeft);
     text('upgrade-reroll', 'РЕРОЛЛ · ' + game.rerollCost + ' ЗОЛ.');
-    text('upgrade-wallet', 'КОШЕЛЁК НАСЛЕДИЯ: ' + wallet + ' ЗОЛ.' + (!game.canReroll ? ' · Нет полного набора новых вариантов' : wallet < game.rerollCost ? ' · Не хватает золота на реролл' : ''));
+    text('upgrade-wallet', 'ЗОЛОТО ЗАБЕГА: ' + wallet + ' ЗОЛ.' + (!game.canReroll ? ' · Нет полного набора новых вариантов' : wallet < game.rerollCost ? ' · Не хватает золота на реролл' : ''));
     text('upgrade-selection', selected ? 'ВЫДЕЛЕНО: ' + selected.title : 'Сначала выдели карточку.');
   }
   function selectOffer(index) {
@@ -457,7 +458,7 @@
     text('selected-weapon', (ownedWeapons.indexOf(game.selectedWeapon) % 5 + 1) + ' / ' + weapon.title.toUpperCase() + (game.selectedWeapon === 'blades' && game.levels.blades ? ' · КЛИНКОВ: ' + (game.levels.blades + game.levels.fork + (game.isEvolved('blades') ? 2 : 0)) : ''));
     text('weapon-page', 'ОРУЖИЕ ' + ownedWeapons.length + '/5' + (game.weaponPages > 1 ? ' · СТР. ' + (game.weaponPage + 1) + '/' + game.weaponPages + (game.stressMode ? ' · ТЕСТ' : ' · СТАРЫЙ НАБОР') : ''));
     $('weapons-prev').hidden = $('weapons-next').hidden = game.weaponPages <= 1;
-    text('run-gold', 'ЗОЛОТО +' + game.goldEarned);
+    text('run-gold', 'ЗОЛОТО +' + game.goldAvailable);
     $('fire-mode').setAttribute('aria-pressed', String(manual));
     text('fire-mode', manual ? 'РУЧНОЙ ОГОНЬ [M]' : 'АВТОАТАКА [M]');
     $('fire-touch').hidden = !manual; $('stress-controls').hidden = !game.stressMode || game.sandboxMode;
@@ -528,7 +529,7 @@
         saveBest(); const won = status === 'won';
         text('ending-title', won ? 'Ты встретил рассвет' : 'Ночь победила');
         text('ending-caption', won ? 'СОЛНЦЕ ВЗОШЛО НАД КЛАДБИЩЕМ' : 'КЛАДБИЩЕ ПОЛУЧИЛО ЕЩЁ ОДНУ ДУШУ');
-        text('ending-text', 'Заработано ' + game.goldEarned + ' золота. Постоянные улучшения ждут в «Наследии» на стартовом экране.');
+        text('ending-text', 'Сохранено ' + game.goldAvailable + ' золота. На рероллы потрачено ' + game.rerollGoldSpent + '. Постоянные улучшения ждут в «Наследии» на стартовом экране.');
         text('ending-art', won ? ' \\ | /\n-- * --\n / | \\' : ' .-.\n(x x)\n |=|\n_|_|_');
         text('result-time', formatTime(game.elapsed)); text('result-kills', game.kills); text('result-level', game.level);
         $('restart').focus({ preventScroll: true });
@@ -747,7 +748,10 @@
     if (game.events.includes('arena-warning')) notify('ГОТОВЬСЯ: ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ СТЕНЫ');
     if (game.events.includes('arena-clear') || game.events.includes('boss-defeated')) notify('БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК');
     if (game.events.includes('arena-timeout')) notify('СТЕНА ИСЧЕЗЛА · БОСС ОСТАЛСЯ НА ПОЛЕ');
-    if (game.events.some(event => ['boss', 'mega-boss', 'revive', 'arena-warning', 'arena-clear', 'arena-timeout', 'boss-defeated', 'chest-open'].includes(event))) saveCheckpoint();
+    if (game.events.includes('supply-heal')) notify('ЯЩИК: +30 ЗДОРОВЬЯ');
+    if (game.events.includes('supply-level')) notify('ЯЩИК: БЕСПЛАТНЫЙ УРОВЕНЬ · ВЫБЕРИ УСИЛЕНИЕ');
+    if (game.events.includes('supply-magnet')) notify('ЯЩИК: МАГНИТ СОБРАЛ ВСЕ КРИСТАЛЛЫ С КАРТЫ');
+    if (game.events.some(event => event.startsWith('supply-') || ['boss', 'mega-boss', 'revive', 'arena-warning', 'arena-clear', 'arena-timeout', 'boss-defeated', 'chest-open'].includes(event))) saveCheckpoint();
     game.events.length = 0;
     if (now - lastHUD > 85) { updateHUD(); lastHUD = now; }
     if (!document.hidden && (game.status === 'running' || dirty)) {

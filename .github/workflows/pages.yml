@@ -51,6 +51,8 @@ jobs:
           node verify-upgrades.cjs
           node --check verify-reroll.cjs
           node verify-reroll.cjs
+          node --check verify-supplies.cjs
+          node verify-supplies.cjs
           node --check verify-sandbox.cjs
           node verify-sandbox.cjs
           node --check verify-forest.cjs

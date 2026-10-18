@@ -246,6 +246,7 @@
       for (const h of game.hearts) this.world(h.x, h.y, '[+]', 11);
       for (const chest of game.chests) { this.world(chest.x, chest.y, chest.canEvolve ? ' ___\n[E*]\n|__|' : ' ___\n[?*]\n|__|', chest.canEvolve ? 5 : 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
       for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) this.world(cache.x, cache.y, '[X]', 7);
+      for (const crate of game.supplyCrates) if (!game.supplyTaken.has(crate.id)) this.world(crate.x, crate.y, ' ___ \n| ' + (crate.kind === 'heal' ? '+' : crate.kind === 'level' ? '^' : 'U') + ' |\n|___|', crate.kind === 'heal' ? 11 : crate.kind === 'level' ? 7 : 16);
       const arena = game.encounter;
       if (arena) {
         const warning = arena.phase === 'warning', radius = arena.radius * (warning ? .85 + .15 * (1 - arena.warningLeft / 5) : 1);

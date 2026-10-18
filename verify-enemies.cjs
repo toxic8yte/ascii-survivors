@@ -74,4 +74,19 @@ assert.equal(new Set(order.slice(0, 6)).size, 6); assert.deepEqual(order.slice(0
 assert.equal(bosses.bossKills, 12); assert.equal(bosses.hearts[0].value, 60);
 const quicker = new NightGame(); assert.ok(Math.abs(quicker.cooldown - .578) < 1e-9); assert.ok(Math.abs(quicker.dashCooldown - 2.04) < 1e-9);
 quicker.levels.haste = 1; assert.ok(quicker.cooldown < .578);
+for(const map of ['forest','graveyard']) {
+  const g=new NightGame(727,'whisper',{map,fireMode:'manual'});g.start();g.enemies=[];g.spawnClock=1e6;g.nextBossAt=0;tick(g,5.1);
+  const boss=g.enemies.find(e=>e.boss);assert.equal(boss.kind,'lichLord');assert.ok(boss.skillClock<=1.2);
+  tick(g,2.2);assert.equal(g.enemies.filter(e=>e.kind==='skeleton').length,2,'First Lich visibly summons two skeletons on the opening attack');
+  tick(g,1);assert.ok(g.player.hp<g.player.maxHp,'The first Lich encounter damages Necromorph in a normal run');
+  for(const e of g.enemies)if(e.kind==='skeleton')g.hurtEnemy(e,e.hp+1);
+  g.gems=[];g.gemBins.clear();g.player.hp=g.player.maxHp;tick(g,2.6);
+  assert.equal(g.enemies.filter(e=>e.alive&&e.kind==='skeleton').length,2,'Lich replenishes minions instead of only summoning once');
+  assert.ok(g.enemies.filter(e=>e.alive&&e.arenaMember&&!e.boss).length<=2,'Opening summon cap remains safe');
+  const old=JSON.parse(JSON.stringify(NightSave.capture(g)));old.arenaBalance=4;
+  const row=old.enemies.find(row=>row[1]===boss.id);row[6]*=.45/NightBalance.firstBossDamage;row[13]=5.5;
+  const resumed=NightSave.restore(old);assert.ok(resumed);const updated=resumed.enemies.find(e=>e.id===boss.id);
+  assert.ok(Math.abs(updated.damage-boss.damage)<1e-8);assert.ok(updated.skillClock<=3.5);
+  const twice=NightSave.restore(JSON.parse(JSON.stringify(NightSave.capture(resumed))));assert.equal(twice.enemies.find(e=>e.id===boss.id).damage,updated.damage,'Saved Lich damage migrates only once');
+}
 console.log('PASS: 58 enemies, six rotating mini-bosses, telegraphs, missiles, summons, charge, teleport, curse, population budgets and shorter cooldowns.');

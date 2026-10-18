@@ -29,9 +29,9 @@
     if (game.stressMode || !['running', 'paused', 'upgrading', 'reward'].includes(game.status)) return null;
     const save = {
       version: 10, runId: game.runId, savedAt: Date.now(), seed: game.seed, randomState: game.randomState >>> 0,
-      banished: [...game.banished], banishesLeft: game.banishesLeft, skipsLeft: game.skipsLeft, offerSelection: game.offerSelection, rerollsUsed: game.rerollsUsed,
+      banished: [...game.banished], banishesLeft: game.banishesLeft, skipsLeft: game.skipsLeft, offerSelection: game.offerSelection, rerollsUsed: game.rerollsUsed, rerollGoldSpent: game.rerollGoldSpent,
       weaponOrder: game.inventory(true), passiveOrder: game.inventory(false), legacyInventory: game.legacyInventory || game.inventory(true).length > 5 || game.inventory(false).length > 5,
-      treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
+      treasuresTaken: Array.from(game.treasuresTaken), supplyTaken: Array.from(game.supplyTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       leechBudget: game.leechBudget,
       holyMarks: Array.from(game.holyMarks, ([id,mark]) => [id,{...mark}]),
       burnMarks: Array.from(game.burnMarks, ([id,mark]) => [id,{...mark}]),
@@ -41,7 +41,7 @@
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
       offers: game.offers.map(u => u.id), encountered: Array.from(game.encountered),
-      terrainEnabled: game.terrainEnabled, arenaBalance: 4, encounter: game.encounter ? { ...game.encounter } : null,
+      terrainEnabled: game.terrainEnabled, arenaBalance: 5, encounter: game.encounter ? { ...game.encounter } : null,
       chests: game.chests.map(chest => ({ ...chest })), reward: game.reward ? { ...game.reward, items: game.reward.items.map(item => ({ ...item })), ...(game.reward.options ? { options: game.reward.options.map(option => ({ ...option })) } : {}) } : null,
       enemies: game.enemies.filter(e => e.alive).map(e => [e.kind, ...enemyKeys.map(key => e[key])]),
       gems: game.gems.map(g => ({ x: g.x, y: g.y, value: g.value, bin: g.bin, magnetized: Boolean(g.magnetized) }))
@@ -67,10 +67,17 @@
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
       if (save.rerollsUsed !== undefined && (!uint(save.rerollsUsed) || save.rerollsUsed > 1000000)) return null;
+      if (save.rerollGoldSpent !== undefined && (!uint(save.rerollGoldSpent) || save.rerollGoldSpent > save.goldEarned)) return null;
       if (save.version >= 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
       if(save.mapId!==undefined&&!NightCatalog.stages.some(s=>s.id===save.mapId))return null;
       const game = new NightGame(save.seed, save.characterId, { map:save.mapId||'graveyard',enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version >= 3 ? save.meta : {} });
       game.rerollsUsed = save.rerollsUsed || 0;
+      game.rerollGoldSpent = save.rerollGoldSpent || 0;
+      if (save.supplyTaken !== undefined) {
+        const taken = list(save.supplyTaken, game.supplyCrates.length);
+        if (new Set(taken).size !== taken.length || taken.some(id => !uint(id) || !game.supplyCrates.some(c => c.id === id))) return null;
+        game.supplyTaken = new Set(taken);
+      }
       if (save.version >= 10) {
         const banned = list(save.banished, 3);
         if (banned.some(id => !NightUpgrades.some(u => u.id === id)) || new Set(banned).size !== banned.length || !uint(save.banishesLeft) || save.banishesLeft !== 3 - banned.length || !uint(save.skipsLeft) || save.skipsLeft > 3 || !Number.isInteger(save.offerSelection) || save.offerSelection < -1 || save.offerSelection > 2) return null;
@@ -174,6 +181,10 @@
         }
         if (!(save.arenaBalance>=4)) for (const boss of game.enemies) if (game.isEncounterBoss(boss)) {
           const fraction=boss.hp/boss.maxHp;boss.maxHp=game.encounterBossHealth(game.bossIndex);boss.hp=boss.maxHp*fraction;
+        }
+        if (!(save.arenaBalance>=5)) for (const boss of game.enemies) if (game.isFirstBoss(boss)) {
+          if (save.arenaBalance>=3) boss.damage *= NightBalance.firstBossDamage / .45;
+          boss.skillClock = Math.min(boss.skillClock, NightBalance.firstBossSkill);
         }
         game.chests = list(save.chests, 64).map(c => {
           if (!Object.hasOwn(NightEnemies, c.source) || !NightEnemies[c.source].boss || !uint(c.id) || c.id < 1 || c.id >= game.nextChestId) throw new Error('Invalid chest');
@@ -336,18 +347,19 @@
       return written;
     }
     rerollReceipt(receipt) {
-      return plain(receipt) && typeof receipt.runId === 'string' && receipt.runId.length > 0 && receipt.runId.length <= 120 && uint(receipt.level) && receipt.level >= 2 && uint(receipt.count) && receipt.count > 0 && receipt.count <= 1000000 && uint(receipt.randomState) && receipt.randomState <= 0xffffffff && Array.isArray(receipt.offers) && receipt.offers.length > 0 && receipt.offers.length <= 3 && new Set(receipt.offers).size === receipt.offers.length && receipt.offers.every(id => NightUpgrades.some(u => u.id === id)) ? receipt : null;
+      return plain(receipt) && (receipt.spent === undefined || uint(receipt.spent)) && typeof receipt.runId === 'string' && receipt.runId.length > 0 && receipt.runId.length <= 120 && uint(receipt.level) && receipt.level >= 2 && uint(receipt.count) && receipt.count > 0 && receipt.count <= 1000000 && uint(receipt.randomState) && receipt.randomState <= 0xffffffff && Array.isArray(receipt.offers) && receipt.offers.length > 0 && receipt.offers.length <= 3 && new Set(receipt.offers).size === receipt.offers.length && receipt.offers.every(id => NightUpgrades.some(u => u.id === id)) ? receipt : null;
     }
     reroll(game) {
       if (game.stressMode || !game.canReroll || game.rerollsUsed >= 1000000) return false;
       const p = this.loadProfile(); this.bank(game, p);
-      if (p.meta.gold < game.rerollCost || !this.checkpoint(game)) return false;
-      const previous = { offers: game.offers, offerSelection: game.offerSelection, randomState: game.randomState, rerollsUsed: game.rerollsUsed };
+      if (game.goldAvailable < game.rerollCost || p.meta.gold < game.rerollCost || !this.checkpoint(game)) return false;
+      const previous = { offers: game.offers, offerSelection: game.offerSelection, randomState: game.randomState, rerollsUsed: game.rerollsUsed, rerollGoldSpent: game.rerollGoldSpent };
       const cost = game.rerollCost;
       if (!game.rerollOffers()) return false;
       p.meta.gold -= cost;
+      game.rerollGoldSpent += cost;
       // Save the paid cards with the debit so an interrupted checkpoint cannot lose a purchase.
-      p.reroll = { runId: game.runId, level: game.level, count: game.rerollsUsed, randomState: game.randomState >>> 0, offers: game.offers.map(u => u.id) };
+      p.reroll = { runId: game.runId, level: game.level, count: game.rerollsUsed, spent: game.rerollGoldSpent, randomState: game.randomState >>> 0, offers: game.offers.map(u => u.id) };
       if (!this.write(PROFILE_KEY, p)) { Object.assign(game, previous); return false; }
       this.profile = p; this.checkpoint(game); return true;
     }
@@ -355,7 +367,7 @@
       const save = this.read(RUN_KEY), receipt = this.loadProfile().reroll;
       if (save && receipt?.runId === save.runId && receipt.count > (save.rerollsUsed || 0)) {
         if (save.status !== 'upgrading' || save.level !== receipt.level) return null;
-        Object.assign(save, { offers: receipt.offers, randomState: receipt.randomState, rerollsUsed: receipt.count, offerSelection: -1 });
+        Object.assign(save, { offers: receipt.offers, randomState: receipt.randomState, rerollsUsed: receipt.count, rerollGoldSpent: receipt.spent || 0, offerSelection: -1 });
       }
       return restore(save);
     }

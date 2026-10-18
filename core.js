@@ -13,7 +13,7 @@
   const BALLISTICS = Object.fromEntries(EXTRA_WEAPONS.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const WEAPON_DAMAGE = Object.fromEntries(UPGRADES.filter(u => u.weapon).map(u => [u.id, u.damageMultiplier]));
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
-  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .00875, bossHeartDropChance: .25, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4, firstBossHealth: .25, firstBossDamage: .45, firstBossSkill: 5.5, firstBossMinions: 2 });
+  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .00875, bossHeartDropChance: .25, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4, firstBossHealth: .25, firstBossDamage: .65, firstBossSkill: 3.5, firstBossMinions: 2 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
   const EnemySystem = root.NightEnemySystem || require('./enemy-system.js');
   const Combat = root.NightCombat || require('./combat.js');
@@ -74,6 +74,14 @@
       this.weaponOrder = []; this.passiveOrder = []; this.legacyInventory = false; this.rosterBossIndex = 0;
       this.treasuresTaken = new Set(); this.treasures = [];
       for (let i = 0; i < 12; i++) { const hash = terrainHash(i + this.seed % 10000, 37); const cache = { id: i, x: 600 + hash % (this.width - 1200), y: 600 + (hash >>> 12) % (this.height - 1200), radius: 20 }; this.resolveTerrain(cache); this.treasures.push(cache); }
+      this.supplyTaken = new Set(); this.supplyCrates = [];
+      if (!this.stressMode) for (let i = 0; i < 48; i++) {
+        const hash = terrainHash(this.seed ^ i, 83), other = terrainHash(this.seed ^ i, 97), roll = hash % 10;
+        const kind = roll < 5 ? 'heal' : roll < 8 ? 'magnet' : 'level';
+        const crate = { id:i, kind, x:(i % 8 + .2 + (hash >>> 8) / 0x1000000 * .6) * 1600, y:(Math.floor(i / 8) + .2 + (other >>> 8) / 0x1000000 * .6) * 1600, radius:20 };
+        if (i === 27) { const angle = hash / 0x100000000 * TAU; crate.x = this.width / 2 + Math.cos(angle) * 540; crate.y = this.height / 2 + Math.sin(angle) * 540; }
+        this.resolveTerrain(crate); this.supplyCrates.push(crate);
+      }
       this.enemyLimit = clamp(Math.floor(Number(options.enemyLimit) || 6000), 100, 24000);
       this.peakEnemies = 0; this.nextBossAt = 60; this.bossIndex = 0; this.bossKills = 0; this.lastBoss = '';
       this.nextMegaAt = 600; this.bossWhips = [];
@@ -100,7 +108,7 @@
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
       this.slashes = []; this.gemBins = new Map(); this.cellPool = [];
-      this.offers = []; this.offerSelection = -1; this.banished = new Set(); this.banishesLeft = 3; this.skipsLeft = 3; this.rerollsUsed = 0;
+      this.offers = []; this.offerSelection = -1; this.banished = new Set(); this.banishesLeft = 3; this.skipsLeft = 3; this.rerollsUsed = 0; this.rerollGoldSpent = 0;
       this.shootClock = .15; this.spawnClock = .35; this.pulseClock = 1.2;
       this.spawnRadius = 650; this.bossSpawned = false; this.damageFlash = 0; this.events = [];
       this.grid = new Map();
@@ -188,6 +196,7 @@
       this.offers = offers; this.offerSelection = -1;
     }
     get rerollCost() { return 5 * (this.rerollsUsed + 1); }
+    get goldAvailable() { return Math.max(0, this.goldEarned - this.rerollGoldSpent); }
     rerollCandidates() { return UPGRADES.filter(u => this.canUpgrade(u) && !this.offers.includes(u)); }
     get canReroll() { return this.status === 'upgrading' && this.rerollsUsed < 1000000 && this.offers.length > 0 && this.rerollCandidates().length >= this.offers.length; }
     rerollOffers() {
@@ -302,6 +311,7 @@
       const first = this.bossIndex === 0;
       boss.hp = boss.maxHp = this.encounterBossHealth(); boss.damage *= first ? BALANCE.firstBossDamage : BALANCE.arenaBossDamage;
       boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
+      if (first) boss.skillClock = 1.2;
       this.player.invulnerable = Math.max(this.player.invulnerable, 1);
       arena.bossId = boss.id; this.bossIndex++; this.bossSpawned = true; this.lastBoss = boss.title;
       this.events.push('boss');
@@ -555,6 +565,18 @@
     healPlayer(value) {
       const actual = Math.max(0, Math.min(value, this.player.maxHp - this.player.hp));
       this.player.hp += actual; this.combat.record('healing', actual); return actual;
+    }
+    openSupply(crate) {
+      if (this.stressMode || this.status !== 'running' || !this.supplyCrates.includes(crate) || this.supplyTaken.has(crate.id) || Math.hypot(crate.x - this.player.x, crate.y - this.player.y) >= 32) return false;
+      this.supplyTaken.add(crate.id);
+      if (crate.kind === 'heal') this.healPlayer(30);
+      else if (crate.kind === 'level') { this.xp += this.xpNeed; this.checkLevel(); }
+      else {
+        const xp = this.gems.reduce((total, gem) => total + gem.value, 0);
+        this.gems = []; this.gemBins.clear(); this.grantXP(xp);
+      }
+      this.rings.push({ x:crate.x, y:crate.y, radius:90, life:.65, maxLife:.65, ink:crate.kind === 'heal' ? 11 : crate.kind === 'level' ? 7 : 16, glyph:'+' });
+      this.events.push('supply-' + crate.kind); return true;
     }
     gainXP(value) { const total = value * this.growth * this.xpEfficiency + this.xpCarry, whole = Math.floor(total + 1e-8); this.xpCarry = Math.max(0, total - whole); this.xp += whole; this.combat.record('xp', whole); return whole; }
     grantXP(value) { if(this.sandboxMode)return;this.gainXP(value); this.checkLevel(); }
@@ -956,7 +978,7 @@
           const a = angle + (i - (count - 1) / 2) * .22, speed = e.projectileSpeed || 175;
           this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * (e.projectileDamageScale ?? .8), radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
         }
-        if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', this.isFirstBoss(e) ? 1 : 3);
+        if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', this.isFirstBoss(e) ? 2 : 3);
       } else if (e.ai === 'summoner') {
         this.queueSummons(e, 'ghoul', 3); this.queueSummons(e, 'mummy', 1);
       } else if (e.ai === 'blink') {
@@ -1108,6 +1130,10 @@
         this.healPlayer(heart.value); this.combat.record('heartsTaken', 1); heart.taken = true; this.burst(p.x, p.y, 3, 10);
       }
       this.hearts = this.hearts.filter(h => !h.taken && (!h.expires || h.expires > this.time)).slice(-128);
+      if (this.status === 'running') {
+        const crate = this.supplyCrates.find(c => !this.supplyTaken.has(c.id) && Math.hypot(c.x - p.x, c.y - p.y) < 32);
+        if (crate) this.openSupply(crate);
+      }
       if (this.status === 'running') {
         const cache = this.treasures.find(c => !this.treasuresTaken.has(c.id) && Math.hypot(c.x - p.x, c.y - p.y) < 32);
         if (cache) {
