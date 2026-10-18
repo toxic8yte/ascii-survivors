@@ -20,8 +20,8 @@ function chest(g, bornAt = 600, kind = 'lichLord') {
   g.time = bornAt; const boss = g.spawn(kind, g.player.x + 260, g.player.y); g.dropChest(boss);
   g.enemies = []; g.buildGrid(); return g.chests[g.chests.length - 1];
 }
-assert.equal(NightCatalog.evolutions.length, 22);
-assert.equal(new Set(NightCatalog.evolutions.map(r => r.weapon)).size, 22);
+assert.equal(NightCatalog.evolutions.length, 31);
+assert.equal(new Set(NightCatalog.evolutions.map(r => r.weapon)).size, 31);
 const permanent = new NightGame(724, 'hunter', { meta: { armor: 5 } }); permanent.levels.rune = 4;
 assert.equal(permanent.canEvolve(NightCatalog.evolutions.find(r => r.weapon === 'rune')), false, 'Permanent legacy upgrades do not replace a run catalyst');
 const blades = fixture(); blades.setFireMode('auto'); blades.levels.blades = 1;
@@ -82,4 +82,26 @@ const thunder = evolved('lightning'); thunder.spawn('brute', thunder.player.x + 
 const moon = evolved('pentagram'); moon.addGem(moon.player.x + 1100, moon.player.y, 2); moon.castRelic('pentagram'); assert.ok(moon.gems[0].magnetized); assert.equal(moon.xp, 0, 'Activating an empty-field pentagram cannot manufacture XP');
 for (const active of [axes, water, rune, thunder, bible, clock]) assert.ok(NightSave.restore(clone(NightSave.capture(active))), 'Active evolved effects survive a JSON save');
 const corrupt = clone(NightSave.capture(shield)); corrupt.evolutions.push('unknown'); assert.equal(NightSave.restore(corrupt), null);
-console.log('PASS: Duplicator orbits and manual attacks, 22 chest evolutions, catalyst ranks, early-chest timing, one-of-three mega rewards, unions, old-save migration and distinct evolved combat effects.');
+
+const coveredWeapons=new Set(NightCatalog.evolutions.flatMap(r=>[r.weapon,...(r.weapons||[])]));
+const coveredPassives=new Set(NightCatalog.evolutions.flatMap(r=>Object.keys(r.passives)));
+assert.ok(NightUpgrades.every(u=>u.weapon?coveredWeapons.has(u.id):coveredPassives.has(u.id)),'Every weapon participates in an evolution or union, every passive is a catalyst');
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,a+' != '+b);
+function targetAt(g,x,y=0,hp=10000,kind='brute'){const e=g.spawn(kind,g.player.x+x,g.player.y+y);e.hp=e.maxHp=hp;e.speed=0;e.knockbackResistance=1;g.buildGrid();return e;}
+function aimRight(g){g.aim={x:g.player.x+500,y:g.player.y,active:true};}
+const bolt=evolved('crossbow');aimRight(bolt);const pinned=targetAt(bolt,65);bolt.castRelic('crossbow');assert.ok(bolt.relics.every(s=>s.evolved&&s.remaining>=9));bolt.updateRelics(.1);assert.ok(bolt.freezes.get(pinned.id)>bolt.time);
+const pinBoss=evolved('crossbow');aimRight(pinBoss);const bossTarget=targetAt(pinBoss,65,0,10000,'lichLord');pinBoss.castRelic('crossbow');pinBoss.updateRelics(.1);near(pinBoss.freezes.get(bossTarget.id)-pinBoss.time,.15);
+const rail=evolved('gauss');aimRight(rail);targetAt(rail,100);const railSide=targetAt(rail,100,70);rail.castRelic('gauss');rail.updateRelics(.06);assert.ok(railSide.hp<railSide.maxHp,'Gauss creates local shock waves outside the rail');
+const plasma=evolved('plasmaMinigun');aimRight(plasma);targetAt(plasma,50,0,1);const splash=targetAt(plasma,50,75);plasma.castRelic('plasmaMinigun');plasma.updateRelics(.1);assert.ok(splash.hp<splash.maxHp,'A plasma kill produces a larger, non-recursive secondary explosion');
+const shock=evolved('electropistol');aimRight(shock);targetAt(shock,80);const hop=targetAt(shock,80,110),hop2=targetAt(shock,80,240),outside=targetAt(shock,-100,400);shock.castRelic('electropistol');shock.updateRelics(.1);assert.ok(hop.hp<hop.maxHp&&hop2.hp<hop2.maxHp);assert.equal(outside.hp,outside.maxHp);assert.ok(shock.arcs.every(a=>a.weapon==='electropistol'&&a.points.length<=3));
+const homing=evolved('chozo');aimRight(homing);targetAt(homing,180,80);homing.castRelic('chozo');assert.ok(homing.relics[0].chargeLeft<.4);homing.relics[0].chargeLeft=0;homing.updateRelics(.05);assert.ok(homing.relics[0].vy>0,'Charged plasma turns towards an off-axis target');
+const iron=evolved('crowbar');aimRight(iron);iron.enemyShots=[{x:iron.player.x+50,y:iron.player.y,radius:7},{x:iron.player.x-50,y:iron.player.y,radius:7},{x:iron.player.x+300,y:iron.player.y,radius:7}];iron.castRelic('crowbar');assert.equal(iron.enemyShots.length,2,'Only nearby frontal bullets are blocked');assert.ok(iron.slashes.every(s=>s.radius<=96),'Evolved crowbar retains short melee reach');
+const fists=evolved('gauntlets');aimRight(fists);const distant=targetAt(fists,200),behindFists=targetAt(fists,-200);fists.castRelic('gauntlets');assert.ok(distant.hp<distant.maxHp,'Directional fist shock wave reaches beyond the normal combo');assert.equal(behindFists.hp,behindFists.maxHp);assert.equal(fists.arcs[0].weapon,'gauntlets');
+const lamp=evolved('lightStaff'),interrupted=targetAt(lamp,100),uninterrupted=targetAt(lamp,120,80,10000,'lichLord');interrupted.windup=uninterrupted.windup=.8;lamp.castRelic('lightStaff');assert.equal(interrupted.windup,0);assert.equal(uninterrupted.windup,.8,'Boss telegraphs are not stun-locked');interrupted.hp=4000;const mark=lamp.holyMarks.get(interrupted.id);mark.next=0;const beforeMark=interrupted.hp;lamp.updateWeapons(.01);near(beforeMark-interrupted.hp,mark.damage*1.5*.7);
+const fire=evolved('flamethrower');aimRight(fire);const burning=targetAt(fire,40);fire.castRelic('flamethrower');fire.updateRelics(.1);assert.equal(fire.burnMarks.size,1);const burn=fire.burnMarks.get(burning.id),firstDamage=burn.damage,nextTick=burn.next;fire.time=.2;fire.castRelic('flamethrower');fire.updateRelics(.1);near(fire.burnMarks.get(burning.id).damage,firstDamage);near(fire.burnMarks.get(burning.id).next,nextTick);fire.relics=[];burning.x=fire.player.x+450;fire.buildGrid();fire.time=.6;const hpBeforeBurn=burning.hp;fire.updateWeapons(.01);assert.ok(burning.hp<hpBeforeBurn,'Burn continues outside the flame stream');
+const fireSnapshot=clone(NightSave.capture(fire)),savedFire=NightSave.restore(fireSnapshot);assert.ok(savedFire);assert.deepEqual(savedFire.burnMarks,fire.burnMarks);savedFire.pause();savedFire.time=1.2;const savedHP=savedFire.enemies.find(e=>e.id===burning.id).hp;savedFire.updateWeapons(.01);assert.ok(savedFire.enemies.find(e=>e.id===burning.id).hp<savedHP,'Restored burn continues ticking');
+const noBurn=clone(fireSnapshot);delete noBurn.burnMarks;assert.ok(NightSave.restore(noBurn));assert.equal(NightSave.restore(noBurn).burnMarks.size,0,'Existing v10 checkpoints need no new required fields');
+for(const mutate of [s=>s.burnMarks[0][1].damage=-1,s=>s.burnMarks.push(s.burnMarks[0]),s=>s.burnMarks[0][0]=999999,s=>s.burnMarks=null]){const bad=clone(fireSnapshot);mutate(bad);assert.equal(NightSave.restore(bad),null);}
+for(const g of [bolt,pinBoss,rail,plasma,shock,homing,iron,fists,lamp]){if(g===iron)g.enemyShots=[];assert.ok(NightSave.restore(clone(NightSave.capture(g))),'New evolved build and projectile flags survive JSON');}
+
+console.log('PASS: Duplicator orbits and manual attacks, 31 chest evolutions, catalyst ranks, early-chest timing, one-of-three mega rewards, unions, old-save migration and distinct evolved combat effects.');

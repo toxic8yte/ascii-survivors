@@ -65,7 +65,7 @@ const hp=front.hp;fists.levels.fork=2;fists.castRelic('gauntlets');assert.equal(
 assert.ok(NightSave.restore(clone(NightSave.capture(fists))),'Gauntlet levels and cooldowns survive saving');
 ripley.aim={x:ripley.player.x+500,y:ripley.player.y,active:true};ripley.castRelic('flamethrower');
 const drawn=[],renderer=Object.create(NightRenderer.prototype);
-Object.assign(renderer,{width:1000,height:600,scaleX:1,scaleY:1,worldWidth:ripley.width,worldHeight:ripley.height,enemyCells:new Uint8Array(100),ctx:{fillRect(){}},scenery(){},world(x,y,glyph,ink){drawn.push({x,y,glyph,ink});},circle(){},line(){}});
+Object.assign(renderer,{width:1000,height:600,scaleX:1,scaleY:1,worldWidth:ripley.width,worldHeight:ripley.height,mapId:ripley.mapId,chunks:new Map(),enemyCells:new Uint8Array(100),ctx:{fillRect(){}},scenery(){},world(x,y,glyph,ink){drawn.push({x,y,glyph,ink});},circle(){},line(){}});
 renderer.render(ripley,{x:ripley.player.x,y:ripley.player.y});
 assert.ok(drawn.some(p=>p.ink===12&&[')}','{~'].includes(p.glyph)),'Flame has animated tongues');
 assert.ok(drawn.some(p=>p.ink===7&&p.glyph==='~'),'Flame has a contrasting multicolor trail');

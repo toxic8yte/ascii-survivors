@@ -49,7 +49,7 @@ __|_____|_____|___|_____|_____|__</pre>
           <p>Бесконечная ночь. Всё больше врагов.<br>Собирай души. Усиливай оружие. Двигайся.</p>
           <div class="intro-keys"><span><kbd>1–5</kbd> оружие</span><span><kbd>M</kbd> авто / ручной</span><span><kbd>ЛКМ / F</kbd> атака</span></div>
           <div class="best">ЛУЧШИЙ ЗАБЕГ <b id="best">—</b></div>
-          <div class="run-options"><label><input id="sandbox-mode" type="checkbox"> Песочница: любой герой и оружие</label><button id="sandbox-open" class="quiet-button" type="button" hidden>НАСТРОИТЬ ТЕСТ →</button><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>Песочница — отдельное оружие и выбранные цели. Нагрузочный тест — весь арсенал и нарастающие волны. Оба режима без наград и сохранения забега.</small></div>
+          <div class="run-options"><label>Арена<select id="stage-select"><option value="forest" selected>Лес без возврата</option><option value="graveyard">Кладбище</option></select></label><small id="stage-description"></small><label><input id="sandbox-mode" type="checkbox"> Песочница: любой герой и оружие</label><button id="sandbox-open" class="quiet-button" type="button" hidden>НАСТРОИТЬ ТЕСТ →</button><label><input id="stress-mode" type="checkbox"> Нагрузочный тест</label><label>Предел врагов <select id="enemy-limit"><option value="1000">1 000</option><option value="3000">3 000</option><option value="6000" selected>6 000</option><option value="12000">12 000</option><option value="24000">24 000</option></select></label><small>Песочница — отдельное оружие и выбранные цели. Нагрузочный тест — весь арсенал и нарастающие волны. Оба режима без наград и сохранения забега.</small></div>
           </div>
           <section class="character-picker" aria-label="Выбор персонажа">
             <div class="picker-heading"><div class="eyebrow">01 / ВЫБЕРИ СВОЕГО ГЕРОЯ</div><button id="meta-open" type="button" class="meta-open">НАСЛЕДИЕ · 50 ЗОЛОТА</button></div>
@@ -58,7 +58,7 @@ __|_____|_____|___|_____|_____|__</pre>
             <button class="primary-button" id="unlock-hero" type="button" hidden>ОТКРЫТЬ ГЕРОЯ</button>
             <div class="continue-box" id="continue-box" hidden><p id="continue-summary"></p><button class="primary-button" id="continue-run" type="button">ПРОДОЛЖИТЬ ЗАБЕГ →</button></div>
             <button class="primary-button" id="start" type="button">ВОЙТИ В НОЧЬ <span>→</span></button>
-            <div id="arsenal-note" class="arsenal-note">5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ОРУЖИЕ: 33 · ЭВОЛЮЦИИ: 22 · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ</div>
+            <div id="arsenal-note" class="arsenal-note">5 СЛОТОВ ОРУЖИЯ + 5 ПАССИВОК · ОРУЖИЕ: 33 · ЭВОЛЮЦИИ: 31 · РЕЦЕПТЫ В НЕКРОНОМИКОНЕ</div>
             <div id="progress-summary" class="progress-summary"></div>
           </section>
         </div>
@@ -122,6 +122,7 @@ _|_|_</pre><div class="eyebrow" id="ending-caption">КЛАДБИЩЕ ПОЛУЧ�
       <label>Противник<select id="sandbox-enemy"><option value="dummy">Неподвижный манекен · 10 000 HP</option></select></label>
       <label>Количество целей<select id="sandbox-count"><option>1</option><option>5</option><option>20</option></select></label>
     </div>
+    <p id="sandbox-evolution-description" hidden></p>
     <div class="sandbox-preview"><pre id="sandbox-enemy-art" aria-hidden="true"></pre><p id="sandbox-enemy-description"></p></div>
     <button id="sandbox-apply" type="button" class="primary-button">НАЧАТЬ ТЕСТ →</button>
   </dialog>

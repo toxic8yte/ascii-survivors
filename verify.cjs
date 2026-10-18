@@ -147,7 +147,7 @@ let rasterized = 0, blits = 0;
 const mockDocument = { createElement: () => mockCanvas() };
 function mockCanvas() { return { ownerDocument: mockDocument, width: 0, height: 0, getContext: () => ({ setTransform() {}, fillRect() {}, fillText(ch) { assert.match(ch, /^[\x20-\x7e]$/); rasterized++; }, drawImage() { blits++; } }) }; }
 const renderer = new NightRenderer(mockCanvas()); renderer.resize(1100, 560, 1);
-assert.equal(rasterized, 1425, 'Only the ASCII atlas rasterizes text, including pickup inks, orange pumpkins and mega-boss inks');
+assert.equal(rasterized, 1900, 'Only the ASCII atlas rasterizes text, including pickup inks, orange pumpkins and mega-boss inks');
 const renderGame = fixture(); renderGame.levels.lightning = renderGame.levels.poison = renderGame.levels.boomerang = renderGame.levels.frost = renderGame.levels.meteor = 1;
 renderGame.spawn('brute', 1800, 1200); tick(renderGame, .8);
 renderer.render(renderGame, { x: 1600, y: 1200 }, .5);
@@ -166,8 +166,9 @@ const pickupGame = fixture(); pickupGame.spawn('ghoul', 1700, 1200); pickupGame.
 const drawn = [], originalWorld = terrainRenderer.world.bind(terrainRenderer);
 terrainRenderer.world = (x, y, glyph, ink) => { drawn.push({ glyph, ink }); originalWorld(x, y, glyph, ink); };
 terrainRenderer.render(pickupGame, { x: 1600, y: 1200 });
-const xpDraw = drawn.findIndex(d => d.glyph === '*' && d.ink === 10), healDraw = drawn.findIndex(d => d.glyph === '[+]' && d.ink === 11);
-assert.ok(xpDraw > drawn.findIndex(d => d.glyph === 'z'), 'Brighter XP is drawn over enemies'); assert.ok(healDraw >= 0, 'Healing has a dedicated brighter ink');
+const xpDraw = drawn.findIndex(d => d.glyph === '*' && d.ink === 16), healDraw = drawn.findIndex(d => d.glyph === '[+]' && d.ink === 11);
+assert.ok(xpDraw > drawn.findIndex(d => d.glyph === NightEnemies.ghoul.sprite), 'Blue XP is drawn over enemies'); assert.ok(healDraw >= 0, 'Healing has a dedicated brighter ink');
+for(const weapon of ['lightning','electropistol']){pickupGame.arcs=[{points:[{x:1600,y:1200},{x:1700,y:1200}],life:.1,maxLife:.24,weapon}];drawn.length=0;terrainRenderer.render(pickupGame,{x:1600,y:1200});assert.ok(drawn.some(d=>d.ink===15),'Electric chain remains bright blue through its final frames');}
 const farBlink = pickupGame.spawn('freddy', 3100, 1200); farBlink.windup = .5; farBlink.targetX = 1650; farBlink.targetY = 1200;
 drawn.length = 0; terrainRenderer.render(pickupGame, { x: 1600, y: 1200 });
 assert.ok(drawn.some(d => d.glyph === '[!]'), 'An offscreen Freddy still warns about his visible teleport destination');

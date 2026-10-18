@@ -4,6 +4,7 @@
 
 | Файл | Содержимое |
 | --- | --- |
+| `stages.json` | Арены и 30 поминутных составов лесных волн из нашего бестиария. |
 | `heroes.json` | 30 героев: `name`, `role`, `description`, портрет `sprite`, стартовое `weapon`, характеристики, бонусы `traits` и цена `cost` |
 | `weapons.json` | 33 оружия: `title`, исходное имя `baseTitle`, `description`, ASCII-значок `icon`, редкость `rarity` (`common`, `uncommon`, `rare`, `epic`, `legendary`), множитель фактического урона `damageMultiplier` (0 < значение ≤ 1), максимум рангов `max`; для дополнительных механик — `cooldown` и `behavior` |
 | `passives.json` | 22 пассивки и их описания |

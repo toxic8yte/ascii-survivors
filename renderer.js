@@ -1,8 +1,9 @@
 (function (root) {
   'use strict';
-  const PALETTE = ['#3d5840', '#82916b', '#82d2ad', '#acb77e', '#cfc7af', '#ac8db8', '#df7054', '#f4c77f', '#f0edd0', '#79bace', '#c6ffdc', '#ffd0b8', '#ff8b2b', '#ff3c52', '#080b09'];
+  const PALETTE = ['#3d5840', '#82916b', '#82d2ad', '#acb77e', '#cfc7af', '#ac8db8', '#df7054', '#f4c77f', '#f0edd0', '#79bace', '#c6ffdc', '#ffd0b8', '#ff8b2b', '#ff3c52', '#080b09', '#389fff', '#a0dcff', '#588452', '#8a7950', '#4e898b'];
   const BALLISTICS = Object.fromEntries((root.NightCatalog || require('./catalog.js')).extraWeapons.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const TAU = Math.PI * 2;
+  const EVOLVED_GLYPHS={crossbow:'|=>',gauss:'=G=>',plasmaMinigun:'{R}',chozo:'(@)',electropistol:'~Z>'};
   const hash = (x, y) => { let v = Math.imul(x ^ 0x64ab, 374761393) ^ Math.imul(y ^ 0xf8c, 668265263); v = Math.imul(v ^ v >>> 13, 1274126177); return (v ^ v >>> 16) >>> 0; };
   const mix = (previous, current, alpha) => (previous ?? current) + (current - (previous ?? current)) * alpha;
 
@@ -83,10 +84,19 @@
       if (this.chunks.has(key)) return this.chunks.get(key);
       const tileW = 400, tileH = 320, left = xx * tileW, top = yy * tileH;
       const canvas = this.makeCanvas(tileW * this.scaleX * this.dpr, tileH * this.scaleY * this.dpr), ctx = canvas.getContext('2d', { alpha: false });
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); ctx.fillStyle = '#15291c'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const forest=this.mapId==='forest';
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); ctx.fillStyle = forest?'#1a3020':'#15291c'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       const paint = (x, y, sprite, ink) => this.sprite(ctx, (x - left) * this.scaleX, (y - top) * this.scaleY, sprite, ink);
       for (let y = top; y < top + tileH; y += 16) for (let x = left; x < left + tileW; x += 10) {
         const v = hash(x / 10, y / 16);
+        if(x<5||x>this.worldWidth-5||y<5||y>this.worldHeight-5){paint(x,y,(x+y)%3?'#':':',1);continue;}
+        const ground=forest?root.NightForestGround(x,y,this.worldWidth,this.worldHeight):'grass';
+        if(ground==='path'||ground==='water'){
+          ctx.fillStyle=ground==='path'?'#33392a':'#183e39';ctx.fillRect((x-left)*this.scaleX,(y-top)*this.scaleY,10*this.scaleX+1,16*this.scaleY+1);
+          if(v%5===0)paint(x,y,ground==='path'?':':'~',ground==='path'?18:19);
+          continue;
+        }
+        if(ground==='flowers'){if(v%3===0)paint(x,y,'+',v%2?17:3);continue;}
         if (x < 5 || x > this.worldWidth - 5 || y < 5 || y > this.worldHeight - 5) paint(x, y, (x + y) % 3 ? '#' : ':', 1);
         else if (v % 23 === 0) paint(x, y, '.', 0);
         else if (v % 107 === 0) paint(x, y, "'", 0);
@@ -94,7 +104,8 @@
       for (let y = Math.floor((top - 80) / 110); y <= Math.ceil((top + tileH + 80) / 110); y++) for (let x = Math.floor((left - 80) / 130); x <= Math.ceil((left + tileW + 80) / 130); x++) {
         const v = hash(x, y), wx = x * 130 + v % 59, wy = y * 110 + (v >>> 8) % 41, type = v % 11;
         if (wx < 45 || wy < 45 || wx > this.worldWidth - 45 || wy > this.worldHeight - 45) continue;
-        if (type < 3) paint(wx, wy, ',,\n/|', 0);
+        if(forest){if(root.NightForestGround(wx,wy,this.worldWidth,this.worldHeight)!=='grass')continue;if(type<3)paint(wx,wy,',,\n/|',0);else if(type===5)paint(wx,wy,'(,,)',17);}
+        else if (type < 3) paint(wx, wy, ',,\n/|', 0);
         else if (type === 5) paint(wx, wy, '-+-', 0);
       }
       // Bounded cache: scrolling never keeps the entire cemetery in memory.
@@ -118,7 +129,7 @@
       return e.frames?e.frames[Math.floor(game.time*6+e.phase)%e.frames.length]:e.sprite;
     }
     render(game, camera, alpha = 1) {
-      if (this.worldWidth !== game.width || this.worldHeight !== game.height) { this.worldWidth = game.width; this.worldHeight = game.height; this.chunks.clear(); }
+      if (this.worldWidth !== game.width || this.worldHeight !== game.height || this.mapId!==game.mapId) { this.worldWidth = game.width; this.worldHeight = game.height;this.mapId=game.mapId; this.chunks.clear(); }
       this.camera = camera; this.alpha = Math.max(0, Math.min(1, alpha)); this.scenery();
       this.enemyCells.fill(0); this.renderedEnemies = 0;
       const halfW = this.width / this.scaleX / 2, halfH = this.height / this.scaleY / 2;
@@ -188,7 +199,8 @@
         const sprite = this.enemySprite(game,e), top=sprite.split('\n').length*8;
         if (e.ai === 'darklord') megaBodies.push({ p, sprite, ink });
         this.world(p.x, p.y, sprite, ink);
-        if (game.holyMarks.has(e.id)) this.world(p.x,p.y-top-10,'+',this.weaponInk('lightStaff',7));
+        if (game.holyMarks.has(e.id)) this.world(p.x,p.y-top-10,game.isEvolved('lightStaff')?'[*]':'+',this.weaponInk('lightStaff',7));
+        if (game.burnMarks.has(e.id)) this.world(p.x-16,p.y-top-10,'*',this.weaponInk('flamethrower',12));
         if (e.hp < e.maxHp && e.maxHp > 70) this.world(p.x, p.y - top - 12, '-'.repeat(Math.ceil(e.hp / e.maxHp * 5)), 6);
         if (e.windup > 0) {
           this.world(p.x, p.y - top - 26, '!', 7);
@@ -206,14 +218,14 @@
       for (const s of game.relics) {
         const p = this.position(s), ballistic = BALLISTICS[s.kind];
         if (ballistic) {
-          if (s.chargeLeft > 0) { this.circle(p.x,p.y,22,this.weaponInk(s.kind,9),'+'); this.world(p.x,p.y,Math.floor(game.time*12)%2 ? '(o)' : '(O)',this.weaponInk(s.kind,9)); continue; }
+          if (s.chargeLeft > 0) { this.circle(p.x,p.y,22,this.weaponInk(s.kind,9),'+'); this.world(p.x,p.y,s.evolved?'(@)':Math.floor(game.time*12)%2 ? '(o)' : '(O)',this.weaponInk(s.kind,9)); continue; }
           if (s.kind === 'flamethrower') {
             const speed = Math.hypot(s.vx,s.vy) || 1, dx = s.vx / speed, dy = s.vy / speed;
-            for (let i=0;i<4;i++) { const flicker = Math.sin(game.time * 23 + i * 2 + s.x * .03) * (4 + i * 2); this.world(p.x - dx * i * 11 - dy * flicker,p.y - dy * i * 11 + dx * flicker,i % 2 ? '~' : '*',this.weaponInk(s.kind,i === 3 ? 7 : 12)); }
+            for (let i=0;i<(s.evolved?6:4);i++) { const flicker = Math.sin(game.time * 23 + i * 2 + s.x * .03) * (4 + i * 2); this.world(p.x - dx * i * 11 - dy * flicker,p.y - dy * i * 11 + dx * flicker,i % 2 ? '~' : '*',this.weaponInk(s.kind,i === 3 ? 7 : 12)); }
             this.world(p.x,p.y,Math.floor(game.time * 15 + s.x) % 2 ? ')}' : '{~',this.weaponInk(s.kind,12)); continue;
           }
           if (s.kind === 'gauss') this.world(p.x - s.vx * .015,p.y - s.vy * .015,'===',this.weaponInk(s.kind,ballistic.ink));
-          this.world(p.x,p.y,ballistic.glyph,this.weaponInk(s.kind,ballistic.ink)); continue;
+          this.world(p.x,p.y,s.evolved?EVOLVED_GLYPHS[s.kind]||ballistic.glyph:ballistic.glyph,this.weaponInk(s.kind,s.kind==='electropistol'?15:ballistic.ink)); continue;
         }
         const glyph = s.kind === 'axe' ? ['/P','-P','P\\'][Math.floor(game.time * 9) % 3] : s.kind === 'fireball' ? '(@)' : s.kind === 'rune' ? ['<+>','{|}','[#]','/|\\'][Math.floor(game.time*8)%4] : s.kind === 'pistol' ? '=' : s.kind === 'sling' ? 'o' : '-->';
         this.world(p.x,p.y,glyph,this.weaponInk(s.kind,s.kind === 'fireball' ? 12 : s.kind === 'rune' ? 9 : 8));
@@ -223,14 +235,14 @@
       for (const s of game.shots) { const p = this.position(s); this.world(p.x - s.vx * .022, p.y - s.vy * .022, Math.abs(s.vy) < Math.abs(s.vx) * .45 ? '-' : s.vx * s.vy > 0 ? '\\' : '/', this.weaponInk('needle',6)); this.world(p.x, p.y, '*', this.weaponInk('needle',7)); }
       for (const b of game.boomerangs) { const p = this.position(b); this.world(p.x, p.y, ['<)>', '/|\\', '<(>', '\\|/'][Math.floor(b.age * 16) % 4], this.weaponInk('boomerang',7)); }
       for (const arc of game.arcs) for (let i = 1; i < arc.points.length; i++) {
-        const a = arc.points[i - 1], b = arc.points[i], beam = arc.weapon === 'clock';
+        const a = arc.points[i - 1], b = arc.points[i], beam = arc.weapon === 'clock' || arc.weapon === 'gauntlets', electric=['lightning','electropistol'].includes(arc.weapon);
         const glyph = beam ? Math.abs(b.y-a.y) < Math.abs(b.x-a.x)*.4 ? '=' : Math.abs(b.x-a.x) < Math.abs(b.y-a.y)*.4 ? '|' : (b.x-a.x)*(b.y-a.y)>0 ? '\\' : '/' : i % 2 ? '~' : '/';
-        this.line(a,b,this.weaponInk(arc.weapon,beam ? 9 : arc.life > .12 ? 8 : 5),glyph,!beam);
+        this.line(a,b,this.weaponInk(arc.weapon,electric?15:beam ? 9 : arc.life > .12 ? 8 : 5),glyph,!beam);
       }
       for (const p of game.particles) this.world(p.x, p.y, p.life > .25 ? '+' : '.', this.weaponInk(p.weapon,p.ink));
       for (const b of game.bladePositions()) this.world(b.x, b.y, game.isEvolved('blades') ? '/+' : Math.sin(b.angle * 2) > 0 ? '/' : '\\', this.weaponInk('blades',game.isEvolved('blades') ? 9 : 8));
       // Pickups use their own brighter inks and remain readable over combat effects.
-      for (const g of game.gems) this.world(g.x, g.y, g.value >= 6 ? '<*>' : '*', 10);
+      for (const g of game.gems) this.world(g.x, g.y, g.value >= 6 ? '<*>' : '*', 16);
       for (const h of game.hearts) this.world(h.x, h.y, '[+]', 11);
       for (const chest of game.chests) { this.world(chest.x, chest.y, chest.canEvolve ? ' ___\n[E*]\n|__|' : ' ___\n[?*]\n|__|', chest.canEvolve ? 5 : 7); this.world(chest.x, chest.y - 36, Math.floor(game.time * 3) % 2 ? '*' : '+', 8); }
       for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) this.world(cache.x, cache.y, '[X]', 7);

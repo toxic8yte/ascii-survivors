@@ -1,0 +1,239 @@
+[
+  {
+    "id": "graveyard",
+    "title": "Кладбище",
+    "description": "Склепы, надгробия и старые волны. Привычная арена для продолжения старых забегов."
+  },
+  {
+    "id": "forest",
+    "title": "Лес без возврата",
+    "description": "Открытые поляны, перекрёсток, редкие деревья, пруды и заброшенный сад. Состав нечисти меняется каждую минуту.",
+    "waves": [
+      {
+        "title": "Сумеречные крылья",
+        "enemies": {
+          "grave_bat": 60
+        }
+      },
+      {
+        "title": "Мёртвая поступь",
+        "enemies": {
+          "ghoul": 60,
+          "grave_bat": 30
+        }
+      },
+      {
+        "title": "Мышиная метель",
+        "enemies": {
+          "grave_bat": 60,
+          "bat": 30
+        }
+      },
+      {
+        "title": "Костяная тропа",
+        "enemies": {
+          "skeleton": 60,
+          "bone_walker": 30
+        }
+      },
+      {
+        "title": "Блуждающие огни",
+        "enemies": {
+          "skeleton": 60,
+          "lantern_wraith": 30
+        }
+      },
+      {
+        "title": "Плесневый покров",
+        "enemies": {
+          "mold_corpse": 60,
+          "coffin_crawler": 30
+        }
+      },
+      {
+        "title": "Гниющая чаща",
+        "enemies": {
+          "ghoul": 60,
+          "mold_corpse": 30
+        }
+      },
+      {
+        "title": "Налёт над трясиной",
+        "enemies": {
+          "bat": 60,
+          "grave_bat": 30,
+          "coffin_crawler": 20
+        }
+      },
+      {
+        "title": "Шествие мертвецов",
+        "enemies": {
+          "ghoul": 60,
+          "mold_corpse": 30
+        }
+      },
+      {
+        "title": "Ночная стая",
+        "enemies": {
+          "bat": 60,
+          "ghoul": 30,
+          "black_hound": 20
+        }
+      },
+      {
+        "title": "Гробовая сырость",
+        "enemies": {
+          "mold_corpse": 60,
+          "coffin_crawler": 30
+        }
+      },
+      {
+        "title": "Костяной ливень",
+        "enemies": {
+          "skeleton": 60,
+          "bone_walker": 30,
+          "screaming_skull": 20
+        }
+      },
+      {
+        "title": "Лунная охота",
+        "enemies": {
+          "werewolf": 60,
+          "lantern_wraith": 30,
+          "skeleton": 20
+        }
+      },
+      {
+        "title": "Призрачный вой",
+        "enemies": {
+          "werewolf": 60,
+          "lantern_wraith": 30
+        }
+      },
+      {
+        "title": "Крылья и клыки",
+        "enemies": {
+          "bat": 60,
+          "werewolf": 30,
+          "black_hound": 20
+        }
+      },
+      {
+        "title": "Голодный лес",
+        "enemies": {
+          "werewolf": 60,
+          "bat": 30,
+          "mold_corpse": 20
+        }
+      },
+      {
+        "title": "Мясная просека",
+        "enemies": {
+          "chapel_butcher": 60,
+          "coffin_crawler": 30,
+          "mold_corpse": 20
+        }
+      },
+      {
+        "title": "Погребальные бинты",
+        "enemies": {
+          "mummy": 60,
+          "brute": 30
+        }
+      },
+      {
+        "title": "Гробовой обоз",
+        "enemies": {
+          "mummy": 60,
+          "coffin_crawler": 30
+        }
+      },
+      {
+        "title": "Железная погребальная",
+        "enemies": {
+          "mummy": 60,
+          "coffin_crawler": 30,
+          "iron_martyr": 20
+        }
+      },
+      {
+        "title": "Стая над склепом",
+        "enemies": {
+          "mummy": 60,
+          "mold_corpse": 30,
+          "bat": 20
+        }
+      },
+      {
+        "title": "Похоронный сад",
+        "enemies": {
+          "corpse_bride": 60,
+          "mourning_nun": 30,
+          "rotting_choir": 20
+        }
+      },
+      {
+        "title": "Траурный венок",
+        "enemies": {
+          "corpse_bride": 60,
+          "mummy": 30
+        }
+      },
+      {
+        "title": "Чёрная процессия",
+        "enemies": {
+          "mourning_nun": 60,
+          "mummy": 30
+        }
+      },
+      {
+        "title": "Сад забвения",
+        "enemies": {
+          "corpse_bride": 60,
+          "mummy": 30,
+          "mold_corpse": 20
+        }
+      },
+      {
+        "title": "Красный урожай",
+        "enemies": {
+          "grand_martyr": 60,
+          "pumpkin": 30,
+          "werewolf": 20
+        }
+      },
+      {
+        "title": "Пылающая изгородь",
+        "enemies": {
+          "pumpkin": 60,
+          "corpse_bride": 30,
+          "brute": 20
+        }
+      },
+      {
+        "title": "Последний обоз",
+        "enemies": {
+          "mummy": 60,
+          "coffin_crawler": 30,
+          "mold_corpse": 20
+        }
+      },
+      {
+        "title": "Кровавые крылья",
+        "enemies": {
+          "bat": 60,
+          "black_hound": 30,
+          "screaming_crown": 20
+        }
+      },
+      {
+        "title": "Лес не отпускает",
+        "enemies": {
+          "grave_bat": 60,
+          "bat": 30,
+          "black_knight": 20
+        }
+      }
+    ]
+  }
+]

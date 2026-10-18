@@ -24,7 +24,7 @@
     },
     enemies: ENEMIES, upgrades: UPGRADES, heroes: content.heroes.map(describe),
     permanents: content.permanents.map(describe), extraWeapons: EXTRA_WEAPONS,
-    evolutions: content.evolutions.map(describe), features: content.features.map(describe)
+    evolutions: content.evolutions.map(describe), features: content.features.map(describe), stages: content.stages.map(describe)
   };
   const freeze = object => {
     if (object && typeof object === 'object' && !Object.isFrozen(object)) {

@@ -7,7 +7,7 @@ validateContent(data, enemies); build(true);
 require('./core.js'); require('./progress.js');
 assert.equal(data.heroes.length, NightCharacters.length); assert.equal(data.weapons.length, NightUpgrades.filter(u => u.weapon).length); assert.equal(data.passives.length, NightUpgrades.filter(u => !u.weapon).length);
 assert.equal(data.legacyEnemies.length + enemies.length, Object.keys(NightEnemies).length);
-for (const rows of [data.heroes, data.weapons, data.passives, data.evolutions, data.legacyEnemies, data.permanents, data.features, enemies]) {
+for (const rows of [data.heroes, data.weapons, data.passives, data.evolutions, data.legacyEnemies, data.permanents, data.features, data.stages, enemies]) {
   for (const row of rows) { assert.ok(row.description.trim(), row.id + ' has a description'); assert.equal(row.text, undefined, 'JSON descriptions have one source of truth'); }
 }
 assert.deepEqual(NightCharacters.map(row => row.id), data.heroes.map(row => row.id));

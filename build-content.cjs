@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const files = { heroes: 'heroes', weapons: 'weapons', passives: 'passives', evolutions: 'evolutions', permanents: 'permanents', features: 'features', legacyEnemies: 'enemies-legacy' };
+const files = { heroes: 'heroes', weapons: 'weapons', passives: 'passives', evolutions: 'evolutions', permanents: 'permanents', features: 'features', legacyEnemies: 'enemies-legacy', stages: 'stages' };
 function readContent(directory = path.join(__dirname, 'data')) {
   const read = name => JSON.parse(fs.readFileSync(path.join(directory, name + '.json'), 'utf8').replace(/^\uFEFF/, ''));
   return { ...Object.fromEntries(Object.entries(files).map(([key, name]) => [key, read(name)])), upgradeOrder: read('catalog-order').upgrades };
@@ -65,6 +65,10 @@ function validateContent(data, roster = []) {
     enemyIds.add(row.id);
   }
   if (!Array.isArray(data.upgradeOrder) || new Set(data.upgradeOrder).size !== data.upgradeOrder.length || data.upgradeOrder.some(id => !upgradeIds.has(id))) fail('catalog-order: invalid or duplicate upgrade ID');
+  for(const stage of data.stages)if(stage.waves!==undefined){
+    if(!Array.isArray(stage.waves)||stage.waves.length!==30)fail('stages/'+stage.id+': expected 30 minute waves');
+    for(const wave of stage.waves)if(!text(wave.title,120)||!wave.enemies||!Object.keys(wave.enemies).length||Object.keys(wave.enemies).length>5||Object.entries(wave.enemies).some(([id,weight])=>!enemyIds.has(id)||!positive(weight)||weight>100||data.legacyEnemies.find(e=>e.id===id)?.boss||['boss','finalBoss'].includes(roster.find(e=>e.id===id)?.rank)))fail('stages/'+stage.id+': invalid wave');
+  }
   return data;
 }
 function generate(data) {

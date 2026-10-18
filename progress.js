@@ -34,9 +34,10 @@
       treasuresTaken: Array.from(game.treasuresTaken), rosterBossIndex: game.rosterBossIndex, combat: game.combat.snapshot(),
       leechBudget: game.leechBudget,
       holyMarks: Array.from(game.holyMarks, ([id,mark]) => [id,{...mark}]),
+      burnMarks: Array.from(game.burnMarks, ([id,mark]) => [id,{...mark}]),
       evolutions: Array.from(game.evolutions), enemyBirths: game.enemies.filter(e => e.alive).map(e => [e.id, e.bornAt]),
       meta: { ...game.meta }, freezes: Array.from(game.freezes), bibleHits: Array.from(game.bibleHits), waterHits:Array.from(game.waterHits),
-      characterId: game.character.id, enemyLimit: game.enemyLimit, status: game.status,
+      characterId: game.character.id, enemyLimit: game.enemyLimit, status: game.status,mapId:game.mapId,
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
       offers: game.offers.map(u => u.id), encountered: Array.from(game.encountered),
@@ -66,7 +67,8 @@
       if (!['running', 'paused', 'upgrading', 'reward'].includes(save.status) || !NightCharacters.some(c => c.id === save.characterId)) return null;
       if (!uint(save.seed) || !uint(save.randomState) || !plain(save.levels) || !plain(save.player) || !plain(save.clocks)) return null;
       if (save.version >= 3 && (!plain(save.meta) || NightMeta.some(u => !uint(save.meta[u.id]) || save.meta[u.id] > u.max))) return null;
-      const game = new NightGame(save.seed, save.characterId, { enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version >= 3 ? save.meta : {} });
+      if(save.mapId!==undefined&&!NightCatalog.stages.some(s=>s.id===save.mapId))return null;
+      const game = new NightGame(save.seed, save.characterId, { map:save.mapId||'graveyard',enemyLimit: number(save.enemyLimit, 100, 24000), fireMode: save.fireMode, terrain: save.terrainEnabled !== false, meta: save.version >= 3 ? save.meta : {} });
       if (save.version >= 10) {
         const banned = list(save.banished, 3);
         if (banned.some(id => !NightUpgrades.some(u => u.id === id)) || new Set(banned).size !== banned.length || !uint(save.banishesLeft) || save.banishesLeft !== 3 - banned.length || !uint(save.skipsLeft) || save.skipsLeft > 3 || !Number.isInteger(save.offerSelection) || save.offerSelection < -1 || save.offerSelection > 2) return null;
@@ -235,6 +237,9 @@
       game.waterHits = new Map(list(save.waterHits===undefined?[]:save.waterHits,24000).map(pair=>{const id=number(pair[0],1,game.nextId-1);if(!uint(id))throw Error('Invalid water hit');return [id,number(pair[1],0)];}));
       game.leechBudget = save.version < 9 ? 2 : number(save.leechBudget,0,2);
       game.holyMarks = new Map(save.version < 9 ? [] : list(save.holyMarks,game.enemyLimit).map(([id,mark]) => { if (!ids.has(id) || !plain(mark)) throw Error('Invalid sacred mark'); return [id,{expires:number(mark.expires,0),next:number(mark.next,0),damage:number(mark.damage,0)}]; }));
+      const burns=list(save.burnMarks===undefined?[]:save.burnMarks,game.enemyLimit);
+      game.burnMarks = new Map(burns.map(([id,mark]) => { if (!ids.has(id) || !plain(mark)) throw Error('Invalid burn mark'); return [id,{expires:number(mark.expires,0),next:number(mark.next,0),damage:number(mark.damage,0)}]; }));
+      if(game.burnMarks.size!==burns.length)return null;
       game.encountered = new Set(list(save.encountered, 100).filter(kind => Object.hasOwn(NightEnemies, kind)));
       game.offers = list(save.offers, 3).map(id => NightUpgrades.find(u => u.id === id));
       if (save.status === 'upgrading' && (!game.offers.length || game.offers.some(u => !u || game.levels[u.id] >= u.max) || new Set(save.offers).size !== save.offers.length)) return null;

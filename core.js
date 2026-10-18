@@ -25,15 +25,31 @@
     { kind: 'crypt', w: 76, h: 54, sprite: ' _____\n|[_+_]|\n|_|||_|', ink: 1 },
     { kind: 'wall', w: 84, h: 30, sprite: '[]===[]\n[]===[]', ink: 1 }
   ];
+  const FOREST_TYPES = [
+    {kind:'pine',w:44,h:58,sprite:'  /\\\n /**\\\n/****\\\n  ||',ink:17},
+    {kind:'oak',w:64,h:58,sprite:' .oo.\n(oOOo)\n \\||/\n  ||',ink:17},
+    {kind:'stump',w:32,h:28,sprite:' _ _\n|o_o|',ink:18},
+    {kind:'boulder',w:60,h:42,sprite:' .--.\n/::::\\\n\\____/',ink:1}
+  ];
+  function forestGround(x,y,width,height){
+    const dx=((x-width/2+1600)%3200+3200)%3200-1600,dy=((y-height/2+1200)%2400+2400)%2400-1200;
+    if(Math.abs(dx)<46||Math.abs(dy)<42||dx>=0&&dx<700&&Math.abs(dy-520)<32)return 'path';
+    if(((dx-940)/190)**2+((dy+600)/110)**2<1||((dx-1150)/95)**2+((dy+300)/60)**2<1)return 'water';
+    if(Math.abs(dx-700)<180&&Math.abs(dy-520)<120&&(Math.abs(dx-700)>145||Math.abs(dy-520)>90))return 'flowers';
+    return 'grass';
+  }
   function terrainHash(x, y) {
     let value = Math.imul(x ^ 0x64ab, 374761393) ^ Math.imul(y ^ 0xf8c, 668265263);
     value = Math.imul(value ^ value >>> 13, 1274126177); return (value ^ value >>> 16) >>> 0;
   }
-  function makeTerrain(width, height) {
+  function makeTerrain(width, height, mapId) {
     const cols = Math.ceil(width / 400), rows = Math.ceil(height / 320), cells = new Array(cols * rows);
     for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
       const value = terrainHash(x, y); if (value % 4 === 0) continue;
-      const block = { ...TERRAIN_TYPES[value % TERRAIN_TYPES.length], x: x * 400 + 120 + value % 160, y: y * 320 + 100 + (value >>> 10) % 120 };
+      const types=mapId==='forest'?FOREST_TYPES:TERRAIN_TYPES;
+      const type=mapId==='forest'?[0,1,0,1,2,3][(value>>>5)%6]:value%types.length;
+      const block = { ...types[type], x: x * 400 + 120 + value % 160, y: y * 320 + 100 + (value >>> 10) % 120 };
+      if(mapId==='forest'&&forestGround(block.x,block.y,width,height)!=='grass')continue;
       if (Math.hypot(block.x - width / 2, block.y - height / 2) < 300) continue;
       cells[y * cols + x] = block;
     }
@@ -45,8 +61,9 @@
       this.seed = seed >>> 0 || 1;
       this.randomState = this.seed;
       this.width = WORLD.width; this.height = WORLD.height; this.duration = Infinity;
+      this.map=(root.NightCatalog||require('./catalog.js')).stages.find(s=>s.id===options.map)|| (root.NightCatalog||require('./catalog.js')).stages[0];this.mapId=this.map.id;
       this.sandboxMode=Boolean(options.sandboxMode);
-      this.terrainEnabled = options.terrain !== false && !this.sandboxMode; this.terrain = makeTerrain(this.width, this.height);
+      this.terrainEnabled = options.terrain !== false && !this.sandboxMode; this.terrain = makeTerrain(this.width, this.height,this.mapId);
       this.encounter = null; this.arenaRadius = 205; this.chests = []; this.reward = null; this.chestsOpened = 0; this.nextChestId = 1;
       this.wallTime = 0; this.pressureOffset = 0; this.steps = 0;
       this.combat = new Combat();
@@ -78,7 +95,7 @@
       for (const id of this.character.extraWeapons || []) { this.levels[id] = 1; this.weaponOrder.push(id); }
       if (this.stressMode && !this.sandboxMode) for (const u of UPGRADES) this.levels[u.id] = u.max;
       this.arcs = []; this.boomerangs = []; this.pools = []; this.meteors = [];
-      this.leechBudget = 2; this.holyMarks = new Map(); this.waterHits = new Map();
+      this.leechBudget = 2; this.holyMarks = new Map(); this.waterHits = new Map(); this.burnMarks = new Map();
       this.relics = []; this.freezes = new Map(); this.bibleHits = new Map(); this.bibleUntil = 0; this.shieldCharges = 0; this.shieldUntil = 0; this.weaponPage = 0;
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
@@ -93,7 +110,7 @@
         else for(const id of this.weaponOrder)this.levels[id]=clamp(Math.floor(Number(config.rank)||1),1,UPGRADES.find(u=>u.id===id).max);
         const passive=UPGRADES.find(u=>!u.weapon&&u.id===config.passive);
         if(passive)for(let i=0;i<clamp(Math.floor(Number(config.passiveRank)||1),1,passive.max);i++)this.applyUpgrade(passive);
-        const recipe=EVOLUTION_BY_WEAPON[this.selectedWeapon];
+        const recipe=EVOLUTION_BY_WEAPON[this.selectedWeapon] || EVOLUTIONS.find(r=>r.weapons?.includes(this.selectedWeapon));
         if(config.evolved&&recipe){for(const id of [recipe.weapon,...(recipe.weapons||[])])this.levels[id]=UPGRADES.find(u=>u.id===id).max;for(const [id,rank]of Object.entries(recipe.passives))while(this.levels[id]<rank)this.applyUpgrade(UPGRADES.find(u=>u.id===id));this.evolve(recipe);}
         this.sandboxEnemy=Object.hasOwn(ENEMIES,config.enemy)?config.enemy:'dummy';this.sandboxCount=clamp(Math.floor(Number(config.count)||1),1,20);this.sandboxClock=0;
         this.treasures=[];
@@ -111,7 +128,7 @@
       if(this.sandboxMode){this.spawnSandboxTargets();return;}
       for (let i = 0; i < 8; i++) {
         const a = i / 8 * TAU + this.random() * .2, d = 310 + this.random() * 100;
-        this.spawn('ghoul', this.player.x + Math.cos(a) * d, this.player.y + Math.sin(a) * d);
+        this.spawn(this.mapId==='forest'?'grave_bat':'ghoul', this.player.x + Math.cos(a) * d, this.player.y + Math.sin(a) * d);
       }
     }
     spawnSandboxTargets() {
@@ -173,7 +190,7 @@
       this.offers = offers; this.offerSelection = -1;
     }
     get weaponPages() { return Math.max(1, Math.ceil(this.inventory(true).length / 5)); }
-    get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode); }
+    get wavePlan() { return EnemySystem.wave(ENEMIES, this.pressureTime, this.stressMode,this.map,this.elapsed); }
     isEvolved(id) { return this.evolutions.has(EVOLUTION_BY_WEAPON[id]?.id); }
     isConsumed(id) { return EVOLUTIONS.some(e => this.evolutions.has(e.id) && e.weapons?.includes(id)); }
     weaponInfo(id) { return this.isEvolved(id) ? EVOLUTION_BY_WEAPON[id] : UPGRADES.find(u => u.id === id); }
@@ -473,7 +490,7 @@
         const force = knockback * (1 - (e.knockbackResistance ?? (this.isFirstBoss(e) ? .65 : 0))); this.moveEntity(e, dx / d * force, dy / d * force);
       }
       if (e.hp > 0) return;
-      e.alive = false; this.holyMarks.delete(e.id); this.waterHits.delete(e.id); this.kills++;
+      e.alive = false; this.holyMarks.delete(e.id); this.waterHits.delete(e.id); this.burnMarks.delete(e.id); this.kills++;
       if(this.sandboxMode){this.burst(e.x,e.y,e.ink,8,weapon);return;}
       if (this.kills % 5 === 0) this.awardGold(1);
       if (e.boss) this.bossKills++;
@@ -671,7 +688,7 @@
         const count = Math.min(12, 1 + this.levels.fork + (id === 'chozo' ? this.character.traits?.chozoAmount || 0 : 0) + (ballistic.rankCount ? Math.floor(level / ballistic.rankCount) : 0));
         for (let i = 0; i < count && this.relics.length < 512; i++) {
           const a = angle + (i ? Math.ceil(i / 2) * (i % 2 ? 1 : -1) * ballistic.spread : 0), speed = ballistic.speed * this.projectileSpeed;
-          this.relics.push({ kind: id, evolved: false, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: ballistic.life * this.effectDuration, damage: (ballistic.damage + ballistic.rankDamage * level) * this.power, radius: ballistic.radius * this.area * (id === 'chozo' ? 1 + (level - 1) * .15 : 1), chargeLeft: ballistic.charge ? Math.max(.12, (ballistic.charge - (level - 1) * .12) / this.haste) : 0, chargeAngle: a, remaining: ballistic.pierce + ballistic.rankPierce * level + this.levels.pierce, hits: new Map(), minX: 0, maxX: this.width, minY: 0, maxY: this.height });
+          this.relics.push({ kind: id, evolved, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: ballistic.life * this.effectDuration, damage: (ballistic.damage + ballistic.rankDamage * level) * this.power, radius: ballistic.radius * this.area * (id === 'chozo' ? 1 + (level - 1) * .15 : 1), chargeLeft: ballistic.charge ? Math.max(.12, (ballistic.charge - (level - 1) * .12) / this.haste * (evolved ? .75 : 1)) : 0, chargeAngle: a, remaining: ballistic.pierce + ballistic.rankPierce * level + this.levels.pierce + (evolved && id === 'crossbow' ? 2 : 0), hits: new Map(), minX: 0, maxX: this.width, minY: 0, maxY: this.height });
         }
         return;
       }
@@ -679,6 +696,7 @@
         const radius = (240 + level * 20) * this.area;
         this.rings.push({ x:p.x, y:p.y, radius, life:.7, maxLife:.7, ink:7, glyph:'+', weapon:id });
         for (const e of this.nearby(p.x, p.y, radius + 50)) if (e.alive && Math.hypot(e.x-p.x, e.y-p.y) < radius + e.radius) {
+          if(evolved&&!e.boss){e.windup=0;e.skillClock=Math.max(e.skillClock,1);}
           this.hurtEnemy(e, (20 + level * 10) * this.power, 5, id);
           if (e.alive) this.holyMarks.set(e.id, { expires:this.time + 4 * this.effectDuration, next:this.time + .5, damage:(5 + level * 3) * this.power });
         }
@@ -691,6 +709,11 @@
           const delta = Math.atan2(e.y-p.y,e.x-p.x)-angle;
           if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < .85) this.hurtEnemy(e,(24+level*12)*this.power*count,40,id);
         }
+        if(evolved)this.enemyShots=this.enemyShots.filter(shot=>{
+          const delta=Math.atan2(shot.y-p.y,shot.x-p.x)-angle;
+          if(Math.hypot(shot.x-p.x,shot.y-p.y)>radius+shot.radius||Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta)))>=.85)return true;
+          this.burst(shot.x,shot.y,9,4,id);return false;
+        });
         return;
       }
       if (id === 'gauntlets') {
@@ -699,6 +722,11 @@
         for (const e of this.nearby(p.x,p.y,radius + 50)) if (e.alive && Math.hypot(e.x-p.x,e.y-p.y) < radius + e.radius) {
           const delta = Math.atan2(e.y-p.y,e.x-p.x) - angle;
           if (Math.abs(Math.atan2(Math.sin(delta),Math.cos(delta))) < .85) this.hurtEnemy(e,(12 + level * 8) * this.power * count,55,id);
+        }
+        if(evolved){
+          const reach=Math.min(220,radius+80),start={x:p.x+Math.cos(angle)*radius*.6,y:p.y+Math.sin(angle)*radius*.6},end={x:p.x+Math.cos(angle)*reach,y:p.y+Math.sin(angle)*reach};
+          this.arcs.push({points:[start,end],life:.25,maxLife:.25,weapon:id});
+          for(const e of this.nearby(p.x,p.y,reach+50))if(e.alive&&segmentDistance(e.x,e.y,start,end)<e.radius+22)this.hurtEnemy(e,(12+level*8)*this.power*.45,85,id);
         }
         return;
       }
@@ -786,6 +814,11 @@
       }
       for (const s of this.relics) {
         if (s.chargeLeft > 0) { s.chargeLeft = Math.max(0,s.chargeLeft-dt); s.x = s.prevX = this.player.x; s.y = s.prevY = this.player.y; if (s.chargeLeft > 0) continue; }
+        if(s.evolved&&s.kind==='chozo'){
+          let target=null,distance=240;
+          for(const e of this.nearby(s.x,s.y,290))if(e.alive&&!s.hits.has(e.id)){const d=Math.hypot(e.x-s.x,e.y-s.y);if(d<distance){target=e;distance=d;}}
+          if(target){const speed=Math.hypot(s.vx,s.vy),angle=Math.atan2(s.vy,s.vx),delta=Math.atan2(target.y-s.y,target.x-s.x)-angle,next=angle+clamp(Math.atan2(Math.sin(delta),Math.cos(delta)),-dt*3,dt*3);s.vx=Math.cos(next)*speed;s.vy=Math.sin(next)*speed;}
+        }
         const x = s.x, y = s.y; s.prevX = x; s.prevY = y; s.life -= dt;
         if (s.kind === 'axe' && !s.evolved) s.vy += 360 * dt;
         s.x += s.vx * dt; s.y += s.vy * dt;
@@ -804,6 +837,21 @@
             this.hurtEnemy(e, s.damage * (critical ? 3 : s.evolved && s.kind === 'sling' && e.boss ? 2 : 1), s.kind === 'sling' ? 24 : 7, s.kind);
             const ballistic = BALLISTICS[s.kind];
             if (ballistic?.splashRadius) this.explode(e.x, e.y, ballistic.splashRadius * this.area, s.damage * ballistic.splashScale, ballistic.ink, 8, s.kind);
+            if(s.evolved){
+              if(s.kind==='crossbow'&&e.alive)this.freezes.set(e.id,this.time+(e.boss ? .15 : .65));
+              if(s.kind==='gauss')this.explode(e.x,e.y,60*this.area,s.damage*.25,9,8,s.kind);
+              if(s.kind==='plasmaMinigun'&&!e.alive)this.explode(e.x,e.y,70*this.area,s.damage*.6,10,10,s.kind);
+              if(s.kind==='flamethrower'&&e.alive){const old=this.burnMarks.get(e.id);this.burnMarks.set(e.id,{expires:this.time+2.5,next:old?.next??this.time+.5,damage:Math.max(old?.damage||0,s.damage*.35)});}
+              if(s.kind==='electropistol'){
+                const points=[{x:e.x,y:e.y}];let from=e;
+                for(let jump=0;jump<2;jump++){
+                  let target=null,distance=150;
+                  for(const other of this.nearby(from.x,from.y,200))if(other.alive&&!s.hits.has(other.id)){const d=Math.hypot(other.x-from.x,other.y-from.y);if(d<distance){target=other;distance=d;}}
+                  if(!target)break;s.hits.set(target.id,this.time+100);points.push({x:target.x,y:target.y});this.hurtEnemy(target,s.damage*(jump ? .35 : .55),0,s.kind);from=target;
+                }
+                if(points.length>1)this.arcs.push({points,life:.22,maxLife:.22,weapon:s.kind});
+              }
+            }
             if (s.evolved && ['fireball', 'sling'].includes(s.kind)) this.explode(e.x, e.y, 80 * this.area, s.damage * .4, s.kind === 'sling' ? 7 : 12, 18, s.kind);
           }
         }
@@ -852,8 +900,13 @@
       this.pools = this.pools.filter(pool => pool.life > 0);
       if (this.holyMarks.size) {
         const markedAlive = new Set();
-        for (const e of this.enemies) { const mark = this.holyMarks.get(e.id); if (!mark || !e.alive || mark.expires <= this.time) continue; markedAlive.add(e.id); if (this.time >= mark.next) { mark.next = this.time + .5; this.hurtEnemy(e,mark.damage,0,'lightStaff'); } }
+        for (const e of this.enemies) { const mark = this.holyMarks.get(e.id); if (!mark || !e.alive || mark.expires <= this.time) continue; markedAlive.add(e.id); if (this.time >= mark.next) { mark.next = this.time + .5; this.hurtEnemy(e,mark.damage*(this.isEvolved('lightStaff')&&e.hp<e.maxHp*.5?1.5:1),0,'lightStaff'); } }
         for (const id of this.holyMarks.keys()) if (!markedAlive.has(id)) this.holyMarks.delete(id);
+      }
+      if(this.burnMarks.size){
+        const burningAlive=new Set();
+        for(const e of this.enemies){const burn=this.burnMarks.get(e.id);if(!burn||!e.alive||burn.expires<this.time)continue;burningAlive.add(e.id);if(this.time>=burn.next){burn.next=this.time+.5;this.hurtEnemy(e,burn.damage,0,'flamethrower');}}
+        for(const id of this.burnMarks.keys())if(!burningAlive.has(id))this.burnMarks.delete(id);
       }
       for (const m of this.meteors) {
         m.wait -= dt;
@@ -1065,5 +1118,5 @@
       this.combat.sample(dt, this);
     }
   }
-  root.NightMeta = META; root.NightGame = NightGame; root.NightEnemies = ENEMIES; root.NightUpgrades = UPGRADES; root.NightCharacters = CHARACTERS; root.NightSlots = SLOTS; root.NightWorld = WORLD; root.NightBalance = BALANCE;
+  root.NightMeta = META; root.NightGame = NightGame; root.NightEnemies = ENEMIES; root.NightUpgrades = UPGRADES; root.NightCharacters = CHARACTERS; root.NightSlots = SLOTS; root.NightWorld = WORLD; root.NightBalance = BALANCE;root.NightForestGround=forestGround;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

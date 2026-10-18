@@ -10,12 +10,12 @@
   let selectedCharacter = progress.profile.character;
   let fireModePreference = progress.profile.fireMode;
   $('enemy-limit').value = progress.profile.enemyLimit;
-  function options() { return { fireMode:fireModePreference, stressMode:$('stress-mode').checked, sandboxMode:$('sandbox-mode').checked, sandbox:{weapon:$('sandbox-weapon').value,rank:Number($('sandbox-rank').value),passive:$('sandbox-passive').value,passiveRank:Number($('sandbox-passive-rank').value),evolved:$('sandbox-evolved').checked,enemy:$('sandbox-enemy').value,count:Number($('sandbox-count').value)}, enemyLimit:Number($('enemy-limit').value),meta:progress.profile.meta.ranks }; }
+  function options() { return { map:$('stage-select').value,fireMode:fireModePreference, stressMode:$('stress-mode').checked, sandboxMode:$('sandbox-mode').checked, sandbox:{weapon:$('sandbox-weapon').value,rank:Number($('sandbox-rank').value),passive:$('sandbox-passive').value,passiveRank:Number($('sandbox-passive-rank').value),evolved:$('sandbox-evolved').checked,enemy:$('sandbox-enemy').value,count:Number($('sandbox-count').value)}, enemyLimit:Number($('enemy-limit').value),meta:progress.profile.meta.ranks }; }
   let game = new NightGame(Date.now(), selectedCharacter, options()), keys = new Set();
   const equipmentTooltip = document.createElement('div'); equipmentTooltip.id = 'equipment-tooltip'; equipmentTooltip.className = 'equipment-tooltip'; equipmentTooltip.setAttribute('role', 'tooltip'); equipmentTooltip.hidden = true; shell.append(equipmentTooltip);
   let tooltipAnchor = null, previewWeapon = null;
   function syncWeaponHighlight() {
-    const id = previewWeapon || game.selectedWeapon;
+    const id = previewWeapon || (game.fireMode==='manual'?game.selectedWeapon:null);
     if (renderer.highlightWeapon !== id) { renderer.highlightWeapon = id; dirty = true; }
     for (const slot of $('loadout').querySelectorAll('[data-item]')) slot.classList.toggle('weapon-highlighted', slot.dataset.item === id);
   }
@@ -78,7 +78,7 @@
   }
   function progressSummary() {
     $('continue-box').hidden = !savedRun;
-    if (savedRun) text('continue-summary', savedRun.character.name + ' · ' + formatTime(savedRun.elapsed) + ' · УР. ' + savedRun.level + ' · ' + Math.ceil(savedRun.player.hp) + ' HP');
+    if (savedRun) text('continue-summary', savedRun.character.name + ' · '+savedRun.map.title+' · ' + formatTime(savedRun.elapsed) + ' · УР. ' + savedRun.level + ' · ' + Math.ceil(savedRun.player.hp) + ' HP');
     text('start', savedRun ? 'НОВЫЙ ЗАБЕГ →' : 'ВОЙТИ В НОЧЬ →');
     const p = progress.profile;
     text('meta-open', 'НАСЛЕДИЕ · ' + p.meta.gold + ' ЗОЛОТА');
@@ -103,7 +103,7 @@
     const restored = progress.loadRun();
     if (!restored) { savedRun = null; progressSummary(); notify('Сохранение недоступно. Можно начать новый забег.'); return; }
     game = restored; selectedCharacter = game.character.id; fireModePreference = game.fireMode;
-    $('stress-mode').checked = false; $('sandbox-mode').checked=false; $('enemy-limit').value = game.enemyLimit; preferences();
+    $('stress-mode').checked = false; $('sandbox-mode').checked=false;$('stage-select').value=game.mapId; $('enemy-limit').value = game.enemyLimit; preferences();
     resetMetrics(); clearInput(); camera = { x: game.player.x, y: game.player.y }; last = accumulator = 0;
     previousStatus = ''; offersLevel = 0; lastWave = game.wave; lastSavedElapsed = game.elapsed;
     if (game.status === 'paused') game.pause();
@@ -186,6 +186,8 @@
       const rank = document.createElement('small'); rank.textContent = (item.weapon ? 'ОРУЖИЕ' : item.kind) + ' · ' + game.levels[item.id] + '/' + item.max + (game.isConsumed(item.id) ? ' · ОБЪЕДИНЕНО' : '');
       if (item.baseTitle) title.title = item.baseTitle;
       card.append(title, description, rank); fragment.append(card);
+      const recipes=NightCatalog.evolutions.filter(r=>r.weapon===item.id||r.weapons?.includes(item.id)||Object.hasOwn(r.passives,item.id));
+      if(recipes.length){const links=document.createElement('p');links.className='upgrade-recipe';links.textContent='ЭВОЛЮЦИИ: '+recipes.map(r=>r.title).join(' · ');card.append(links);}
     }
     $('content-reference').replaceChildren(fragment);
   }
@@ -193,11 +195,17 @@
     if (!accessFeature('treasureMap')) return;
     mapWasRunning = game.status === 'running'; if (mapWasRunning) { clearInput(); game.pause(); saveCheckpoint(); updateHUD(); }
     const ns = 'http://www.w3.org/2000/svg', svg = $('treasure-map'); svg.replaceChildren();
-    svg.setAttribute('viewBox', '0 0 ' + game.width + ' ' + game.height);
+    svg.setAttribute('viewBox', '0 0 ' + game.width + ' ' + game.height);svg.setAttribute('aria-label',game.map.title+' · карта сокровищ');
     const marker = (x, y, glyph, color, label) => {
       const dot = document.createElementNS(ns, 'text'); dot.setAttribute('x', x); dot.setAttribute('y', y); dot.setAttribute('fill', color); dot.setAttribute('font-size', '290'); dot.setAttribute('text-anchor', 'middle'); dot.textContent = glyph;
       const title = document.createElementNS(ns, 'title'); title.textContent = label; dot.append(title); svg.append(dot);
     };
+    if(game.mapId==='forest'){
+      const shape=(tag,attrs)=>{const node=document.createElementNS(ns,tag);for(const [key,value]of Object.entries(attrs))node.setAttribute(key,value);svg.append(node);};
+      for(let x=0;x<=game.width;x+=3200)shape('line',{x1:x,y1:0,x2:x,y2:game.height,stroke:'#6c6e43','stroke-width':70});
+      for(let y=0;y<=game.height;y+=2400)shape('line',{x1:0,y1:y,x2:game.width,y2:y,stroke:'#6c6e43','stroke-width':70});
+      for(let x=0;x<=game.width;x+=3200)for(let y=0;y<=game.height;y+=2400){shape('ellipse',{cx:x+940,cy:y-600,rx:190,ry:110,fill:'#43817e'});shape('rect',{x:x+520,y:y+400,width:360,height:240,fill:'none',stroke:'#76945c','stroke-width':35});}
+    }
     for (const cache of game.treasures) if (!game.treasuresTaken.has(cache.id)) marker(cache.x, cache.y, 'X', '#edc77d', 'Тайник ' + (cache.id + 1));
     for (const chest of game.chests) marker(chest.x, chest.y, '$', '#c49be2', 'Оставленный сундук');
     marker(game.player.x, game.player.y, '@', '#f47561', 'Ты здесь');
@@ -271,7 +279,7 @@
     preferences();
   }
   function exportMetrics() {
-    const payload = { version: 2, mode: game.sandboxMode ? 'sandbox' : game.stressMode ? 'stress' : 'survival', character: game.character.id, levels: { ...game.levels }, meta: { ...game.meta }, evolutions: [...game.evolutions], enemyLimit: game.enemyLimit, elapsed: game.elapsed, simulationSeconds: game.time, pressureSeconds: game.pressureTime, peakEnemies: game.peakEnemies, kills: game.kills, sampleWindow: 'Performance: last 3600 session seconds. Combat: 180 windows of 10 simulated seconds and persistent totals.', combat: game.combat.snapshot(), samples: records };
+    const payload = { version: 2, mode: game.sandboxMode ? 'sandbox' : game.stressMode ? 'stress' : 'survival', map:game.mapId, character: game.character.id, levels: { ...game.levels }, meta: { ...game.meta }, evolutions: [...game.evolutions], enemyLimit: game.enemyLimit, elapsed: game.elapsed, simulationSeconds: game.time, pressureSeconds: game.pressureTime, peakEnemies: game.peakEnemies, kills: game.kills, sampleWindow: 'Performance: last 3600 session seconds. Combat: 180 windows of 10 simulated seconds and persistent totals.', combat: game.combat.snapshot(), samples: records };
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = 'ascii-survivors-metrics.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
@@ -312,6 +320,9 @@
     updateSandboxPreview();
   }
   function updateSandboxPreview() {
+    const weapon=$('sandbox-weapon').value==='starter'?NightCharacters.find(c=>c.id===$('sandbox-hero').value)?.weapon:$('sandbox-weapon').value,recipe=NightCatalog.evolutions.find(r=>r.weapon===weapon||r.weapons?.includes(weapon));
+    $('sandbox-evolution-description').hidden=!$('sandbox-evolved').checked;
+    text('sandbox-evolution-description',recipe?recipe.title+' · '+recipe.description+' Все ингредиенты рецепта выдаются для теста.':'Для выбранного оружия нет рецепта.');
     const enemy=NightEnemies[$('sandbox-enemy').value],passive=NightUpgrades.find(u=>u.id===$('sandbox-passive').value);
     text('sandbox-enemy-art',enemy?.sprite || ' ._.\n[+|+]\n / \\');text('sandbox-enemy-description',enemy?.description || 'Неподвижная цель с 10 000 HP. После зачистки выбранные цели появятся снова.');
     for(const option of $('sandbox-passive-rank').options)option.disabled=Number(option.value)>(passive?.max||1);
@@ -459,7 +470,8 @@
     text('stage',game.sandboxMode?'ПЕСОЧНИЦА / СВОБОДНЫЙ ТЕСТ':(game.stressMode?'ТЕСТ ДВИЖКА / ':'')+(status==='ready'?'БЕСКОНЕЧНАЯ НОЧЬ':'ВОЛНА '+game.wave));
     $('sandbox-open').hidden=!game.sandboxMode;$('sandbox-open-live').hidden=!game.sandboxMode||status==='ready';
     text('coords', Math.round(p.x) + ' : ' + Math.round(p.y));
-    text('map-label', 'КЛАДБИЩЕ · ' + game.width.toLocaleString('ru-RU') + ' × ' + game.height.toLocaleString('ru-RU'));
+    text('stage-description',game.map.description);
+    text('map-label', game.map.title.toUpperCase()+' · ' + game.width.toLocaleString('ru-RU') + ' × ' + game.height.toLocaleString('ru-RU'));
     const boss = game.enemies.find(e => e.alive && e.boss);
     text('boss-name', boss ? boss.title + ' · ' + (boss.id === game.encounter?.bossId ? Math.ceil(boss.hp) + ' / ' + Math.ceil(boss.maxHp) + ' HP' : Math.ceil(boss.hp / boss.maxHp * 100) + '%') : '');
     const encounter = game.encounter;
@@ -609,14 +621,14 @@
     if(!$('stress-mode').checked&&!$('sandbox-mode').checked){selectedCharacter=progress.profile.character;fireModePreference=progress.profile.fireMode;}
     configureRun();
   });
-  $('enemy-limit').addEventListener('change', configureRun);
+  $('enemy-limit').addEventListener('change', configureRun);$('stage-select').addEventListener('change',()=>configureRun());
   $('sandbox-open').addEventListener('click',openSandbox);$('sandbox-open-live').addEventListener('click',openSandbox);
   $('sandbox-close').addEventListener('click',()=>$('sandbox-settings').close());
-  $('sandbox-enemy').addEventListener('change',updateSandboxPreview);$('sandbox-passive').addEventListener('change',updateSandboxPreview);
+  for(const id of ['sandbox-enemy','sandbox-passive','sandbox-weapon','sandbox-hero','sandbox-evolved'])$(id).addEventListener('change',updateSandboxPreview);
   $('sandbox-apply').addEventListener('click',()=>{
     if(!game.sandboxMode)return;
     sandboxWasRunning=false;selectedCharacter=$('sandbox-hero').value;$('sandbox-settings').close();
-    game=new NightGame(Date.now(),selectedCharacter,options());resetMetrics();camera={x:game.player.x,y:game.player.y};previousStatus='';offersLevel=0;clearInput();resize();updateCharacterDetails();start();
+    game=new NightGame(Date.now(),selectedCharacter,options());resetMetrics();camera={x:game.player.x,y:game.player.y};previousStatus='';offersLevel=0;lastWave=1;accumulator=0;clearInput();resize();updateCharacterDetails();start();
   });
   $('sandbox-settings').addEventListener('close',()=>{if(sandboxWasRunning&&game.status==='paused'){game.pause();last=0;updateHUD();canvas.focus({preventScroll:true});}sandboxWasRunning=false;});
   $('loadout').addEventListener('click', e => { const slot = e.target.closest('[data-slot]'); if (slot) selectWeapon(Number(slot.dataset.slot)); });
