@@ -10,6 +10,21 @@ function fixture(hero = 'hunter') {
 const tick = (g,seconds) => { for(let i=0;i<Math.ceil(seconds*60);i++) g.update(1/60); };
 function target(g,dx=150) {const e=g.spawn('brute',g.player.x+dx,g.player.y); e.hp=e.maxHp=10000;e.speed=0;return e;}
 const hero = id => NightCharacters.find(h=>h.id===id);
+const {weaponTrial}=require('./audit-weapons.cjs');
+for(const u of NightUpgrades.filter(u=>u.weapon&&!['clock','laurel'].includes(u.id))) {
+  assert.ok([50,100,200,400].some(distance=>weaponTrial(u.id,1,0,'auto',distance).dps>0),u.id+' rank-one attack can damage a target in front');
+}
+assert.ok(weaponTrial('clock',1,0,'manual',200).freezeSeconds>0);assert.ok(weaponTrial('laurel',1,0,'auto',100).shieldSeconds>0,'Support weapons are tested for control or protection rather than DPS');
+const meteor=fixture();meteor.levels.meteor=3;meteor.levels.fork=2;meteor.setFireMode('auto');target(meteor,150);meteor.buildGrid();meteor.castMeteor();assert.equal(meteor.meteors.length,4,'Rank and Duplicator create all meteors even when only one target exists');
+const hammer=fixture();hammer.levels.hammer=1;const remote=target(hammer,350);hammer.buildGrid();hammer.setFireMode('auto');hammer.castRelic('hammer');assert.equal(hammer.meteors.length,0,'Hammer does not bomb distant enemies');hammer.setFireMode('manual');hammer.aim={x:remote.x,y:remote.y,active:true};hammer.castRelic('hammer');assert.ok(hammer.meteors.every(m=>Math.hypot(m.x-hammer.player.x,m.y-hammer.player.y)<=130));
+const pools=fixture();pools.levels.water=pools.levels.poison=1;const soaked=target(pools,70);pools.buildGrid();
+pools.pools=[{x:soaked.x,y:soaked.y,radius:50,life:3,kind:'water',damage:15},{x:soaked.x,y:soaked.y,radius:50,life:3}];
+pools.updateWeapons(.01);assert.ok(pools.combat.weapons.water.damage>0&&pools.combat.weapons.poison.damage>0,'Water and acid tick independently on the same enemy');
+const poolHP=soaked.hp;pools.updateWeapons(.01);assert.equal(soaked.hp,poolHP,'Overlapping pools of the same family retain their shared cooldown');
+const restoredPools=NightSave.restore(clone(NightSave.capture(pools)));assert.ok(restoredPools);assert.deepEqual(restoredPools.waterHits,pools.waterHits);
+const oldPools=clone(NightSave.capture(pools));delete oldPools.waterHits;assert.ok(NightSave.restore(oldPools),'Existing checkpoints without a water timer still load');
+for(const invalid of [null,[[999999,1]],[[soaked.id,-1]]]){const damaged=clone(NightSave.capture(pools));damaged.waterHits=invalid;assert.equal(NightSave.restore(damaged),null,'Invalid water cooldown data is rejected');}
+soaked.alive=false;assert.ok(NightSave.restore(clone(NightSave.capture(pools))),'A recently despawned enemy may retain its short water cooldown until cleanup');
 assert.equal(hero('witch').name,'Электра Ивановна');assert.equal(hero('tact').name,'DJ Харон');
 assert.equal(hero('ark').weapon,'crowbar');assert.equal(hero('ark').extraWeapons,undefined);
 assert.deepEqual(fixture('shepard').inventory(true),['crossbow','rune']);

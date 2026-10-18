@@ -13,7 +13,7 @@
   const BALLISTICS = Object.fromEntries(EXTRA_WEAPONS.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const WEAPON_DAMAGE = Object.fromEntries(UPGRADES.filter(u => u.weapon).map(u => [u.id, u.damageMultiplier]));
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
-  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .00875, bossHeartDropChance: .25, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4 });
+  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .00875, bossHeartDropChance: .25, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4, firstBossHealth: .25, firstBossDamage: .45, firstBossSkill: 5.5, firstBossMinions: 2 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
   const EnemySystem = root.NightEnemySystem || require('./enemy-system.js');
   const Combat = root.NightCombat || require('./combat.js');
@@ -77,7 +77,7 @@
       for (const id of this.character.extraWeapons || []) { this.levels[id] = 1; this.weaponOrder.push(id); }
       if (this.stressMode) for (const u of UPGRADES) this.levels[u.id] = u.max;
       this.arcs = []; this.boomerangs = []; this.pools = []; this.meteors = [];
-      this.leechBudget = 2; this.holyMarks = new Map();
+      this.leechBudget = 2; this.holyMarks = new Map(); this.waterHits = new Map();
       this.relics = []; this.freezes = new Map(); this.bibleHits = new Map(); this.bibleUntil = 0; this.shieldCharges = 0; this.shieldUntil = 0; this.weaponPage = 0;
       this.weaponClocks = { blades: 0, lightning: .25, boomerang: .25, frost: .3, meteor: .3, poison: 0 };
       for (const w of EXTRA_WEAPONS) this.weaponClocks[w.id] = .3;
@@ -235,6 +235,7 @@
       this.encounter = { phase: 'warning', x: this.player.x, y: this.player.y, radius: this.arenaRadius, warningLeft: 5, lockedLeft: BALANCE.arenaSeconds, bossId: 0, kind: BOSSES[this.bossIndex % BOSSES.length] };
       this.events.push('arena-warning');
     }
+    isFirstBoss(enemy) { return this.bossIndex === 1 && enemy.boss && enemy.kind === BOSSES[0]; }
     updateEncounter(dt) {
       const arena = this.encounter; if (!arena) return;
       if (arena.phase === 'locked') {
@@ -250,7 +251,8 @@
       for (const enemy of this.enemies) { enemy.arenaMember = 0; this.resolveArena(enemy); }
       const angle = this.random() * TAU, distance = arena.radius * .56;
       const boss = this.spawn(arena.kind, arena.x + Math.cos(angle) * distance, arena.y + Math.sin(angle) * distance, 1);
-      boss.hp *= BALANCE.arenaBossHealth; boss.maxHp = boss.hp; boss.damage *= BALANCE.arenaBossDamage;
+      const first = this.bossIndex === 0;
+      boss.hp *= first ? BALANCE.firstBossHealth : BALANCE.arenaBossHealth; boss.maxHp = boss.hp; boss.damage *= first ? BALANCE.firstBossDamage : BALANCE.arenaBossDamage;
       boss.radius = Math.min(46, boss.radius * 1.25); boss.arenaMember = 1;
       this.player.invulnerable = Math.max(this.player.invulnerable, 1);
       arena.bossId = boss.id; this.bossIndex++; this.bossSpawned = true; this.lastBoss = boss.title;
@@ -444,10 +446,10 @@
       e.hp -= damage; e.flash = .12;
       if (knockback) {
         const dx = e.x - this.player.x, dy = e.y - this.player.y, d = Math.hypot(dx, dy) || 1;
-        const force = knockback * (1 - (e.knockbackResistance || 0)); this.moveEntity(e, dx / d * force, dy / d * force);
+        const force = knockback * (1 - (e.knockbackResistance ?? (this.isFirstBoss(e) ? .65 : 0))); this.moveEntity(e, dx / d * force, dy / d * force);
       }
       if (e.hp > 0) return;
-      e.alive = false; this.holyMarks.delete(e.id); this.kills++;
+      e.alive = false; this.holyMarks.delete(e.id); this.waterHits.delete(e.id); this.kills++;
       if (this.kills % 5 === 0) this.awardGold(1);
       if (e.boss) this.bossKills++;
       if (e.boss) {
@@ -577,10 +579,11 @@
     castSlash() {
       const p = this.player, aim = this.aimPoint(130), angle = Math.atan2(aim.y - p.y, aim.x - p.x), radius = (110 + this.levels.blades * 10) * this.area;
       const count = 1 + this.levels.fork + (this.isEvolved('blades') ? 2 : 0);
-      for (let i = 0; i < count; i++) this.slashes.push({ x: p.x, y: p.y, angle: angle + (i - (count - 1) / 2) * .25, radius: radius + i * 9, life: .22, weapon: 'blades' });
+      const swings=Array.from({length:count},(_,i)=>angle+(i-(count-1)/2)*.25);
+      for (const facing of swings) this.slashes.push({ x:p.x, y:p.y, angle:facing, radius, life:.22, weapon:'blades' });
       for (const e of this.nearby(p.x, p.y, radius + 35)) if (e.alive && Math.hypot(e.x - p.x, e.y - p.y) < radius + e.radius) {
-        const difference = Math.atan2(Math.sin(Math.atan2(e.y - p.y, e.x - p.x) - angle), Math.cos(Math.atan2(e.y - p.y, e.x - p.x) - angle));
-        if (Math.abs(difference) < 1.25) this.hurtEnemy(e, (23 + this.levels.blades * 5) * this.power * count * (this.isEvolved('blades') ? 1.5 : 1), 18, 'blades');
+        const facing=Math.atan2(e.y-p.y,e.x-p.x), hits=swings.filter(a=>Math.abs(Math.atan2(Math.sin(facing-a),Math.cos(facing-a)))<=.95).length;
+        if (hits) this.hurtEnemy(e,(23+this.levels.blades*5)*this.power*hits*(this.isEvolved('blades')?1.5:1),18,'blades');
       }
     }
     castPoison() {
@@ -626,7 +629,8 @@
     }
     castMeteor() {
       const count = (this.levels.meteor >= 3 ? 2 : 1) + this.levels.fork + (this.isEvolved('meteor') ? 2 : 0);
-      const targets = this.fireMode === 'manual' ? Array.from({ length: count }, (_, i) => { const aim = this.aimPoint(); return { x: aim.x + (i - (count - 1) / 2) * 55, y: aim.y }; }) : this.targets(this.player.x, this.player.y, 620, count);
+      const nearby = this.fireMode === 'auto' ? this.targets(this.player.x, this.player.y, 620, count) : [];
+      const targets = this.fireMode === 'manual' ? Array.from({ length: count }, (_, i) => { const aim = this.aimPoint(); return { x: aim.x + (i - (count - 1) / 2) * 55, y: aim.y }; }) : nearby.length ? Array.from({length:count},(_,i)=>nearby[i % nearby.length]) : [];
       for (const e of targets.slice(0, count)) if (this.meteors.length < 100) this.meteors.push({ x: clamp(e.x, 28, this.width - 28), y: clamp(e.y, 28, this.height - 28), wait: .65, radius: (90 + this.levels.meteor * 12) * this.area * (this.isEvolved('meteor') ? 1.4 : 1), damage: (48 + 22 * this.levels.meteor) * this.power });
     }
     biblePositions() {
@@ -677,8 +681,8 @@
       if (id === 'bible') { this.bibleUntil = this.time + (2 + level * .4) * this.effectDuration; return; }
       if (id === 'hammer') {
         const count = 1 + Math.floor(level / 2) + this.levels.fork;
-        const nearby = this.targets(p.x, p.y, 340, count);
-        const targets = this.fireMode === 'manual' ? Array.from({ length: count }, (_, i) => { const aim = this.aimPoint(300); return { x: aim.x + (i - (count - 1) / 2) * 42, y: aim.y }; }) : nearby.length ? Array.from({ length: count }, (_, i) => nearby[i % nearby.length]) : [];
+        const reach = 130 * this.area, nearby = this.targets(p.x, p.y, reach, count);
+        const targets = this.fireMode === 'manual' ? Array.from({ length: count }, () => this.aimPoint(reach)) : nearby.length ? Array.from({ length: count }, (_, i) => nearby[i % nearby.length]) : [];
         for (const point of targets) if (this.meteors.length < 100) this.meteors.push({ x: clamp(point.x, 28, this.width - 28), y: clamp(point.y, 28, this.height - 28), wait: .3, radius: (70 + level * 10) * this.area, damage: (36 + level * 16) * this.power, kind: 'hammer' });
         return;
       }
@@ -740,7 +744,14 @@
       for (let i = 0; i < count && this.relics.length < 512; i++) {
         const a = evolved && id === 'axe' ? angle + i * TAU / count : (id === 'dagger' && this.fireMode === 'auto' ? Math.atan2(p.dirY, p.dirX) : angle) + (i - (count - 1) / 2) * .16;
         const speed = (id === 'pistol' ? 800 : id === 'sling' ? 480 : id === 'dagger' ? 700 : id === 'axe' ? 240 : id === 'fireball' ? 220 : 330) * this.projectileSpeed;
-        this.relics.push({ kind: id, evolved, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed - (id === 'axe' && !evolved ? 260 : 0), life: (id === 'rune' ? 4 * this.effectDuration : 2.5), damage: (id === 'fireball' ? 45 + 20 * level : id === 'axe' ? 30 + 18 * level : 12 + 8 * level) * this.power * (evolved ? 1.8 : 1), radius: (id === 'fireball' ? 15 : 8) * this.area, remaining: id === 'rune' || id === 'axe' || evolved && id === 'fireball' ? 100000 : 1 + this.levels.pierce + Math.floor(level / 2), hits: new Map(), minX: Math.max(28, p.x - 500), maxX: Math.min(this.width - 28, p.x + 500), minY: Math.max(28, p.y - 300), maxY: Math.min(this.height - 28, p.y + 300) });
+        let vx = Math.cos(a) * speed, vy = Math.sin(a) * speed;
+        if (id === 'axe' && !evolved) {
+          const point = this.fireMode === 'manual' ? this.aimPoint(420) : target || this.aimPoint(420);
+          const dx = point.x-p.x, dy = point.y-p.y, distance = Math.hypot(dx,dy) || 1, scale = Math.min(1,420/distance), flight = clamp(Math.min(420,distance)/speed,.2,1.75);
+          const spread = a-angle, ax = dx*scale/flight, ay = dy*scale/flight-180*flight;
+          vx = ax*Math.cos(spread)-ay*Math.sin(spread); vy = ax*Math.sin(spread)+ay*Math.cos(spread);
+        }
+        this.relics.push({ kind: id, evolved, x: p.x, y: p.y, prevX: p.x, prevY: p.y, vx, vy, life: (id === 'rune' ? 4 * this.effectDuration : 2.5), damage: (id === 'fireball' ? 45 + 20 * level : id === 'axe' ? 30 + 18 * level : 12 + 8 * level) * this.power * (evolved ? 1.8 : 1), radius: (id === 'fireball' ? 15 : 8) * this.area, remaining: id === 'rune' || id === 'axe' || evolved && id === 'fireball' ? 100000 : 1 + this.levels.pierce + Math.floor(level / 2), hits: new Map(), minX: Math.max(28, p.x - 500), maxX: Math.min(this.width - 28, p.x + 500), minY: Math.max(28, p.y - 300), maxY: Math.min(this.height - 28, p.y + 300) });
       }
     }
     updateRelics(dt) {
@@ -774,7 +785,7 @@
       }
       this.relics = this.relics.filter(s => s.life > 0 && s.remaining > 0 && s.x >= 0 && s.y >= 0 && s.x <= this.width && s.y <= this.height);
       for (const b of this.biblePositions()) for (const e of this.nearby(b.x, b.y, 60)) if (e.alive && this.time >= (this.bibleHits.get(e.id) || 0) && Math.hypot(e.x - b.x, e.y - b.y) < e.radius + 20) { this.bibleHits.set(e.id, this.time + .35); this.hurtEnemy(e, (15 + this.levels.bible * 8) * this.power * (this.isEvolved('bible') ? 1.6 : 1), 22, 'bible'); }
-      if (this.steps % 60 === 0) { for (const [id, until] of this.freezes) if (until <= this.time) this.freezes.delete(id); for (const [id, until] of this.bibleHits) if (until <= this.time) this.bibleHits.delete(id); }
+      if (this.steps % 60 === 0) for (const map of [this.freezes,this.bibleHits,this.waterHits]) for (const [id,until] of map) if (until<=this.time) map.delete(id);
     }
     updateWeapons(dt) {
       const p = this.player;
@@ -808,8 +819,9 @@
       for (const pool of this.pools) {
         pool.life -= dt;
         if (pool.home) { const dx = p.x - pool.x, dy = p.y - pool.y, d = Math.hypot(dx, dy) || 1, step = Math.min(d, 35 * dt); pool.x += dx / d * step; pool.y += dy / d * step; pool.radius = Math.min(180 * this.area, pool.radius + dt * 8); }
-        for (const e of this.nearby(pool.x, pool.y, pool.radius + 35)) if (e.alive && this.time >= e.poisonAt && Math.hypot(e.x - pool.x, e.y - pool.y) < pool.radius + e.radius) {
-          e.poisonAt = this.time + .4; this.hurtEnemy(e, pool.kind === 'water' ? pool.damage : (5 + this.levels.poison * 3) * this.power * (pool.acid ? 2 : 1), 0, pool.kind === 'water' ? 'water' : 'poison'); if (pool.acid) e.chilledTill = this.time + 1;
+        for (const e of this.nearby(pool.x, pool.y, pool.radius + 35)) if (e.alive && this.time >= (pool.kind === 'water' ? this.waterHits.get(e.id)||0 : e.poisonAt) && Math.hypot(e.x - pool.x, e.y - pool.y) < pool.radius + e.radius) {
+          if (pool.kind === 'water') this.waterHits.set(e.id,this.time+.4); else e.poisonAt=this.time+.4;
+          this.hurtEnemy(e, pool.kind === 'water' ? pool.damage : (5 + this.levels.poison * 3) * this.power * (pool.acid ? 2 : 1), 0, pool.kind === 'water' ? 'water' : 'poison'); if (pool.acid) e.chilledTill = this.time + 1;
         }
       }
       this.pools = this.pools.filter(pool => pool.life > 0);
@@ -836,7 +848,7 @@
     queueSummons(e, kind, count) {
       if (e.arenaMember && this.encounter?.phase === 'locked') {
         const inside = this.enemies.filter(enemy => enemy.alive && enemy.arenaMember && !enemy.boss).length + this.summons.filter(summon => summon.arenaMember).length;
-        count = Math.min(count, Math.max(0, BALANCE.arenaSummonLimit - inside));
+        count = Math.min(count, Math.max(0, (this.isFirstBoss(e) ? BALANCE.firstBossMinions : BALANCE.arenaSummonLimit) - inside));
       }
       for (let i = 0; i < count && this.summons.length < 24; i++) {
         const angle = this.random() * TAU, distance = 55 + this.random() * 40;
@@ -854,12 +866,12 @@
         if (this.enemyShots.length > 216) this.enemyShots.splice(0, this.enemyShots.length - 216);
         for (let i = 0; i < 40; i++) { const a = i * TAU / 20 + (i >= 20 ? .12 : 0); this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * (i < 20 ? 135 : 95), vy: Math.sin(a) * (i < 20 ? 135 : 95), life: 7, damage: e.damage * .6, radius: 7, ink: 13, glyph: 'o' }); }
       } else if (e.ai === 'ranged') {
-        const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x), count = e.kind === 'lich' ? 1 : 3;
+        const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x), count = e.kind === 'lich' || this.isFirstBoss(e) ? 1 : 3;
         for (let i = 0; i < count && this.enemyShots.length < 256; i++) {
           const a = angle + (i - (count - 1) / 2) * .22, speed = e.projectileSpeed || 175;
           this.enemyShots.push({ x: e.x, y: e.y, prevX: e.x, prevY: e.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 4, damage: e.damage * (e.projectileDamageScale ?? .8), radius: 7, ink: e.ink, glyph: e.kind === 'pumpkin' ? 'o' : '~' });
         }
-        if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', 3);
+        if (e.kind === 'lichLord') this.queueSummons(e, 'skeleton', this.isFirstBoss(e) ? 1 : 3);
       } else if (e.ai === 'summoner') {
         this.queueSummons(e, 'ghoul', 3); this.queueSummons(e, 'mummy', 1);
       } else if (e.ai === 'blink') {
@@ -883,7 +895,7 @@
         EnemySystem.movement[e.movement.type](e, ex, ey, d, this.time); vx = e.moveX; vy = e.moveY;
         speed = e.speed * Math.min(1.5, 1 + this.pressureTime / 6000) * lateSpeed * slow;
       } else if (e.ai === 'weave') { const weave = Math.sin(this.time * 5 + e.phase) * .7; vx -= ey / d * weave; vy += ex / d * weave; }
-      if (e.ai === 'ranged') speed *= d > 380 ? 1 : d < 230 ? -.65 : 0;
+      if (e.ai === 'ranged') speed *= d > 380 ? 1 : d < (this.isFirstBoss(e) ? 140 : 230) ? -.65 : 0;
       e.skillClock = Math.max(0, e.skillClock - dt);
       if (e.summon && e.skillClock === 0) { this.queueSummons(e, e.summon.kind, e.summon.count); e.skillClock = e.summon.interval; }
       if (e.roster && e.ai === 'charge' && e.skillClock > e.movement.trackingDuration) speed = 0;
@@ -894,7 +906,7 @@
         e.chargeTime = Math.max(0, e.chargeTime - dt); vx = e.chargeX; vy = e.chargeY; speed = (e.boss ? 380 : 340) * slow;
         if (e.roster && e.chargeTime === 0) e.skillClock = e.movement.recoveryDuration + e.movement.trackingDuration;
       } else if (e.skill && e.skillClock <= 0 && d < (e.ai === 'charge' ? 620 : 850)) {
-        e.skillClock = e.skill; e.windup = e.roster ? e.movement.windupDuration : e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
+        e.skillClock = this.isFirstBoss(e) ? BALANCE.firstBossSkill : e.skill; e.windup = e.roster ? e.movement.windupDuration : e.ai === 'darklord' ? 1.6 : e.ai === 'blink' ? .95 : e.boss ? .8 : .6;
         e.chargeX = ex / d; e.chargeY = ey / d;
         const angle = this.random() * TAU;
         e.targetX = clamp(p.x + Math.cos(angle) * 150, 28, this.width - 28);

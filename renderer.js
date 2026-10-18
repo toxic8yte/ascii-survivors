@@ -137,7 +137,12 @@
         else this.circle(r.x,r.y,r.radius*Math.sqrt(t),this.weaponInk(r.weapon,t<.7 ? (r.ink ?? 7) : 1),r.glyph || (t<.45 ? '+' : '.'));
       }
       if (game.levels.blades && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, game.bladeRadius, this.weaponInk('blades',game.isEvolved('blades') ? 9 : 0));
-      if (game.levels.garlic && game.fireMode === 'auto') this.circle(game.player.x, game.player.y, (75 + game.levels.garlic * 15) * game.area, this.weaponInk('garlic',3), '.');
+      if (game.levels.garlic && game.fireMode === 'auto') {
+        const radius=(75+game.levels.garlic*15)*game.area*(game.isEvolved('garlic')?1.4:1), angle=game.time*2, p=game.player;
+        this.circle(p.x,p.y,radius,this.weaponInk('garlic',3),'.');
+        const censer={x:p.x+Math.cos(angle)*radius*.65,y:p.y+Math.sin(angle)*radius*.65};
+        this.line(p,censer,this.weaponInk('garlic',1),':');this.world(censer.x,censer.y,'(g)',this.weaponInk('garlic',7));
+      }
       if (game.isEvolved('boomerang') && game.fireMode === 'auto') { this.circle(game.player.x, game.player.y, game.mikoleninRadius, 13, '+'); this.world(game.player.x, game.player.y - 52, '{M}', this.weaponInk('boomerang',7)); }
       for (const s of game.slashes) {
         if (s.weapon === 'whip' && s.points) {

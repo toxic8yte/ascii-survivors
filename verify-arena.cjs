@@ -22,8 +22,8 @@ assert.equal(cage.encounter.phase, 'warning'); assert.equal(cage.enemies.length,
 const warning = cage.encounter.warningLeft; cage.pause(); tick(cage, 2); assert.equal(cage.encounter.warningLeft, warning); cage.pause();
 tick(cage, 4.5); assert.equal(cage.encounter.phase, 'warning'); tick(cage, .6);
 const arena = cage.encounter, boss = cage.enemies.find(e => e.id === arena.bossId);
-assert.equal(arena.phase, 'locked'); assert.ok(boss.hp > NightEnemies[boss.kind].hp * 1.25 && boss.hp < NightEnemies[boss.kind].hp * 2.5);
-assert.equal(boss.damage, NightEnemies[boss.kind].damage * .75);
+assert.equal(arena.phase,'locked');assert.ok(boss.maxHp>=NightEnemies[boss.kind].hp*NightBalance.firstBossHealth&&boss.maxHp<NightEnemies[boss.kind].hp*.3);
+assert.equal(boss.damage,NightEnemies[boss.kind].damage*NightBalance.firstBossDamage);
 for (const b of cage.visibleObstacles(arena.x - arena.radius, arena.y - arena.radius, arena.x + arena.radius, arena.y + arena.radius)) assert.ok(Math.hypot(b.x - arena.x, b.y - arena.y) > arena.radius);
 cage.input.x = 1; tick(cage, 3); cage.dash(); tick(cage, .3);
 assert.ok(Math.hypot(cage.player.x - arena.x, cage.player.y - arena.y) <= arena.radius - cage.player.radius - 8 + .01, 'The sealed circle blocks walking and dashing');
@@ -95,7 +95,7 @@ const bossHP = focusBoss.hp, outsideHP = closerOutside.hp; focus.castLightning()
 focus.castMeteor(); assert.equal(focus.meteors[0].x, focusBoss.x);
 focus.castBoomerang(); assert.ok(focus.boomerangs.at(-1).vx < 0);
 focus.queueSummons(focusBoss, 'skeleton', 20);
-assert.equal(focus.summons.length, 3, 'Existing arena minions and queued summons share the four-minion budget');
+assert.equal(focus.summons.length,1,'Existing arena minions and queued summons share the first boss two-minion budget');
 for (const summon of focus.summons) focus.spawn(summon.kind, summon.x, summon.y, summon.arenaMember);
 focus.summons = []; focus.queueSummons(focusBoss, 'skeleton', 3); assert.equal(focus.summons.length, 0);
 
@@ -103,20 +103,28 @@ for (let i = 0; i < 6; i++) focus.spawn('skeleton', focusArena.x, focusArena.y +
 const oldCage = clone(NightSave.capture(focus)); delete oldCage.arenaBalance; delete oldCage.encounter.lockedLeft;
 const hpColumn = 1 + ['id', 'x', 'y', 'hp'].indexOf('hp');
 const bossRow = oldCage.enemies.find(row => row[1] === focusBoss.id);
-bossRow[hpColumn] *= 2; bossRow[hpColumn + 1] *= 2; bossRow[hpColumn + 2] /= .75;
+bossRow[hpColumn] *= 2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth; bossRow[hpColumn+1] *= 2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth; bossRow[hpColumn+2] /= NightBalance.firstBossDamage;
 const migratedCage = NightSave.restore(oldCage); assert.ok(migratedCage);
 const migratedBoss = migratedCage.enemies.find(e => e.id === focusBoss.id);
-assert.equal(migratedBoss.hp, focusBoss.hp); assert.equal(migratedBoss.maxHp, focusBoss.maxHp); assert.equal(migratedBoss.damage, focusBoss.damage);
+assert.ok(Math.abs(migratedBoss.hp-focusBoss.hp)<1e-8);assert.ok(Math.abs(migratedBoss.maxHp-focusBoss.maxHp)<1e-8);assert.ok(Math.abs(migratedBoss.damage-focusBoss.damage)<1e-8);
 assert.equal(migratedCage.encounter.lockedLeft, 15);
-assert.equal(migratedCage.enemies.filter(e => e.arenaMember && !e.boss).length, 4, 'Excess old summons are moved outside the seal during migration');
+assert.equal(migratedCage.enemies.filter(e=>e.arenaMember&&!e.boss).length,2,'Excess old summons are moved outside the first seal during migration');
 const migratedAgain = NightSave.restore(clone(NightSave.capture(migratedCage)));
 assert.equal(migratedAgain.enemies.find(e => e.id === focusBoss.id).hp, migratedBoss.hp, 'The balance migration runs only once');
 const brokenTimer = clone(NightSave.capture(migratedCage)); brokenTimer.encounter.lockedLeft = -1; assert.equal(NightSave.restore(brokenTimer), null);
 
-const playable = fixture({ terrain: false, fireMode: 'auto' }); playable.player.invulnerable = 1e8;
-playable.levels.pistol = 2; playable.levels.needle = 2; playable.levels.power = playable.levels.haste = 1; playable.time = 60; playable.nextBossAt = 60;
-tick(playable, 5.1); const playableBoss = playable.enemies.find(e => e.boss), startingHP = playableBoss.hp;
-for (let i = 0; i < 60 * 150 && playableBoss.alive; i++) { playable.update(1 / 60); if (playable.status === 'upgrading') playable.choose(0); }
-assert.ok(playableBoss.hp < startingHP); assert.equal(playableBoss.alive, false, 'The tougher first boss remains killable with a modest two-weapon build after the 15-second seal expires');
-assert.equal(playable.chests.length, 1); assert.equal(playable.encounter, null);
-console.log('PASS: terrain, five-second warning, 15-second wall timeout, early boss release, boss targeting, capped summons, ordinary combat kill, chest rewards and old-save balance migration.');
+const {firstBossTrial}=require('./audit-weapons.cjs');
+for(const hero of ['hunter','ripley','ark','plague'])for(const seed of [811,427]) {
+  const trial=firstBossTrial(hero,seed,true);
+  assert.ok(trial.bossKilled&&trial.playerHP>0,hero+' defeats first boss with normal health, ordinary waves and no Legacy');
+  assert.ok(trial.seconds<30);assert.ok(trial.damageReceived>0,'Survival trial does not suppress enemy damage');
+}
+const later=fixture({terrain:false});later.bossIndex=1;later.nextBossAt=0;tick(later,5.1);const laterBoss=later.enemies.find(e=>e.boss);
+assert.ok(laterBoss.maxHp>NightEnemies.british.hp*NightBalance.arenaBossHealth);assert.equal(laterBoss.damage,NightEnemies.british.damage*NightBalance.arenaBossDamage,'Later bosses retain full difficulty');
+const prior=clone(NightSave.capture(focus));prior.arenaBalance=2;const priorBoss=prior.enemies.find(row=>row[1]===focusBoss.id);
+priorBoss[hpColumn]*=NightBalance.arenaBossHealth/NightBalance.firstBossHealth;priorBoss[hpColumn+1]*=NightBalance.arenaBossHealth/NightBalance.firstBossHealth;priorBoss[hpColumn+2]*=NightBalance.arenaBossDamage/NightBalance.firstBossDamage;
+const adjusted=NightSave.restore(prior);assert.ok(adjusted);assert.ok(Math.abs(adjusted.enemies.find(e=>e.id===focusBoss.id).hp-focusBoss.hp)<1e-8,'Existing first boss health is adjusted proportionally');
+focus.releaseArena('arena-timeout');const oldOutside=clone(NightSave.capture(focus));delete oldOutside.arenaBalance;
+const outsideRow=oldOutside.enemies.find(row=>row[1]===focusBoss.id);outsideRow[hpColumn]*=2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth;outsideRow[hpColumn+1]*=2*NightBalance.arenaBossHealth/NightBalance.firstBossHealth;outsideRow[hpColumn+2]/=NightBalance.firstBossDamage;
+const resumedOutside=NightSave.restore(oldOutside);assert.ok(resumedOutside);assert.ok(Math.abs(resumedOutside.enemies.find(e=>e.id===focusBoss.id).hp-focusBoss.hp)<1e-8,'Old first bosses are adjusted even after the wall has opened');
+console.log('PASS: terrain, wall warning/timeout and kill release, targeting, intro boss combat with real HP and waves, later bosses retained, chest rewards and one-time save migration.');

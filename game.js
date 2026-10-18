@@ -444,7 +444,7 @@
     text('boss-name', boss ? boss.title + ' · ' + (boss.id === game.encounter?.bossId ? Math.ceil(boss.hp) + ' / ' + Math.ceil(boss.maxHp) + ' HP' : Math.ceil(boss.hp / boss.maxHp * 100) + '%') : '');
     const encounter = game.encounter;
     $('encounter-note').hidden = !encounter; arena.classList.toggle('has-encounter', Boolean(encounter));
-    if (encounter) text('encounter-note', encounter.phase === 'warning' ? 'ПЕЧАТЬ ЗАМКНЁТСЯ ЧЕРЕЗ ' + Math.ceil(encounter.warningLeft) + ' С' : 'СТЕНА: ' + Math.ceil(encounter.lockedLeft) + ' С · УБЕЙ БОССА, ЧТОБЫ СНЯТЬ РАНЬШЕ');
+    if (encounter) text('encounter-note', encounter.phase === 'warning' ? 'ПЕЧАТЬ ЗАМКНЁТСЯ ЧЕРЕЗ ' + Math.ceil(encounter.warningLeft) + ' С' : 'БОСС: ' + Math.ceil(boss?.hp || 0) + ' HP · СТЕНА: ' + Math.ceil(encounter.lockedLeft) + ' С · УБЕЙ БОССА, ЧТОБЫ СНЯТЬ РАНЬШЕ');
     if (game.stressMode) text('save-status', 'ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ');
     else if (status === 'ready') text('save-status', progress.available ? 'АВТОСОХРАНЕНИЕ' : 'ХРАНИЛИЩЕ НЕДОСТУПНО');
     text('dash-label', p.dashReady <= 0 ? 'РЫВОК ГОТОВ' : 'РЫВОК ' + p.dashReady.toFixed(1) + ' С');

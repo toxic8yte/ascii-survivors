@@ -1,0 +1,4585 @@
+{
+  "scope": "20-second stationary single-target weapon trials at four distances, facing and aiming right; first boss with normal HP, no Legacy, starter rank 2 plus a rank-1 ranged weapon, steering bot, terrain disabled, isolated and with ordinary waves. Not human playtesting or browser FPS.",
+  "weapons": [
+    {
+      "id": "whip",
+      "title": "Кнут Новой надежды",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 86.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 86.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "axe",
+      "title": "Топорики Т-77",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 21.12,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 171.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 171.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 159.12,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 106.08,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 46.08,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 46.08,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 46.08,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 42.24,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 23.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 21.12,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "water",
+      "title": "Крещёная минералка",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 60.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 60.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 60.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 60.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 27.56,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rune",
+      "title": "Скандинавский пинбол",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 44,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 42.24,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 17.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 17.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 17.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 16.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pentagram",
+      "title": "Игрушечный пентакль",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 20,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 20,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 20,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 20,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 4.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garlic",
+      "title": "Кадило на цепи",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 28.05,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 28.05,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 9.86,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dagger",
+      "title": "Ножи 47-й аргумент",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 46.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 46.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 45.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 45,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 350.46,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 350.46,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 116.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 114.84,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 93.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 93.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 91.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 46.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 46.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 45.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 45,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fireball",
+      "title": "Фаерболл Балрога",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 27.63,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 207.19,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 191.25,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 191.25,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 63.75,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 60.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 60.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 60.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 55.25,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 30.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 27.63,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "title": "Луч Доктора Что?",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 2.83,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 3.88,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 2.02,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 2.02,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 2.02,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 2.83,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 1.42,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 13.93,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 13.93,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 13.93,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 13.93,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "laurel",
+      "title": "Божья страховка",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 19.7
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 19.7
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 19.7
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 19.7
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 13.82
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bible",
+      "title": "Библия Джона Кика",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 11.21,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 75.79,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 16.39,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 11.21,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "birds",
+      "title": "Летучая мышь из Китая",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 1.27,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 7.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 2.55,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ebony",
+      "title": "Лапки бэтмена",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 2.55,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 5.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 2.55,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 15.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hammer",
+      "title": "Молот Бора",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 22.88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 22.88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 156,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 156,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 45.76,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 45.76,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 22.88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 22.88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 22.88,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pistol",
+      "title": "Пистоль, Джеймс Пистоль",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 188.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 188.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 62.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 60.61,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 49.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 49.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 49.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 24.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sling",
+      "title": "Праща пращуров",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 16.15,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 131.67,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 131.67,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 43.89,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 41.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 34.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 34.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 34.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 17.1,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 16.15,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "needle",
+      "title": "Поджигатор 3000",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 31.35,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 57.06,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 57.06,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 55.59,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 54.13,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 64.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 64.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 64.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 31.35,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 32.3,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 31.35,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "blades",
+      "title": "Кольца мясорубки",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 13.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 79.01,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 26.25,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 37.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 37.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pulse",
+      "title": "Стигийский мегафон",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 24.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 24.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 24.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 11.9,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lightning",
+      "title": "Карманная катушка Теслы",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 23.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 23.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 23.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 23.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 13.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "boomerang",
+      "title": "Серп",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 24.99,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 24.99,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 12.49,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 99.96,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 99.96,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 49.98,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 49.98,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 49.98,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 24.99,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 24.99,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 24.99,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 12.49,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frost",
+      "title": "Сигил Деда Мороза",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 8.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 8.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 8.64,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 3.78,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meteor",
+      "title": "Метеоритный дождь",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 80.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 80.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 80.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 80.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 41.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 41.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 41.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 41.65,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 20.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "poison",
+      "title": "Язва Чужого",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 33.32,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 15.68,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crossbow",
+      "title": "Арбалет Ван Дер Хельсинга",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 25.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 166.32,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 158.76,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 158.76,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 52.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 54.72,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 54.72,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 54.72,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 25.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 27.36,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 25.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gauss",
+      "title": "Гаусс Полураспад",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 51.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 51.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 51.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 51.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 61.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 61.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 61.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 61.2,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 30.6,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plasmaMinigun",
+      "title": "Плазменный миниган Маркус",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 36.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 36.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 36.5,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 35.57,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 69.26,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 68.8,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 68.33,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 66.92,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 73.63,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 73.63,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 73.01,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 35.57,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 36.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 36.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 36.5,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 35.57,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lightStaff",
+      "title": "Жезл Светоча Зарты",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 38.54,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 38.54,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 38.54,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 18.48,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crowbar",
+      "title": "Монтировка Фримена",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 34.02,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 81,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 68.04,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 34.02,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chozo",
+      "title": "Пушка Чозо",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 23.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 54.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 54.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 54.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 54.82,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 51.93,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 51.93,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 51.93,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 23.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 25.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 23.97,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flamethrower",
+      "title": "Огнемёт Рипли",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 36.72,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 36.38,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 235.62,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 232.05,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 76.16,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 73.44,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 72.76,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 36.72,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 36.38,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "electropistol",
+      "title": "Электропистоль Вольта",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 174.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 174.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 174.83,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 58.28,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 59.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 59.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 59.4,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 29.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gauntlets",
+      "title": "Гигаперчатки: кулачный аргумент",
+      "tests": [
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 4,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 93.5,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 93.5,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "auto",
+          "rank": 1,
+          "fork": 1,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 53.55,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 53.55,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        },
+        {
+          "mode": "manual",
+          "rank": 1,
+          "fork": 0,
+          "targets": [
+            {
+              "distance": 50,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 100,
+              "dps": 35.7,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 200,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            },
+            {
+              "distance": 400,
+              "dps": 0,
+              "freezeSeconds": 0,
+              "shieldSeconds": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "firstBoss": [
+    {
+      "hero": "hunter",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 11.8,
+      "playerHP": 79.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 612.56,
+      "damageReceived": 20.64
+    },
+    {
+      "hero": "hunter",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 11.78,
+      "playerHP": 70.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 609.14,
+      "damageReceived": 29.28
+    },
+    {
+      "hero": "hunter",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 10.75,
+      "playerHP": 70.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 609.14,
+      "damageReceived": 29.28
+    },
+    {
+      "hero": "hunter",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 11.78,
+      "playerHP": 70.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 609.14,
+      "damageReceived": 29.28
+    },
+    {
+      "hero": "ripley",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 4.97,
+      "playerHP": 107.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 611,
+      "damageReceived": 7.64
+    },
+    {
+      "hero": "ripley",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 4.95,
+      "playerHP": 107.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 611,
+      "damageReceived": 7.64
+    },
+    {
+      "hero": "ripley",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 4.97,
+      "playerHP": 107.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 611,
+      "damageReceived": 7.64
+    },
+    {
+      "hero": "ripley",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 4.7,
+      "playerHP": 107.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 609,
+      "damageReceived": 7.64
+    },
+    {
+      "hero": "ark",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 8.07,
+      "playerHP": 93.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 616.8,
+      "damageReceived": 6.64
+    },
+    {
+      "hero": "ark",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 8.08,
+      "playerHP": 83.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 616.8,
+      "damageReceived": 16.64
+    },
+    {
+      "hero": "ark",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 7.9,
+      "playerHP": 93.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 592.6,
+      "damageReceived": 6.64
+    },
+    {
+      "hero": "ark",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 8.07,
+      "playerHP": 93.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 616.8,
+      "damageReceived": 6.64
+    },
+    {
+      "hero": "loop",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 21.57,
+      "playerHP": 56.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 418,
+      "damageReceived": 53.28
+    },
+    {
+      "hero": "loop",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 7.52,
+      "playerHP": 50,
+      "bossRemainingHP": 0,
+      "sealedDamage": 602,
+      "damageReceived": 60
+    },
+    {
+      "hero": "loop",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 21.57,
+      "playerHP": 56.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 464.75,
+      "damageReceived": 53.28
+    },
+    {
+      "hero": "loop",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": false,
+      "seconds": 26.87,
+      "playerHP": 0,
+      "bossRemainingHP": 172.61,
+      "sealedDamage": 426.75,
+      "damageReceived": 110
+    },
+    {
+      "hero": "plague",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 12.77,
+      "playerHP": 77.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 607.4,
+      "damageReceived": 32.64
+    },
+    {
+      "hero": "plague",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 12.77,
+      "playerHP": 65.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 607.4,
+      "damageReceived": 44.64
+    },
+    {
+      "hero": "plague",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 12.33,
+      "playerHP": 101.36,
+      "bossRemainingHP": 0,
+      "sealedDamage": 617.6,
+      "damageReceived": 8.64
+    },
+    {
+      "hero": "plague",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 12.57,
+      "playerHP": 68.72,
+      "bossRemainingHP": 0,
+      "sealedDamage": 617.6,
+      "damageReceived": 41.28
+    },
+    {
+      "hero": "abyss",
+      "seed": 811,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": false,
+      "seconds": 13.68,
+      "playerHP": 0,
+      "bossRemainingHP": 276.36,
+      "sealedDamage": 342,
+      "damageReceived": 100
+    },
+    {
+      "hero": "abyss",
+      "seed": 811,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": false,
+      "seconds": 28.88,
+      "playerHP": 0,
+      "bossRemainingHP": 10.36,
+      "sealedDamage": 551,
+      "damageReceived": 100
+    },
+    {
+      "hero": "abyss",
+      "seed": 427,
+      "waves": false,
+      "bossHP": 618.36,
+      "bossKilled": true,
+      "seconds": 17.02,
+      "playerHP": 2.08,
+      "bossRemainingHP": 0,
+      "sealedDamage": 551,
+      "damageReceived": 97.92
+    },
+    {
+      "hero": "abyss",
+      "seed": 427,
+      "waves": true,
+      "bossHP": 618.36,
+      "bossKilled": false,
+      "seconds": 12.85,
+      "playerHP": 0,
+      "bossRemainingHP": 295.36,
+      "sealedDamage": 323,
+      "damageReceived": 100
+    }
+  ]
+}

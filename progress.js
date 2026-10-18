@@ -35,12 +35,12 @@
       leechBudget: game.leechBudget,
       holyMarks: Array.from(game.holyMarks, ([id,mark]) => [id,{...mark}]),
       evolutions: Array.from(game.evolutions), enemyBirths: game.enemies.filter(e => e.alive).map(e => [e.id, e.bornAt]),
-      meta: { ...game.meta }, freezes: Array.from(game.freezes), bibleHits: Array.from(game.bibleHits),
+      meta: { ...game.meta }, freezes: Array.from(game.freezes), bibleHits: Array.from(game.bibleHits), waterHits:Array.from(game.waterHits),
       characterId: game.character.id, enemyLimit: game.enemyLimit, status: game.status,
       fireMode: game.fireMode, selectedWeapon: game.selectedWeapon, lastBoss: game.lastBoss,
       player: pick(game.player, playerKeys), levels: { ...game.levels }, clocks: { ...game.weaponClocks },
       offers: game.offers.map(u => u.id), encountered: Array.from(game.encountered),
-      terrainEnabled: game.terrainEnabled, arenaBalance: 2, encounter: game.encounter ? { ...game.encounter } : null,
+      terrainEnabled: game.terrainEnabled, arenaBalance: 3, encounter: game.encounter ? { ...game.encounter } : null,
       chests: game.chests.map(chest => ({ ...chest })), reward: game.reward ? { ...game.reward, items: game.reward.items.map(item => ({ ...item })), ...(game.reward.options ? { options: game.reward.options.map(option => ({ ...option })) } : {}) } : null,
       enemies: game.enemies.filter(e => e.alive).map(e => [e.kind, ...enemyKeys.map(key => e[key])]),
       gems: game.gems.map(g => ({ x: g.x, y: g.y, value: g.value, bin: g.bin, magnetized: Boolean(g.magnetized) }))
@@ -151,7 +151,7 @@
           game.encounter.lockedLeft = a.lockedLeft === undefined ? NightBalance.arenaSeconds : number(a.lockedLeft, 0, NightBalance.arenaSeconds);
           number(a.radius, 120, 300); number(a.x, a.radius, game.width - a.radius); number(a.y, a.radius, game.height - a.radius); number(a.warningLeft, 0, 5);
           if (!uint(a.bossId) || a.phase === 'locked' && !game.enemies.some(e => e.id === a.bossId && e.boss && e.arenaMember)) return null;
-          if (a.phase === 'locked' && save.arenaBalance !== 2) {
+          if (a.phase === 'locked' && !(save.arenaBalance >= 2)) {
             const boss = game.enemies.find(e => e.id === a.bossId);
             boss.hp *= .5; boss.maxHp *= .5; boss.damage *= NightBalance.arenaBossDamage;
             game.player.invulnerable = Math.max(game.player.invulnerable, 1.5);
@@ -160,6 +160,13 @@
               enemy.arenaMember = 0; game.resolveArena(enemy); enemy.prevX = enemy.x; enemy.prevY = enemy.y;
             }
           }
+        }
+        if (!(save.arenaBalance >= 3)) for (const boss of game.enemies) if (game.isFirstBoss(boss)) {
+          if (!(save.arenaBalance>=2) && game.encounter?.bossId!==boss.id) {boss.hp*=.5;boss.maxHp*=.5;boss.damage*=NightBalance.arenaBossDamage;}
+          boss.hp *= NightBalance.firstBossHealth/NightBalance.arenaBossHealth; boss.maxHp *= NightBalance.firstBossHealth/NightBalance.arenaBossHealth;
+          boss.damage *= NightBalance.firstBossDamage/NightBalance.arenaBossDamage; boss.skillClock=Math.max(2,boss.skillClock);
+          let minions=0;
+          for (const enemy of game.enemies) if (enemy.arenaMember && !enemy.boss && ++minions>NightBalance.firstBossMinions) {enemy.arenaMember=0;game.resolveArena(enemy);enemy.prevX=enemy.x;enemy.prevY=enemy.y;}
         }
         game.chests = list(save.chests, 64).map(c => {
           if (!Object.hasOwn(NightEnemies, c.source) || !NightEnemies[c.source].boss || !uint(c.id) || c.id < 1 || c.id >= game.nextChestId) throw new Error('Invalid chest');
@@ -222,6 +229,7 @@
         return copy;
       });
       if (save.version >= 3) for (const key of ['freezes', 'bibleHits']) game[key] = new Map(list(save[key], 24000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
+      game.waterHits = new Map(list(save.waterHits===undefined?[]:save.waterHits,24000).map(pair=>{const id=number(pair[0],1,game.nextId-1);if(!uint(id))throw Error('Invalid water hit');return [id,number(pair[1],0)];}));
       game.leechBudget = save.version < 9 ? 2 : number(save.leechBudget,0,2);
       game.holyMarks = new Map(save.version < 9 ? [] : list(save.holyMarks,game.enemyLimit).map(([id,mark]) => { if (!ids.has(id) || !plain(mark)) throw Error('Invalid sacred mark'); return [id,{expires:number(mark.expires,0),next:number(mark.next,0),damage:number(mark.damage,0)}]; }));
       game.encountered = new Set(list(save.encountered, 100).filter(kind => Object.hasOwn(NightEnemies, kind)));
