@@ -597,6 +597,13 @@
   });
   $('meta-open').addEventListener('click', () => { showMeta(); $('meta-shop').showModal(); });
   $('meta-close').addEventListener('click', () => $('meta-shop').close());
+  $('export-progress').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ profile: progress.loadProfile() }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = 'ascii-survivors-profile.json'; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    text('meta-message', 'Профиль экспортирован: золото, герои и Наследие. Текущий бой остаётся в браузере.');
+  });
   $('meta-grid').addEventListener('click', e => {
     const feature = e.target.closest('[data-feature]');
     if (feature && game.status === 'ready') { const bought = progress.purchaseFeature(feature.dataset.feature); showMeta(); progressSummary(); text('meta-message', bought ? 'Раздел открыт навсегда. Покупка сохранена.' : 'Покупка не выполнена. Проверь баланс и доступность хранилища.'); return; }
