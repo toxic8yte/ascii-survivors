@@ -18,3 +18,11 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Godot C# build/import output. Content is copied from the shared JSON at build time.
+/godot/.godot/
+/godot/.mono/
+/godot/bin/
+/godot/obj/
+/godot/Data/
+/godot/Builds/

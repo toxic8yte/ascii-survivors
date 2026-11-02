@@ -6,6 +6,8 @@
 
 **[Играть в браузере →](https://toxic8yte.github.io/ascii-survivors/)**
 
+**[Версия для Windows: Godot .NET + C# →](godot/README.md)** — нативный проект с тем же контентом, сохранениями и переносом браузерного профиля. Сборки доступны в [Actions → Godot Windows](https://github.com/toxic8yte/ascii-survivors/actions/workflows/godot.yml).
+
 [Полный набор эволюций и девять новых связок](docs/EVOLUTION_COVERAGE.md).
 
 [Редкости, выбор усилений, изгнание/платный реролл и новое оружие](docs/UPGRADES.md). [Замедление прокачки и аудит всего арсенала](docs/PROGRESSION_TUNING.md).

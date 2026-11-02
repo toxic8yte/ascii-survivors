@@ -1,0 +1,1755 @@
+{
+  "sourceCommit": "2362535908541fa7e94d277bff228759ceb6fa08",
+  "cases": [
+    {
+      "id": "whip",
+      "evolved": false,
+      "directDamage": 72.25,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.85
+    },
+    {
+      "id": "whip",
+      "evolved": true,
+      "directDamage": 108.375,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.85
+    },
+    {
+      "id": "axe",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 201.08795152194512,
+          "vy": -260.3625083469351,
+          "damage": 102,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 240,
+          "vy": -225,
+          "damage": 102,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 272.7811444983558,
+          "vy": -183.88976917209703,
+          "damage": 102,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.4782608695652175
+    },
+    {
+      "id": "axe",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 240,
+          "vy": 0,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 169.7056274847714,
+          "vy": 169.70562748477138,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 1.469576158976824e-14,
+          "vy": 240,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": -169.70562748477138,
+          "vy": 169.7056274847714,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": -240,
+          "vy": 2.939152317953648e-14,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": -169.70562748477144,
+          "vy": -169.70562748477138,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": -4.408728476930471e-14,
+          "vy": -240,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 169.70562748477136,
+          "vy": -169.70562748477144,
+          "damage": 183.6,
+          "life": 2.5,
+          "radius": 8.48,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.4782608695652175
+    },
+    {
+      "id": "water",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [
+        {
+          "x": 300,
+          "y": 0,
+          "radius": 96,
+          "life": 4.6
+        },
+        {
+          "x": 247.6006844729036,
+          "y": 169.39274201851094,
+          "radius": 96,
+          "life": 4.6
+        },
+        {
+          "x": 108.70732634300202,
+          "y": 279.61172579016784,
+          "radius": 96,
+          "life": 4.6
+        }
+      ],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 2.0695652173913044
+    },
+    {
+      "id": "water",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [
+        {
+          "x": 300,
+          "y": 0,
+          "radius": 96,
+          "life": 6.4399999999999995
+        },
+        {
+          "x": 247.6006844729036,
+          "y": 169.39274201851094,
+          "radius": 96,
+          "life": 6.4399999999999995
+        },
+        {
+          "x": 108.70732634300202,
+          "y": 279.61172579016784,
+          "radius": 96,
+          "life": 6.4399999999999995
+        }
+      ],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 2.0695652173913044
+    },
+    {
+      "id": "rune",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 325.7850035139569,
+          "vy": -52.575008182701175,
+          "damage": 44,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 330,
+          "vy": 0,
+          "damage": 44,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 325.7850035139569,
+          "vy": 52.575008182701175,
+          "damage": 44,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.5521739130434784
+    },
+    {
+      "id": "rune",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 313.2476879672055,
+          "vy": -103.80696500331887,
+          "damage": 79.2,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 325.7850035139569,
+          "vy": -52.575008182701175,
+          "damage": 79.2,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 330,
+          "vy": 0,
+          "damage": 79.2,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 325.7850035139569,
+          "vy": 52.575008182701175,
+          "damage": 79.2,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 313.2476879672055,
+          "vy": 103.80696500331887,
+          "damage": 79.2,
+          "life": 4,
+          "radius": 8,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.5521739130434784
+    },
+    {
+      "id": "pentagram",
+      "evolved": false,
+      "directDamage": 200,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 17.73913043478261
+    },
+    {
+      "id": "pentagram",
+      "evolved": true,
+      "directDamage": 300,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 7.095652173913044
+    },
+    {
+      "id": "garlic",
+      "evolved": false,
+      "directDamage": 17,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.5913043478260871
+    },
+    {
+      "id": "garlic",
+      "evolved": true,
+      "directDamage": 25.5,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.5913043478260871
+    },
+    {
+      "id": "dagger",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 691.0590983629388,
+          "vy": -111.52274462997218,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 700,
+          "vy": 0,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 691.0590983629388,
+          "vy": 111.52274462997218,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.33260869565217394
+    },
+    {
+      "id": "dagger",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 717.6219760703252,
+          "vy": -237.81231982578504,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 746.3438262319739,
+          "vy": -120.44456420036995,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 756,
+          "vy": 0,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 746.3438262319739,
+          "vy": 120.44456420036995,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 717.6219760703252,
+          "vy": 237.81231982578504,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.1330434782608696
+    },
+    {
+      "id": "fireball",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 217.1900023426379,
+          "vy": -35.05000545513411,
+          "damage": 125,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 220,
+          "vy": 0,
+          "damage": 125,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 217.1900023426379,
+          "vy": 35.05000545513411,
+          "damage": 125,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.6260869565217393
+    },
+    {
+      "id": "fireball",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 208.83179197813698,
+          "vy": -69.20464333554591,
+          "damage": 247.5,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 217.1900023426379,
+          "vy": -35.05000545513411,
+          "damage": 247.5,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 220,
+          "vy": 0,
+          "damage": 247.5,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 217.1900023426379,
+          "vy": 35.05000545513411,
+          "damage": 247.5,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 208.83179197813698,
+          "vy": 69.20464333554591,
+          "damage": 247.5,
+          "life": 2.5,
+          "radius": 15,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.6260869565217393
+    },
+    {
+      "id": "clock",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 2,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.773913043478261
+    },
+    {
+      "id": "clock",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 2.3,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.773913043478261
+    },
+    {
+      "id": "laurel",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 3,
+      "bibleUntil": 0,
+      "cooldown": 5.173913043478262
+    },
+    {
+      "id": "laurel",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 3,
+      "bibleUntil": 0,
+      "cooldown": 5.173913043478262
+    },
+    {
+      "id": "bible",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 3.6,
+      "cooldown": 2.8086956521739133
+    },
+    {
+      "id": "bible",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 3.8880000000000003,
+      "cooldown": 2.8086956521739133
+    },
+    {
+      "id": "birds",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 300,
+          "y": 0,
+          "damage": 60,
+          "radius": 97,
+          "wait": 0.6
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.4043478260869566
+    },
+    {
+      "id": "birds",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 300,
+          "y": 0,
+          "damage": 96,
+          "radius": 130.95000000000002,
+          "wait": 0.6
+        },
+        {
+          "x": 330,
+          "y": 0,
+          "damage": 96,
+          "radius": 130.95000000000002,
+          "wait": 0.6
+        },
+        {
+          "x": 360,
+          "y": 0,
+          "damage": 96,
+          "radius": 130.95000000000002,
+          "wait": 0.6
+        },
+        {
+          "x": 390,
+          "y": 0,
+          "damage": 96,
+          "radius": 130.95000000000002,
+          "wait": 0.6
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.4043478260869566
+    },
+    {
+      "id": "ebony",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 300,
+          "y": 0,
+          "damage": 60,
+          "radius": 97,
+          "wait": 0.6
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.4043478260869566
+    },
+    {
+      "id": "hammer",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 130,
+          "y": 0,
+          "damage": 100,
+          "radius": 110,
+          "wait": 0.3
+        },
+        {
+          "x": 130,
+          "y": 0,
+          "damage": 100,
+          "radius": 110,
+          "wait": 0.3
+        },
+        {
+          "x": 130,
+          "y": 0,
+          "damage": 100,
+          "radius": 110,
+          "wait": 0.3
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.5521739130434784
+    },
+    {
+      "id": "pistol",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 789.7818267005016,
+          "vy": -127.45456529139678,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 800,
+          "vy": 0,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 789.7818267005016,
+          "vy": 127.45456529139678,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.6652173913043479
+    },
+    {
+      "id": "pistol",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 759.3883344659527,
+          "vy": -251.65324849289422,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 789.7818267005016,
+          "vy": -127.45456529139678,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 800,
+          "vy": 0,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 789.7818267005016,
+          "vy": 127.45456529139678,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 759.3883344659527,
+          "vy": 251.65324849289422,
+          "damage": 79.2,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.33260869565217394
+    },
+    {
+      "id": "sling",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 473.8690960203009,
+          "vy": -76.47273917483807,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 480,
+          "vy": 0,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 473.8690960203009,
+          "vy": 76.47273917483807,
+          "damage": 44,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.9608695652173913
+    },
+    {
+      "id": "sling",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 455.6330006795716,
+          "vy": -150.99194909573652,
+          "damage": 87.12000000000002,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 473.8690960203009,
+          "vy": -76.47273917483807,
+          "damage": 87.12000000000002,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 480,
+          "vy": 0,
+          "damage": 87.12000000000002,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 473.8690960203009,
+          "vy": 76.47273917483807,
+          "damage": 87.12000000000002,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        },
+        {
+          "vx": 455.6330006795716,
+          "vy": 150.99194909573652,
+          "damage": 87.12000000000002,
+          "life": 2.5,
+          "radius": 8,
+          "remaining": 3,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.9608695652173913
+    },
+    {
+      "id": "needle",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 490,
+          "vy": 0,
+          "damage": 30.8,
+          "life": 1.5,
+          "radius": 5,
+          "remaining": 1,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "needle",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 490,
+          "vy": 0,
+          "damage": 61.6,
+          "life": 1.5,
+          "radius": 5,
+          "remaining": 4,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "blades",
+      "evolved": false,
+      "directDamage": 32.25,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "blades",
+      "evolved": true,
+      "directDamage": 193.5,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "pulse",
+      "evolved": false,
+      "directDamage": 98.59999999997672,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "pulse",
+      "evolved": true,
+      "directDamage": 177.47999999998137,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 7,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "lightning",
+      "evolved": false,
+      "directDamage": 47.59999999997672,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "lightning",
+      "evolved": true,
+      "directDamage": 47.59999999997672,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 65,
+          "y": 0,
+          "damage": 56,
+          "radius": 55,
+          "wait": 0.4
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "boomerang",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 367.7637562439778,
+          "vy": -40.61797130975468,
+          "damage": 42,
+          "life": 2.5,
+          "radius": 16,
+          "remaining": 100000,
+          "charge": 0
+        },
+        {
+          "vx": 367.7637562439778,
+          "vy": 40.61797130975468,
+          "damage": 42,
+          "life": 2.5,
+          "radius": 16,
+          "remaining": 100000,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "boomerang",
+      "evolved": true,
+      "directDamage": 86.69999999995343,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "frost",
+      "evolved": false,
+      "directDamage": 28.800000000046566,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 1.6,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "frost",
+      "evolved": true,
+      "directDamage": 57.59999999997672,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 1.62,
+      "chilled": 1.7280000000000002,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "meteor",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 272.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 138,
+          "wait": 0.65
+        },
+        {
+          "x": 327.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 138,
+          "wait": 0.65
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "meteor",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [],
+      "blasts": [
+        {
+          "x": 217.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 204.792,
+          "wait": 0.65
+        },
+        {
+          "x": 272.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 204.792,
+          "wait": 0.65
+        },
+        {
+          "x": 327.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 204.792,
+          "wait": 0.65
+        },
+        {
+          "x": 382.5,
+          "y": 0,
+          "damage": 136,
+          "radius": 204.792,
+          "wait": 0.65
+        }
+      ],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "poison",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [
+        {
+          "x": 300,
+          "y": 0,
+          "radius": 78,
+          "life": 6
+        }
+      ],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "poison",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [],
+      "pools": [
+        {
+          "x": 300,
+          "y": 0,
+          "radius": 78,
+          "life": 10.8
+        }
+      ],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": null
+    },
+    {
+      "id": "crossbow",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 650,
+          "vy": 0,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 6,
+          "charge": 0
+        },
+        {
+          "vx": 646.7527074307167,
+          "vy": 64.8917208204383,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 6,
+          "charge": 0
+        },
+        {
+          "vx": 646.7527074307167,
+          "vy": -64.8917208204383,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 6,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.923913043478261
+    },
+    {
+      "id": "crossbow",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 650,
+          "vy": 0,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 9,
+          "charge": 0
+        },
+        {
+          "vx": 646.7527074307167,
+          "vy": 64.8917208204383,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 9,
+          "charge": 0
+        },
+        {
+          "vx": 646.7527074307167,
+          "vy": -64.8917208204383,
+          "damage": 56,
+          "life": 1.8,
+          "radius": 6,
+          "remaining": 9,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.923913043478261
+    },
+    {
+      "id": "gauss",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 2000,
+          "vy": 0,
+          "damage": 104,
+          "life": 0.65,
+          "radius": 9,
+          "remaining": 16,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.847826086956522
+    },
+    {
+      "id": "gauss",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 2160,
+          "vy": 0,
+          "damage": 104,
+          "life": 0.65,
+          "radius": 9,
+          "remaining": 16,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.847826086956522
+    },
+    {
+      "id": "plasmaMinigun",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 520,
+          "vy": 0,
+          "damage": 9,
+          "life": 1.4,
+          "radius": 9,
+          "remaining": 1,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.13304347826086957
+    },
+    {
+      "id": "plasmaMinigun",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 520,
+          "vy": 0,
+          "damage": 9,
+          "life": 1.4,
+          "radius": 9,
+          "remaining": 1,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.13304347826086957
+    },
+    {
+      "id": "lightStaff",
+      "evolved": false,
+      "directDamage": 42,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 2.3652173913043484
+    },
+    {
+      "id": "lightStaff",
+      "evolved": true,
+      "directDamage": 42,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 2.3652173913043484
+    },
+    {
+      "id": "crowbar",
+      "evolved": false,
+      "directDamage": 64.80000000004657,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.8130434782608696
+    },
+    {
+      "id": "crowbar",
+      "evolved": true,
+      "directDamage": 64.80000000004657,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.8130434782608696
+    },
+    {
+      "id": "chozo",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 650,
+          "vy": 0,
+          "damage": 86,
+          "life": 1.5,
+          "radius": 17.4,
+          "remaining": 7,
+          "charge": 0.44000000000000006
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.3304347826086957
+    },
+    {
+      "id": "chozo",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 650,
+          "vy": 0,
+          "damage": 86,
+          "life": 1.62,
+          "radius": 17.4,
+          "remaining": 7,
+          "charge": 0.33000000000000007
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 1.3304347826086957
+    },
+    {
+      "id": "flamethrower",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 300,
+          "vy": 0,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        },
+        {
+          "vx": 295.15310783643645,
+          "vy": 53.708872027747255,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        },
+        {
+          "vx": 295.15310783643645,
+          "vy": -53.708872027747255,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.14782608695652177
+    },
+    {
+      "id": "flamethrower",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 300,
+          "vy": 0,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        },
+        {
+          "vx": 295.15310783643645,
+          "vy": 53.708872027747255,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        },
+        {
+          "vx": 295.15310783643645,
+          "vy": -53.708872027747255,
+          "damage": 14,
+          "life": 0.55,
+          "radius": 20,
+          "remaining": 2,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.14782608695652177
+    },
+    {
+      "id": "electropistol",
+      "evolved": false,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 800,
+          "vy": 0,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        },
+        {
+          "vx": 796.0033322224206,
+          "vy": 79.86673331746252,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        },
+        {
+          "vx": 796.0033322224206,
+          "vy": -79.86673331746252,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.5173913043478261
+    },
+    {
+      "id": "electropistol",
+      "evolved": true,
+      "directDamage": 0,
+      "shots": [
+        {
+          "vx": 800,
+          "vy": 0,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        },
+        {
+          "vx": 796.0033322224206,
+          "vy": 79.86673331746252,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        },
+        {
+          "vx": 796.0033322224206,
+          "vy": -79.86673331746252,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        },
+        {
+          "vx": 784.0532622729933,
+          "vy": 158.93546463604898,
+          "damage": 35,
+          "life": 1,
+          "radius": 7,
+          "remaining": 1,
+          "charge": 0
+        }
+      ],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.5173913043478261
+    },
+    {
+      "id": "gauntlets",
+      "evolved": false,
+      "directDamage": 74.80000000004657,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.8130434782608696
+    },
+    {
+      "id": "gauntlets",
+      "evolved": true,
+      "directDamage": 91.63000000000466,
+      "shots": [],
+      "pools": [],
+      "blasts": [],
+      "frozen": 0,
+      "chilled": 0,
+      "shields": 0,
+      "bibleUntil": 0,
+      "cooldown": 0.8130434782608696
+    }
+  ]
+}

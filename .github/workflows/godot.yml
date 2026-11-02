@@ -1,0 +1,68 @@
+name: Godot Windows
+
+on:
+  push:
+    branches: [main, 'feature/**']
+    paths: ['godot/**', 'data/**', '.github/workflows/godot.yml']
+  pull_request:
+    paths: ['godot/**', 'data/**', '.github/workflows/godot.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Cache Godot and Windows templates
+        uses: actions/cache@v6
+        id: godot
+        with:
+          path: |
+            ${{ runner.temp }}/godot-4.7.2
+            ~/AppData/Roaming/Godot/export_templates/4.7.2.stable.mono
+          key: godot-4.7.2-dotnet-windows-x64-v1
+      - name: Download official Godot .NET and Windows templates
+        if: steps.godot.outputs.cache-hit != 'true'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tools = Join-Path $env:RUNNER_TEMP 'godot-4.7.2'
+          New-Item -ItemType Directory -Force -Path $tools | Out-Null
+          Invoke-WebRequest 'https://downloads.godotengine.org/?version=4.7.2&flavor=stable&slug=mono_win64.zip&platform=windows.64' -OutFile (Join-Path $env:RUNNER_TEMP 'godot.zip')
+          Expand-Archive -LiteralPath (Join-Path $env:RUNNER_TEMP 'godot.zip') -DestinationPath $tools
+          Invoke-WebRequest 'https://downloads.godotengine.org/?flavor=stable&platform=templates&slug=mono_export_templates.tpz&version=4.7.2' -OutFile (Join-Path $env:RUNNER_TEMP 'templates.tpz')
+          $templates = Join-Path $env:APPDATA 'Godot/export_templates/4.7.2.stable.mono'
+          New-Item -ItemType Directory -Force -Path $templates | Out-Null
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead((Join-Path $env:RUNNER_TEMP 'templates.tpz'))
+          try {
+            foreach ($entry in $zip.Entries) {
+              if ($entry.FullName -match 'templates/(windows_(debug|release)_x86_64(_console)?\.exe|version\.txt)$') {
+                [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, (Join-Path $templates $entry.Name), $true)
+              }
+            }
+          } finally { $zip.Dispose() }
+      - name: Verify C# gameplay and export Windows game
+        run: |
+          $godot = (Get-ChildItem -LiteralPath (Join-Path $env:RUNNER_TEMP 'godot-4.7.2') -Recurse -Filter '*_console.exe' | Select-Object -First 1).FullName
+          if (-not $godot) { throw 'Godot .NET executable not found' }
+          ./godot/Run.ps1 -Godot $godot -Mode Verify
+          ./godot/Run.ps1 -Godot $godot -Mode Export
+      - name: Upload playable Windows build
+        uses: actions/upload-artifact@v7
+        with:
+          name: ASCII-Survivors-Windows
+          path: godot/Builds/Windows/
+          if-no-files-found: error
+          retention-days: 30
