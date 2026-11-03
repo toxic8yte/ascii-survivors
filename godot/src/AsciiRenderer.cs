@@ -59,10 +59,22 @@ public partial class AsciiRenderer : Node2D
         foreach(var pool in g.Pools){int ink=Ink(pool.Weapon,pool.Kind=="water"?9:3);Circle(pool.Pos,pool.Radius,ink,"~",.65f);Stamp(pool.Pos,pool.Kind=="water"?"{~}":"~x~",ink);}
         foreach(var b in g.Blasts){Circle(b.Pos,b.Radius,Ink(b.Weapon,6),":");Stamp(b.Pos,"[!]",Ink(b.Weapon,7));}
         foreach(var v in g.Visuals)DrawVisual(v);
+        if(g.L("garlic")>0&&!g.Manual)
+        {
+            float radius=(75+g.L("garlic")*15)*g.Area*(g.Evolved("garlic")?1.4f:1);
+            DrawCenser(V.Lerp(g.Player.Prev,g.Player.Pos,Interpolation),radius,g.Time*2);
+        }
         foreach(var shot in g.Shots)
         {
             var pos=Interpolated(shot);int ink=Ink(shot.Weapon,shot.Ink);
             if(shot.ChargeLeft>0){Circle(pos,16+(1-Math.Min(shot.ChargeLeft,1))*16,ink,".");Stamp(pos,"(@)",ink);continue;}
+            if(shot.Weapon=="needle")
+            {
+                var direction=Safe(shot.Velocity);
+                Line(pos-direction*30,pos-direction*10,Ink("needle",12),"~");
+                Stamp(pos,(int)(g.Time*18+shot.Age*11)%2==0?"{*}":"(*)",Ink("needle",12));
+                Stamp(pos,"*",Ink("needle",7));continue;
+            }
             if(shot.Weapon=="flamethrower"){Stamp(pos,MathF.Sin(g.Time*25+shot.Age)>0?")}":"{~",ink);Stamp(pos-Safe(shot.Velocity)*24,"~",Ink(shot.Weapon,7));continue;}
             if(shot.Weapon=="poison")ink=3;
             string glyph=shot.Evolved?shot.Weapon switch{"crossbow"=>"|=>","gauss"=>"=G=>","plasmaMinigun"=>"{R}","chozo"=>"(@)","electropistol"=>"~Z>",_=>shot.Glyph}:shot.Glyph;
@@ -136,6 +148,8 @@ public partial class AsciiRenderer : Node2D
     private void DrawVisual(Visual v)
     {
         int ink=Ink(v.Weapon,v.Ink);float alpha=Math.Clamp(v.Life/Math.Max(.01f,v.MaxLife)*2,0,1);
+        if(v.Weapon=="garlic")
+        {if(Game?.Manual==true)DrawCenser(v.Pos,v.Radius,Game.Time*2,alpha);return;}
         if(v.Shape is "arc" or "beam"){for(int i=1;i<v.Points.Length;i++)Line(v.Points[i-1],v.Points[i],ink,v.Shape=="beam"?"~":"+",alpha);return;}
         if(v.Shape=="whip")
         {float reveal=Math.Min(1,(1-v.Life/v.MaxLife)*4+.25f)*(v.Points.Length-1);for(int i=1;i<=MathF.Ceiling(reveal);i++){float t=Math.Min(1,reveal-i+1);Line(v.Points[i-1],V.Lerp(v.Points[i-1],v.Points[i],t),ink,"~",alpha);}return;}
@@ -145,6 +159,14 @@ public partial class AsciiRenderer : Node2D
         if(v.Shape=="slash"){for(float a=-.95f;a<=.95f;a+=.13f)Stamp(v.Pos+World.Direction(v.Angle+a)*v.Radius,v.Glyph,ink,alpha);return;}
         if(v.Shape=="pentagram"){var points=Enumerable.Range(0,5).Select(i=>v.Pos+World.Direction(i*MathF.Tau/5-MathF.PI/2)*v.Radius).ToArray();for(int i=0;i<5;i++)Line(points[i],points[(i+2)%5],ink,"*",alpha);return;}
         Circle(v.Pos,v.Radius,ink,v.Glyph,alpha);
+    }
+    private void DrawCenser(V center,float radius,float angle,float alpha=1)
+    {
+        int ink=Ink("garlic",7);var censer=center+World.Direction(angle)*radius*.65f;
+        Circle(center,radius,Ink("garlic",3),".",alpha*.55f);
+        Line(center,censer,Ink("garlic",1),":",alpha);
+        Stamp(censer,Game?.Evolved("garlic")==true?"(G)":"(g)",ink,alpha);
+        Stamp(censer+new V(0,-21),MathF.Sin(angle*3)>0?"~":"'",Ink("garlic",4),alpha*.8f);
     }
     public override void _ExitTree(){foreach(var line in textCache.Values)line.Dispose();textCache.Clear();}
 }

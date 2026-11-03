@@ -36,7 +36,21 @@ public static partial class PortTests
         {var g=new Simulation(c,83,new(){Sandbox=true,Manual=true,Enemy=pair.Key});g.Start();Check(g.Arena?.Phase=="locked",pair.Key+" sandbox ring");g.Player.Hp=g.Player.MaxHp=1000;g.Enemies[0].SkillClock=0;Tick(g,7);Check(g.Combat.Hurt>0,pair.Key+" inflicts damage");var boss=g.Enemies.First(e=>e.Def.Boss);g.HurtEnemy(boss,1e9f);Check(g.Arena is null&&g.GoldEarned==0&&g.Chests.Count==0,pair.Key+" releases without rewards");}
         var circle=Fixture(c);circle.NextBossAt=0;Tick(circle,5.1f);var lich=circle.Enemies.First(e=>e.Def.Boss);Close(lich.MaxHp,1500,"First boss health");Check(circle.Arena?.Phase=="locked","Warning closes");circle.Player.Invulnerable=100;Tick(circle,15.1f);Check(circle.Arena is null&&lich.Alive,"Wall expires while boss lives");circle.HurtEnemy(lich,1e9f);Check(circle.Chests.Count==1,"Boss drops chest");Check(circle.OpenChest(circle.Chests[0]),"Chest opens");Check(circle.Rewards.Count==3&&circle.ClaimReward(0)&&!circle.ClaimReward(0),"One of three rewards only");
         var supply=Fixture(c);supply.Player.Hp=40;var box=supply.MapWorld.Supplies.First(b=>b.Kind=="heal");supply.Player.Pos=box.Pos;Check(supply.OpenSupply(box)&&!supply.OpenSupply(box),"Crate only once");Close(supply.Player.Hp,70,"Crate heal");
+        CheckStarterWeapons(c);
         SaveTests(c);
         Console.WriteLine($"PASS: {checks} native C# checks, 64 JS weapon/evolution references, all heroes/enemies, progression, waves, boss AI, walls and rewards.");
+    }
+    private static void CheckStarterWeapons(Catalog c)
+    {
+        var shot=Fixture(c);shot.Manual=false;shot.Clocks["needle"]=1000;shot.Player.Facing=Vector2.UnitX;
+        var near=shot.Spawn("brute",shot.Player.Pos-new Vector2(100,0));var far=shot.Spawn("brute",shot.Player.Pos+new Vector2(180,0));
+        near.Hp=near.MaxHp=far.Hp=far.MaxHp=1000;near.Speed=far.Speed=0;shot.RebuildGrid();shot.Cast("needle");
+        Check(shot.Shots.Count==1&&shot.Shots[0].Velocity.X<0,"Igniter aims at nearest enemy opposite facing");
+        Tick(shot,.3f);Close(near.Hp,981,"Igniter projectile actually deals audited damage");Close(far.Hp,1000,"Igniter does not damage enemy behind it");
+        var manual=Fixture(c);manual.AimActive=true;manual.Aim=manual.Player.Pos+new Vector2(0,300);manual.Cast("needle");Check(manual.Shots[0].Velocity.Y>0&&Math.Abs(manual.Shots[0].Velocity.X)<.01f,"Manual igniter follows cursor without a target");
+        var aura=Fixture(c);aura.Levels["needle"]=0;aura.Levels["garlic"]=2;
+        var inside=aura.Spawn("brute",aura.Player.Pos+new Vector2(0,80));var outside=aura.Spawn("brute",aura.Player.Pos+new Vector2(220,0));
+        inside.Hp=inside.MaxHp=outside.Hp=outside.MaxHp=1000;inside.Speed=outside.Speed=0;aura.RebuildGrid();aura.Cast("garlic");
+        Close(inside.Hp,989.8f,"Censer damages whole aura away from moving ball");Close(outside.Hp,1000,"Censer cannot damage beyond aura");
     }
 }

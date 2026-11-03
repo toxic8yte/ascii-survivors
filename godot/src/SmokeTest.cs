@@ -38,6 +38,13 @@ public partial class Main
             edit.Hero="hunter";edit.Enemy="lichLord";edit.Weapon="lightning";edit.Rank=4;edit.Invulnerable=false;StartNew();game.Status=RunStatus.Paused;game.Manual=true;game.Player.Hp=game.Player.MaxHp=1000;
             var boss=game.Enemies.First(e=>e.Def.Boss);boss.SkillClock=0;game.Status=RunStatus.Running;for(int i=0;i<240&&game.Status==RunStatus.Running;i++)game.Tick(1/60f);game.Status=RunStatus.Paused;game.Cast("lightning");renderer.HighlightedWeapon="lightning";RefreshHud(true);await Shot("07-boss-ring");Assert(game.Combat.Hurt>0,"Sandbox boss deals damage");
             ShowBestiary();await Shot("08-bestiary");ShowRecipes();await Shot("09-necronomicon");ShowMap();await Shot("10-map");
+            foreach(string weapon in new[]{"needle","garlic"})
+            {
+                edit.Weapon=weapon;edit.Enemy="dummy";edit.Evolved=false;edit.Manual=false;edit.Rank=2;StartNew();game.Clocks[weapon]=1000;
+                game.Cast(weapon);for(int i=0;i<8;i++)game.Tick(1/60f);game.Status=RunStatus.Paused;renderer.HighlightedWeapon=null;await Shot("weapon-"+weapon+"-auto");
+                if(weapon=="garlic")
+                {game.Elapsed+=.7;await Shot("weapon-garlic-rotation");game.Manual=true;game.Cast("garlic");RefreshHud(true);await Shot("weapon-garlic-manual");}
+            }
             edit.Sandbox=false;edit.Weapon="starter";MakeReady();game.Start();game.Status=RunStatus.Upgrading;game.Offers=["gauntlets","flamethrower","area"];DisplayServer.WindowSetSize(new(960,640));ShowChoices(false);SelectChoice(0);await Shot("11-small-window");Assert(confirmChoice!.GetGlobalRect().End.Y<=root.Size.Y+1,"Small-window actions fit");
             var matrix=new List<object>();
             foreach(var resolution in new[]{new Vector2I(960,640),new Vector2I(1024,768),new Vector2I(1280,720),new Vector2I(1920,1080),new Vector2I(2560,1080),new Vector2I(2560,1440),new Vector2I(3440,1440)})
