@@ -148,7 +148,7 @@ public sealed partial class Simulation
         foreach(var item in content.Permanents)Meta.TryAdd(item.Id,0);
         if(OfferTiers.Any(p=>!Offers.Contains(p.Key)||p.Value is <0 or >4)||QualityBonus.Any(p=>!content.ById.TryGetValue(p.Key,out var item)||!item.Weapon||!float.IsFinite(p.Value)||p.Value<0||p.Value>item.Max*.5f))throw new InvalidDataException("Invalid upgrade quality");
         if(Rewards.Any(r=>r.Tier is <0 or >4))throw new InvalidDataException("Invalid chest quality");
-        if(FreeRerollsUsed<0||FreeRerollsUsed>RerollsUsed||FreeRerollsUsed>M("reroll")*2||SkipsLeft<0||SkipsLeft>M("skip")*2)throw new InvalidDataException("Invalid choice charges");
+        if(FreeRerollsUsed<0||PreservedRerolls<0||FreeRerollsUsed+PreservedRerolls>RerollsUsed||FreeRerollsUsed>M("reroll")*2||SkipsLeft<0||SkipsLeft>M("skip")*2)throw new InvalidDataException("Invalid choice charges");
         if(IsTest||!content.Heroes.ContainsKey(HeroId)||!content.Stages.ContainsKey(MapId)||Level<1||XpNeed<1||XpNeed>5000||RerollGoldSpent<0||RerollGoldSpent>GoldEarned||Options.EnemyLimit is <100 or >24000||Enemies.Count>Options.EnemyLimit||Shots.Count>13000||Gems.Count>50000)throw new InvalidDataException("Invalid run snapshot");
         if(Levels.Count!=content.Items.Count||content.Items.Any(u=>L(u.Id)<0||L(u.Id)>u.Max))throw new InvalidDataException("Invalid inventory");
         if(Offers.Count>3||Offers.Distinct().Count()!=Offers.Count||Offers.Any(id=>!CanUpgrade(id))||Evolutions.Any(id=>!content.Recipes.Any(r=>r.Id==id)))throw new InvalidDataException("Invalid choices");
@@ -165,8 +165,8 @@ public sealed partial class Simulation
     {
         if(IsTest||!MapWorld.Campfires.Contains(fire)||!CampfiresBroken.Add(fire.Id))return false;
         MapWorld.Cells[fire.Id]=null;float roll=Random();
-        if(roll<.55f){Hearts.Add(new(){Pos=fire.Pos+new Vector2(-10,0),Value=20,Expires=Time+180});Combat.HeartsDropped++;}
-        if(roll>=.45f)AddGem(fire.Pos+new Vector2(12,0),5+Random()*7,true);
+        if(roll<.55f&&!DisabledItems.Contains("pickup:heal")){Hearts.Add(new(){Pos=fire.Pos+new Vector2(-10,0),Value=20,Expires=Time+180});Combat.HeartsDropped++;}
+        if(roll>=.45f&&!DisabledItems.Contains("pickup:gold"))AddGem(fire.Pos+new Vector2(12,0),5+Random()*7,true);
         Ring("",fire.Pos,24,.25f,12,"✦");SoundSignals|=SoundCue.Explosion;return true;
     }
 }

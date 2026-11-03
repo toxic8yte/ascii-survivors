@@ -68,6 +68,8 @@ public sealed class Catalog
     public static readonly string[] RarityIds=["common","uncommon","rare","epic","legendary"];
     public static readonly int[] RarityWeights=[100,65,35,16,6];
     public static readonly string[] BossOrder=["lichLord","british","freddy","jason","alienQueen","reaper"];
+    public static readonly ItemDef[] LightPickups=[new(){Id="pickup:heal",Title="Лечение из костра",Icon="[+]",Description="Исключить лечебные находки из костров."},new(){Id="pickup:gold",Title="Монеты из костра",Icon="◉",Description="Исключить золото из костров. Монеты с врагов остаются."}];
+    public static bool IsLightPickup(string id)=>LightPickups.Any(p=>p.Id==id);
     public static Catalog Load(string directory)
         =>Load(file=>File.ReadAllText(Path.Combine(directory,file)));
     public static Catalog Load(Func<string,string> readFile)
@@ -96,7 +98,7 @@ public sealed class Catalog
         using(var additions=JsonDocument.Parse(readFile("desktop-additions.json")))
         {
             foreach(var item in JsonSerializer.Deserialize<ItemDef[]>(additions.RootElement.GetProperty("passives").GetRawText(),Options)!){c.Items.Add(item);all.Add(item.Id,item);}
-            c.Permanents.AddRange(JsonSerializer.Deserialize<ShopDef[]>(additions.RootElement.GetProperty("permanents").GetRawText(),Options)!);
+            c.Permanents=JsonSerializer.Deserialize<ShopDef[]>(additions.RootElement.GetProperty("permanents").GetRawText(),Options)!.ToList();
             foreach(var entry in additions.RootElement.GetProperty("heroes").EnumerateObject())
             {var hero=c.Heroes[entry.Name];hero.Sprite=entry.Value.GetProperty("sprite").GetString()!;hero.FacingSprites=JsonSerializer.Deserialize<Dictionary<string,string>>(entry.Value.GetProperty("facingSprites").GetRawText(),Options)!;}
             foreach(var entry in additions.RootElement.GetProperty("bosses").EnumerateObject())

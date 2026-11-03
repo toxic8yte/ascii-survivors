@@ -7,7 +7,7 @@ public static partial class PortTests
 {
     private static void CheckLegacyExpansion(Catalog c)
     {
-        Check(c.Permanents.Count==25&&c.Permanents.Select(p=>p.Id).Distinct().Count()==25,"All 25 Legacy lines unique");
+        Check(c.Permanents.Count==27&&c.Permanents.Select(p=>p.Id).Distinct().Count()==27,"All 27 Legacy lines unique");
         var g=Fixture(c);var baseline=Fixture(c);foreach(var item in c.Permanents)g.Meta[item.Id]=item.Max;
         Check(g.Power>baseline.Power&&g.Area>baseline.Area&&g.Duration>baseline.Duration&&g.ProjectileSpeed>baseline.ProjectileSpeed&&g.Greed>baseline.Greed,"Permanent combat and economy stats affect simulation");
         var a=baseline.GetWave();var b=g.GetWave();Check(b.Target>a.Target&&b.Interval<a.Interval,"Curse and Charm change waves");
@@ -32,10 +32,10 @@ public static partial class PortTests
         string json=JsonSerializer.Serialize(fireGame,SaveStore.JsonOptions);var restored=JsonSerializer.Deserialize<Simulation>(json,SaveStore.JsonOptions)!;restored.RepairAfterLoad(c);
         Check(restored.CampfiresBroken.Contains(fire.Id)&&restored.MapWorld.Cells[fire.Id] is null&&!restored.BreakCampfire(restored.MapWorld.Campfires.First(f=>f.Id==fire.Id)),"Broken fire persists and cannot duplicate loot");
         var drops=Fixture(c);foreach(var f in drops.MapWorld.Campfires)Check(drops.BreakCampfire(f),"Generated campfire drops loot");Check(drops.Hearts.Count>10&&drops.Gems.Count(g=>g.Gold)>10&&drops.Gems.All(g=>g.Gold),"Campfires drop healing and coins, never XP");
-        string dir=Path.Combine(Path.GetTempPath(),"ascii-legacy",Guid.NewGuid().ToString("N"));var store=new SaveStore(c,Path.Combine(dir,"state.json"));store.Profile.Gold=100000;
+        string dir=Path.Combine(Path.GetTempPath(),"ascii-legacy",Guid.NewGuid().ToString("N"));var store=new SaveStore(c,Path.Combine(dir,"state.json"));store.Profile.Gold=10000000;
         Check(!store.SetSeal("pentagram",true)&&store.Purchase("seal1","permanent")&&store.SealCapacity==1&&store.SetSeal("pentagram",true)&&!store.SetSeal("water",true),"Seals require bought capacity");
         Check(new SaveStore(c,Path.Combine(dir,"state.json")).Profile.SealedItems.Contains("pentagram"),"Seal survives restart");Check(store.SetSeal("pentagram",false)&&store.SetSeal("water",true),"Unsealing restores capacity");
         foreach(var item in c.Permanents.Where(i=>i.Id!="seal1"))Check(store.Purchase(item.Id,"permanent"),item.Id+" can be bought with gold");
-        var fresh=new Simulation(c,56,new(){Meta=new(store.Profile.Ranks)});Check(fresh.SkipsLeft==2&&fresh.BanishesLeft==5&&fresh.FreeRerollsLeft==2&&fresh.Amount==1,"Purchased choice and Amount bonuses active from new run");
+        var fresh=new Simulation(c,56,new(){Meta=new(store.Profile.Ranks)});Check(fresh.SkipsLeft==2&&fresh.BanishesLeft==2&&fresh.FreeRerollsLeft==2&&fresh.Amount==1,"Purchased choice and Amount bonuses active from new run");
     }
 }

@@ -25,7 +25,7 @@ public partial class Main
         {
             if(!game.IsTest){Toast("Сначала начни песочницу или нагрузочный тест");return;}
             string starter=game.SelectedWeapon;foreach(string id in game.Levels.Keys)game.Levels[id]=0;
-            game.Levels[starter]=1;game.WeaponOrder=[starter];game.PassiveOrder=[];game.QualityBonus.Clear();game.Evolutions.Clear();game.Shots.Clear();game.Pools.Clear();game.Blasts.Clear();game.Visuals.Clear();game.ShieldCharges=0;game.BibleUntil=0;game.Player.MaxHp=game.Hero.Hp+game.M("vital")*10;game.Player.Hp=game.Player.MaxHp;RefreshHud(true);Toast("ОСТАВЛЕНО ОДНО ОРУЖИЕ 1 РАНГА");
+            game.Levels[starter]=1;game.WeaponOrder=[starter];game.PassiveOrder=[];game.QualityBonus.Clear();game.Evolutions.Clear();game.Shots.Clear();game.Pools.Clear();game.Blasts.Clear();game.Visuals.Clear();game.ShieldCharges=0;game.BibleUntil=0;game.Player.MaxHp=game.Hero.Hp*(1+game.M("vital")*.1f);game.Player.Hp=game.Player.MaxHp;RefreshHud(true);Toast("ОСТАВЛЕНО ОДНО ОРУЖИЕ 1 РАНГА");
         }));
         test.AddChild(MenuAction("DevAllWeapons","ВЫДАТЬ ВСЁ ОРУЖИЕ (ТЕСТ)",()=>
         {

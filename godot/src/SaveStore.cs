@@ -13,6 +13,7 @@ public sealed class Profile
     public HashSet<string> Heroes=["hunter"],Features=[],Seen=[],Finished=[];
     public HashSet<string> DisabledItems=[];
     public HashSet<string> SealedItems=[];
+    public int LegacyAccountingVersion,LegacySpent;
 }
 public sealed class SaveDocument {public int Version=1;public Profile Profile=new();public Simulation? Run;}
 public sealed class SaveStore
@@ -50,9 +51,19 @@ public sealed class SaveStore
     {
         if(Profile is null||Profile.Gold<0||Profile.LifetimeGold<0||Profile.Heroes is null||Profile.Features is null||Profile.Seen is null||Profile.Ranks is null||Profile.Finished is null||Profile.CreditedGross is null||Profile.CreditedNet is null||!double.IsFinite(Profile.Seconds+Profile.BestTime))throw new InvalidDataException("Invalid profile");
         Profile.Heroes.RemoveWhere(id=>!content.Heroes.ContainsKey(id));Profile.Heroes.Add("hunter");Profile.Features.RemoveWhere(id=>!content.Features.Any(f=>f.Id==id));Profile.Seen.RemoveWhere(id=>!content.Enemies.ContainsKey(id));
+        if(Profile.LegacyAccountingVersion==0)
+        {
+            // Old versions sold ranks at base * rank²; never refund them at the new, higher prices.
+            Dictionary<string,int> oldCosts=new(){["vital"]=25,["power"]=30,["haste"]=35,["stride"]=25,["armor"]=30,["magnet"]=20,["growth"]=35,["revive"]=150,["luck"]=40,["recovery"]=25,["area"]=45,["velocity"]=35,["duration"]=45,["amount"]=300,["greed"]=30,["curse"]=60,["omni"]=75,["charm"]=60,["defang"]=35,["reroll"]=60,["skip"]=30,["banish"]=40,["seal1"]=50,["seal2"]=75,["seal3"]=100};
+            int refund=0;Profile.LegacySpent=0;
+            foreach(var item in content.Permanents)for(int rank=1;rank<=Math.Clamp(Profile.Ranks.GetValueOrDefault(item.Id),0,10);rank++)
+            {int paid=oldCosts.GetValueOrDefault(item.Id)*rank*rank;if(rank>item.Max)refund+=paid;else Profile.LegacySpent+=paid;}
+            Profile.Gold=checked(Profile.Gold+refund);Profile.LegacyAccountingVersion=1;
+        }
+        if(Profile.LegacyAccountingVersion!=1||Profile.LegacySpent<0)throw new InvalidDataException("Invalid Legacy ledger");
         foreach(var u in content.Permanents)Profile.Ranks[u.Id]=Math.Clamp(Profile.Ranks.GetValueOrDefault(u.Id),0,u.Max);
         Profile.DisabledItems??=[];Profile.DisabledItems.RemoveWhere(id=>!content.ById.ContainsKey(id));
-        Profile.SealedItems??=[];Profile.SealedItems=Profile.SealedItems.Where(content.ById.ContainsKey).Take(SealCapacity).ToHashSet();
+        Profile.SealedItems??=[];Profile.SealedItems=Profile.SealedItems.Where(id=>content.ById.ContainsKey(id)||Catalog.IsLightPickup(id)).Take(SealCapacity).ToHashSet();
         if(!Profile.Heroes.Contains(Profile.Hero))Profile.Hero="hunter";if(!content.Stages.ContainsKey(Profile.Map))Profile.Map="forest";
     }
     public bool Write()
@@ -93,16 +104,27 @@ public sealed class SaveStore
     {
         int pending=Math.Max(0,g.GoldEarned-Profile.CreditedGross.GetValueOrDefault(g.RunId));
         if(Profile.Gold+pending<g.RerollCost)return false;
-        var profile=CloneProfile();var oldRun=Document.Run;var offers=g.Offers;var tiers=g.OfferTiers;int selected=g.OfferSelection,spent=g.RerollGoldSpent,used=g.RerollsUsed,free=g.FreeRerollsUsed;uint rng=g.RandomState;
+        var profile=CloneProfile();var oldRun=Document.Run;var offers=g.Offers;var tiers=g.OfferTiers;int selected=g.OfferSelection,spent=g.RerollGoldSpent,used=g.RerollsUsed,free=g.FreeRerollsUsed,preserved=g.PreservedRerolls;uint rng=g.RandomState;
         if(!g.Reroll())return false;
         if(Checkpoint(g))return true;
-        Document.Profile=profile;Document.Run=oldRun;g.Offers=offers;g.OfferTiers=tiers;g.OfferSelection=selected;g.RerollGoldSpent=spent;g.RerollsUsed=used;g.FreeRerollsUsed=free;g.RandomState=rng;return false;
+        Document.Profile=profile;Document.Run=oldRun;g.Offers=offers;g.OfferTiers=tiers;g.OfferSelection=selected;g.RerollGoldSpent=spent;g.RerollsUsed=used;g.FreeRerollsUsed=free;g.PreservedRerolls=preserved;g.RandomState=rng;return false;
     }
-    public int SealCapacity=>Profile.Ranks.GetValueOrDefault("seal1")+Profile.Ranks.GetValueOrDefault("seal2")*2+Profile.Ranks.GetValueOrDefault("seal3")*3;
+    public int SealCapacity=>Profile.Ranks.GetValueOrDefault("seal1")+Profile.Ranks.GetValueOrDefault("seal2")*2+Profile.Ranks.GetValueOrDefault("seal3")*3+Profile.Ranks.GetValueOrDefault("sealAll")*4;
+    public static int RankPrice(int initial,int bought,int totalBought)
+        =>totalBought==0?initial:(int)Math.Min(int.MaxValue,(long)initial*(1+bought)+Math.Floor(20*Math.Pow(1.1,totalBought)));
+    public int PermanentCost(string id)
+    {var item=content.Permanents.First(i=>i.Id==id);return RankPrice(item.Cost,Profile.Ranks.GetValueOrDefault(id),content.Permanents.Sum(i=>Profile.Ranks.GetValueOrDefault(i.Id)));}
+    public bool ResetPowerUps()
+    {
+        if(Profile.LegacySpent>int.MaxValue-Profile.Gold)return false;
+        var before=CloneProfile();Profile.Gold+=Profile.LegacySpent;Profile.LegacySpent=0;
+        foreach(var item in content.Permanents)Profile.Ranks[item.Id]=0;Profile.SealedItems.Clear();
+        if(Write())return true;Document.Profile=before;return false;
+    }
     public HashSet<string> RotationExclusions()=>Profile.DisabledItems.Concat(Profile.SealedItems).ToHashSet();
     public bool SetSeal(string id,bool sealedItem)
     {
-        if(!content.ById.ContainsKey(id)||sealedItem&&!Profile.SealedItems.Contains(id)&&Profile.SealedItems.Count>=SealCapacity)return false;
+        if((!content.ById.ContainsKey(id)&&!Catalog.IsLightPickup(id))||sealedItem&&!Profile.SealedItems.Contains(id)&&Profile.SealedItems.Count>=SealCapacity)return false;
         var before=new HashSet<string>(Profile.SealedItems);if(sealedItem)Profile.SealedItems.Add(id);else Profile.SealedItems.Remove(id);
         if(Write())return true;Profile.SealedItems=before;return false;
     }
@@ -114,7 +136,7 @@ public sealed class SaveStore
         else if(category=="feature")
         {var f=content.Features.FirstOrDefault(x=>x.Id==id);if(f is null||Profile.Features.Contains(id)||Profile.Gold<f.Cost)return false;Profile.Gold-=f.Cost;Profile.Features.Add(id);}
         else
-        {var u=content.Permanents.FirstOrDefault(x=>x.Id==id);if(u is null)return false;int rank=Profile.Ranks.GetValueOrDefault(id),cost=u.Cost*(rank+1)*(rank+1);if(rank>=u.Max||Profile.Gold<cost)return false;Profile.Gold-=cost;Profile.Ranks[id]=rank+1;}
+        {var u=content.Permanents.FirstOrDefault(x=>x.Id==id);if(u is null)return false;int rank=Profile.Ranks.GetValueOrDefault(id),cost=PermanentCost(id);if(rank>=u.Max||Profile.Gold<cost||cost>int.MaxValue-Profile.LegacySpent)return false;Profile.Gold-=cost;Profile.LegacySpent+=cost;Profile.Ranks[id]=rank+1;}
         if(Write())return true;Document.Profile=before;return false;
     }
     public bool ImportBrowserProfile(string path)
@@ -138,6 +160,6 @@ public sealed class SaveStore
             if(root.TryGetProperty("runs",out var runs))p.Runs=Math.Max(0,runs.GetInt32());if(root.TryGetProperty("kills",out var kills))p.Kills=Math.Max(0,kills.GetInt32());if(root.TryGetProperty("bossKills",out var bosses))p.BossKills=Math.Max(0,bosses.GetInt32());if(root.TryGetProperty("chestsOpened",out var chests))p.ChestsOpened=Math.Max(0,chests.GetInt32());if(root.TryGetProperty("maxLevel",out var level))p.MaxLevel=Math.Max(0,level.GetInt32());if(root.TryGetProperty("seconds",out var seconds))p.Seconds=Math.Max(0,seconds.GetDouble());if(root.TryGetProperty("best",out var best)&&best.ValueKind==JsonValueKind.Object)p.BestTime=best.GetProperty("time").GetDouble();
             Document=new(){Profile=p};NormalizeProfile();if(Write())return true;Document=before;return false;
         }
-        catch(Exception e)when(e is IOException or JsonException or InvalidOperationException or KeyNotFoundException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NullReferenceException){Document=before;LastError="Импорт не выполнен: "+e.Message;return false;}
+        catch(Exception e)when(e is IOException or JsonException or InvalidOperationException or KeyNotFoundException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NullReferenceException or OverflowException){Document=before;LastError="Импорт не выполнен: "+e.Message;return false;}
     }
 }

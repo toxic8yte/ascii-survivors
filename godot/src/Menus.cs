@@ -162,21 +162,27 @@ public partial class Main
     private void ShowShop()
     {
         if(game.Status!=RunStatus.Ready){Toast("Наследие доступно на стартовом экране");return;}returnView="intro";
-        var body=Modal("shop","Наследие · "+store.Profile.Gold+" золота","Постоянные улучшения действуют в новых забегах. Герои и разделы открываются навсегда.",true);var grid=new GridContainer{Columns=2};grid.AddThemeConstantOverride("h_separation",16);grid.AddThemeConstantOverride("v_separation",12);Scroll(body,grid);
+        var body=Modal("shop","Наследие · "+store.Profile.Gold+" золота","Постоянные улучшения действуют в новых забегах. Герои и разделы открываются навсегда. Цены растут с общим числом купленных рангов.",true);var grid=new GridContainer{Columns=2};grid.AddThemeConstantOverride("h_separation",16);grid.AddThemeConstantOverride("v_separation",12);Scroll(body,grid);
         foreach(var item in content.Permanents)
         {
-            int rank=store.Profile.Ranks.GetValueOrDefault(item.Id),cost=item.Cost*(rank+1)*(rank+1);var b=Button(item.Icon+" "+item.Title+$" · {rank}/{item.Max}\n\n"+item.Description+"\n\n"+(rank==item.Max?"МАКСИМУМ":cost+" ЗОЛОТА"),()=>{if(store.Purchase(item.Id,"permanent")){MakeReady();ShowShop();}else Toast(store.LastError.Length>0?store.LastError:"Недостаточно золота");});b.Disabled=rank>=item.Max||store.Profile.Gold<cost;b.AutowrapMode=TextServer.AutowrapMode.WordSmart;b.Alignment=HorizontalAlignment.Left;b.CustomMinimumSize=new(0,140);grid.AddChild(b);
+            int rank=store.Profile.Ranks.GetValueOrDefault(item.Id),cost=store.PermanentCost(item.Id);var b=Button(item.Icon+" "+item.Title+$" · {rank}/{item.Max}\n\n"+item.Description+"\n\n"+(rank==item.Max?"МАКСИМУМ":cost+" ЗОЛОТА"),()=>{if(store.Purchase(item.Id,"permanent")){MakeReady();ShowShop();}else Toast(store.LastError.Length>0?store.LastError:"Недостаточно золота");});b.Name="PowerUp-"+item.Id;b.Disabled=rank>=item.Max||store.Profile.Gold<cost;b.AutowrapMode=TextServer.AutowrapMode.WordSmart;b.Alignment=HorizontalAlignment.Left;b.CustomMinimumSize=new(0,140);grid.AddChild(b);
         }
         foreach(var feature in content.Features)
         {bool owned=store.Profile.Features.Contains(feature.Id);var b=Button(feature.Icon+" "+feature.Title+"\n\n"+feature.Description+"\n\n"+(owned?"ОТКРЫТО":feature.Cost+" ЗОЛОТА"),()=>{if(store.Purchase(feature.Id,"feature")){MakeReady();ShowShop();}else Toast(store.LastError.Length>0?store.LastError:"Недостаточно золота");});b.Disabled=owned||store.Profile.Gold<feature.Cost;b.AutowrapMode=TextServer.AutowrapMode.WordSmart;b.Alignment=HorizontalAlignment.Left;b.CustomMinimumSize=new(0,140);grid.AddChild(b);}
         var footer=new HBoxContainer();body.AddChild(footer);footer.AddChild(Button("ИМПОРТ ПРОФИЛЯ / КОПИИ…",ImportProfile));footer.AddChild(Button("ЭКСПОРТ РЕЗЕРВНОЙ КОПИИ…",ExportProfile));
+        body.AddChild(MenuAction("ResetPowerUps","СБРОС УСИЛЕНИЙ · ВЕРНУТЬ "+store.Profile.LegacySpent+" ЗОЛОТА",ConfirmResetPowerUps));
         body.AddChild(MenuAction("Seals",$"ПЕЧАТИ · {store.Profile.SealedItems.Count} / {store.SealCapacity} ИСКЛЮЧЕНИЙ",ShowSeals));
+    }
+    private void ConfirmResetPowerUps()
+    {
+        var dialog=new ConfirmationDialog{Title="Сброс усилений",DialogText=$"Вернуть {store.Profile.LegacySpent} золота и сбросить все постоянные усиления и печати? Герои, открытые разделы и сохранённый забег останутся. Эффект применится к новым забегам.",OkButtonText="СБРОСИТЬ"};AddChild(dialog);
+        dialog.Confirmed+=()=>{if(store.ResetPowerUps()){MakeReady();ShowShop();}else Toast(store.LastError.Length>0?store.LastError:"Невозможно вернуть золото");dialog.QueueFree();};dialog.Canceled+=()=>dialog.QueueFree();dialog.PopupCentered(new(640,220));
     }
     private void ShowSeals()
     {
-        returnView="shop";var body=Modal("seals","Печати · "+store.Profile.SealedItems.Count+" / "+store.SealCapacity,"Купи места печатей I / II / III за золото в Наследии. Отметь предмет, чтобы убрать его из карточек и сундуков новых забегов. Стартовое оружие героя остаётся. Снять печать можно бесплатно.",true);
+        returnView="shop";var body=Modal("seals","Печати · "+store.Profile.SealedItems.Count+" / "+store.SealCapacity,"Купи места печатей I / II / III / «Исключить всё» за золото в Наследии. Отметь предмет, чтобы убрать его из карточек и сундуков новых забегов. Стартовое оружие героя остаётся. Снять печать можно бесплатно.",true);
         var grid=new GridContainer{Columns=2};Scroll(body,grid);
-        foreach(var item in content.Items)
+        foreach(var item in content.Items.Concat(Catalog.LightPickups))
         {
             bool selected=store.Profile.SealedItems.Contains(item.Id);var b=new CheckButton{Text=item.Icon+" "+item.Title,ButtonPressed=selected,Disabled=!selected&&store.Profile.SealedItems.Count>=store.SealCapacity,TooltipText=item.Description,ClipText=true,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill};b.Name="Seal-"+item.Id;grid.AddChild(b);
             b.Toggled+=value=>{if(store.SetSeal(item.Id,value)){MakeReady();ShowSeals();}else{b.SetPressedNoSignal(!value);Toast(store.LastError.Length>0?store.LastError:"Нет свободных мест печати");}};
