@@ -47,6 +47,7 @@ public static partial class PortTests
         CheckGameplayReview(c);
         CheckLegacyExpansion(c);
         CheckExactLegacy(c);
+        CheckXpAndLoot(c);
         var castleRows=MenuBackdrop.Castle.Split('\n');
         Check(castleRows.Length==9&&castleRows.All(row=>row.Length==41),"Castle uses a uniform cell grid");
         char Mirror(char ch)=>ch switch{'/'=>'\\','\\'=>'/','<'=>'>','>'=>'<','┌'=>'┐','┐'=>'┌','├'=>'┤','┤'=>'├',_=>ch};

@@ -4,11 +4,11 @@ namespace AsciiSurvivors;
 
 public sealed partial class Simulation
 {
-    public void AddGem(Vector2 pos,float value,bool gold=false)
+    public void AddGem(Vector2 pos,float value,bool gold=false,string source="")
     {
         if(value<=0)return;int key=(int)MathF.Floor(pos.X/64)+(int)MathF.Floor(pos.Y/64)*1024+(gold?10000000:0);
-        if(gemBins.TryGetValue(key,out var old)&&!old.Taken&&!old.Magnetized){old.Value+=value;return;}
-        var gem=new Gem{Pos=pos,Value=value,Bin=key,Gold=gold};Gems.Add(gem);gemBins[key]=gem;
+        if(gemBins.TryGetValue(key,out var old)&&!old.Taken&&!old.Magnetized&&old.Source==source){old.Value+=value;return;}
+        var gem=new Gem{Pos=pos,Value=value,Bin=key,Gold=gold,Source=source};Gems.Add(gem);gemBins[key]=gem;
     }
     public bool OpenSupply(PickupBox box)
     {
@@ -158,6 +158,8 @@ public sealed partial class Simulation
         foreach(var e in Enemies){if(!content.Enemies.TryGetValue(e.Kind,out var def)||e.Hp<=0||e.Hp>e.MaxHp||!float.IsFinite(e.Pos.X+e.Pos.Y+e.Hp))throw new InvalidDataException("Invalid enemy");e.Def=def;e.Prev=e.Pos;}
         if(Enemies.Select(e=>e.Id).Distinct().Count()!=Enemies.Count)throw new InvalidDataException("Duplicate enemy IDs");
         foreach(var shot in Shots){if(!content.ById.ContainsKey(shot.Weapon)||!float.IsFinite(shot.Pos.X+shot.Pos.Y+shot.Life+shot.Damage))throw new InvalidDataException("Invalid projectile");shot.Prev=shot.Pos;}
+        // Remove the old monster loot on resume, keeping every XP gem and already banked coin.
+        Gems.RemoveAll(g=>g.Gold&&g.Source!="campfire");Hearts.RemoveAll(h=>h.Source!="campfire");
         gemBins.Clear();foreach(var gem in Gems)if(!gem.Magnetized)gemBins[gem.Bin]=gem;
         if(Status==RunStatus.Running)Status=RunStatus.Paused;RebuildGrid();
     }
@@ -165,8 +167,8 @@ public sealed partial class Simulation
     {
         if(IsTest||!MapWorld.Campfires.Contains(fire)||!CampfiresBroken.Add(fire.Id))return false;
         MapWorld.Cells[fire.Id]=null;float roll=Random();
-        if(roll<.55f&&!DisabledItems.Contains("pickup:heal")){Hearts.Add(new(){Pos=fire.Pos+new Vector2(-10,0),Value=20,Expires=Time+180});Combat.HeartsDropped++;}
-        if(roll>=.45f&&!DisabledItems.Contains("pickup:gold"))AddGem(fire.Pos+new Vector2(12,0),5+Random()*7,true);
+        if(roll<.55f&&!DisabledItems.Contains("pickup:heal")){Hearts.Add(new(){Pos=fire.Pos+new Vector2(-10,0),Value=20,Expires=Time+180,Source="campfire"});Combat.HeartsDropped++;}
+        if(roll>=.45f&&!DisabledItems.Contains("pickup:gold"))AddGem(fire.Pos+new Vector2(12,0),5+Random()*7,true,"campfire");
         Ring("",fire.Pos,24,.25f,12,"✦");SoundSignals|=SoundCue.Explosion;return true;
     }
 }

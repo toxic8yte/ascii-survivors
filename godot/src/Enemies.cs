@@ -162,9 +162,7 @@ public sealed partial class Simulation
         e.Hp-=damage;e.Flash=.12f;if(knockback>0){float resistance=e.Def.Resistance>0?e.Def.Resistance:FirstBoss(e)?.65f:0;MoveEnemy(e,SafeDirection(e.Pos-Player.Pos)*knockback*(1-resistance));}
         if(e.Hp>0)return;SoundSignals|=e.Def.Boss?SoundCue.BossDeath:SoundCue.Kill;e.Alive=false;Kills++;
         if(Options.Sandbox){if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ТЕСТ");return;}
-        if(Kills%5==0)AddGem(e.Pos,1,true);
         if(e.Def.Boss){BossKills++;AwardGold(e.Def.Mega?125:25);if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК");else Notice="БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК";NextBossAt=Math.Max(NextBossAt,PressureTime+90);Chests.Add(new(){Id=NextChestId++,Pos=e.Pos,Source=e.Kind,CanEvolve=e.Def.Mega||e.BornAt>=600});if(Chests.Count>64)Chests.RemoveAt(0);}
         if(e.Def.Xp>0&&(e.Def.Boss||Options.Stress||Random()<.5f))AddGem(e.Pos,e.Def.Xp);
-        if(!IsTest&&Random()<(e.Def.Boss?.275f:.009625f*Luck)){Hearts.Add(new(){Pos=e.Pos+new Vector2(14,0),Value=e.Def.Boss?60:20,Expires=Time+120});Combat.HeartsDropped++;}
     }
 }

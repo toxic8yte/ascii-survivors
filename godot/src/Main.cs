@@ -16,6 +16,7 @@ public partial class Main : Node
     private VBoxContainer layout=null!;
     private Label hpLabel=null!,timeLabel=null!,enemyLabel=null!,levelLabel=null!,modeLabel=null!,waveLabel=null!,goldLabel=null!,saveLabel=null!,noticeLabel=null!;
     private ProgressBar hpBar=null!,xpBar=null!;
+    private Label xpLabel=null!;
     private HBoxContainer weaponSlots=null!,passiveSlots=null!;
     private Button modeButton=null!;
     private Theme theme=null!;
@@ -76,7 +77,8 @@ public partial class Main : Node
         top.AddChild(Button("⛶ ВЕСЬ ЭКРАН [G]",ToggleFullscreen));top.AddChild(Button("Ⅱ ПАУЗА [P]",ShowPause));
         var stats=new HBoxContainer();head.AddChild(stats);Gap(stats,24);hpLabel=Label("ЖИЗНЬ");hpLabel.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;stats.AddChild(hpLabel);timeLabel=Label("00:00",22,amber);enemyLabel=Label("ВРАГОВ 0");levelLabel=Label("УРОВЕНЬ 1");stats.AddChild(timeLabel);stats.AddChild(enemyLabel);stats.AddChild(levelLabel);
         hpBar=new ProgressBar{CustomMinimumSize=new(0,7),ShowPercentage=false};hpBar.AddThemeStyleboxOverride("fill",Box(red,red,0,0));hpBar.AddThemeStyleboxOverride("background",Box(new Color("38241d"),Colors.Transparent,0,0));head.AddChild(hpBar);
-        xpBar=new ProgressBar{CustomMinimumSize=new(0,5),ShowPercentage=false};xpBar.AddThemeStyleboxOverride("fill",Box(new Color("78bcab"),Colors.Transparent,0,0));head.AddChild(xpBar);
+        xpBar=new ProgressBar{Name="ExperienceBar",CustomMinimumSize=new(0,16),ShowPercentage=false,Step=.01};xpBar.AddThemeStyleboxOverride("fill",Box(new Color("389fff"),Colors.Transparent,0,0));xpBar.AddThemeStyleboxOverride("background",Box(new Color("162a32"),new Color("4e747c"),0,1));head.AddChild(xpBar);
+        xpLabel=Label("",11,Colors.White);xpLabel.Name="ExperienceLabel";xpLabel.HorizontalAlignment=HorizontalAlignment.Center;xpLabel.VerticalAlignment=VerticalAlignment.Center;xpLabel.MouseFilter=Control.MouseFilterEnum.Ignore;xpLabel.AddThemeColorOverride("font_shadow_color",Colors.Black);xpLabel.AddThemeConstantOverride("shadow_offset_x",1);xpLabel.AddThemeConstantOverride("shadow_offset_y",1);xpBar.AddChild(xpLabel);Fill(xpLabel);
         var actions=new HBoxContainer();head.AddChild(actions);Gap(actions,8);modeButton=Button("АВТОАТАКА [M]",()=>{game.SetManual(!game.Manual);edit.Manual=game.Manual;RefreshHud(true);});actions.AddChild(modeButton);modeLabel=Label("",12,muted);modeLabel.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;actions.AddChild(modeLabel);
         actions.AddChild(Button("ПЕСОЧНИЦА",()=>OpenSandbox()));actions.AddChild(Button("КАРТА",()=>OpenFeature("treasureMap")));actions.AddChild(Button("НЕКРОНОМИКОН",()=>OpenFeature("necronomicon")));actions.AddChild(Button("БЕСТИАРИЙ",()=>OpenFeature("bestiary")));actions.AddChild(Button("ДВИЖОК",ShowMetrics));
         arenaSpace=new Control{MouseFilter=Control.MouseFilterEnum.Ignore,SizeFlagsVertical=Control.SizeFlags.ExpandFill,CustomMinimumSize=new(0,180)};layout.AddChild(arenaSpace);
@@ -133,6 +135,7 @@ public partial class Main : Node
     {
         if(game is null)return;hpLabel.Text=game.Hero.Name.ToUpperInvariant()+" / "+(game.Invincible?"НЕУЯЗВИМОСТЬ":$"{MathF.Ceiling(game.Player.Hp)} / {game.Player.MaxHp}");hpBar.MaxValue=game.Player.MaxHp;hpBar.Value=game.Player.Hp;xpBar.MaxValue=game.XpNeed;xpBar.Value=game.Xp;
         timeLabel.Text=FormatTime(game.Time);enemyLabel.Text=$"ВРАГОВ {game.Enemies.Count} · ИЗГНАНО {game.Kills}";levelLabel.Text="УРОВЕНЬ "+game.Level;
+        xpLabel.Text=game.Options.Sandbox?"ПЕСОЧНИЦА · БЕЗ ОПЫТА":$"ОПЫТ {game.Xp} / {game.XpNeed} · УРОВЕНЬ {game.Level}";
         modeButton.Text=game.Manual?"РУЧНОЙ ОГОНЬ [M]":"АВТОАТАКА [M]";modeLabel.Text=game.Content.ById[game.SelectedWeapon].Title;
         if(game.IsTest)waveLabel.Text=game.Options.Sandbox?"ПЕСОЧНИЦА · БЕЗ ПРОГРЕССИИ":"НАГРУЗОЧНЫЙ ТЕСТ";else waveLabel.Text=game.GetWave().Title+" · ОПЫТ "+game.Xp+" / "+game.XpNeed+" · КРИСТАЛЛЫ "+(game.XpEfficiency*100).ToString("0")+"%";
         goldLabel.Text="ЗОЛОТО ЗАБЕГА +"+game.GoldAvailable;if(game.IsTest)saveLabel.Text="ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ";

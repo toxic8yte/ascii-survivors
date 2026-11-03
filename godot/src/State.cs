@@ -53,12 +53,13 @@ public sealed class Visual
 }
 public sealed class Gem
 {
+    public string Source="";
     public Vector2 Pos;
     public float Value;
     public int Bin;
     public bool Magnetized,Taken,Gold;
 }
-public sealed class Heart {public Vector2 Pos;public float Value=20,Expires;public bool Taken;}
+public sealed class Heart {public Vector2 Pos;public float Value=20,Expires;public bool Taken;public string Source="";}
 public sealed class Chest {public int Id;public Vector2 Pos;public string Source="lichLord";public bool CanEvolve,Treasure;}
 public sealed class Choice {public string Kind="",Id="";public float Value;public int Rank,Tier;}
 public sealed class Encounter

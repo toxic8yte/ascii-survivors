@@ -132,6 +132,10 @@ public partial class Main
             overlay.FindChildren("Seal-pentagram","CheckButton",true,false).Cast<CheckButton>().Single().ButtonPressed=true;await Shot("legacy-seals");Assert(store.Profile.SealedItems.Contains("pentagram"),"Player seal UI works");CloseAux();
             MakeReady();game.Start();game.Status=RunStatus.Upgrading;game.DrawOffers();game.Meta["skip"]=1;game.SkipsLeft=2;DisplayServer.WindowSetSize(new(960,640));ShowChoices(false);await Shot("legacy-skip-small");Assert(confirmChoice!.GetGlobalRect().End.Y<=root.Size.Y&&FindButton("SkipUpgrade").GetGlobalRect().End.Y<=root.Size.Y,"Skip and confirm fit small window");
             DisplayServer.WindowSetSize(new(1440,900));MakeReady();CloseOverlay();game.Status=RunStatus.Paused;game.Player.Pos=game.Player.Prev=new(6620,4590);renderer.Camera=game.Player.Pos;RefreshHud(true);await Shot("forest-environment");
+            game.Level=5;game.Xp=23;game.XpNeed=33;RefreshHud(true);await Shot("experience-level-five");
+            Assert(xpBar.IsVisibleInTree()&&xpBar.Size.Y>=16&&xpBar.Value==23&&xpBar.MaxValue==33&&xpLabel.Text.Contains("23 / 33"),"Level five XP bar has visible track and numeric progress");
+            using(var xpImage=GetViewport().GetTexture().GetImage())
+            {var point=xpBar.GlobalPosition+new Vector2(xpBar.Size.X*.25f,xpBar.Size.Y*.5f);var color=xpImage.GetPixel((int)point.X,(int)point.Y);Assert(color.B>color.G+.15f,"Actual XP fill is bright blue");}
             File.WriteAllText(Path.Combine(directory,"resolutions.json"),System.Text.Json.JsonSerializer.Serialize(matrix,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
             GD.Print("PASS: native UI smoke test, title/hero/stage navigation, hero locks, saved-run resume, isolated test modes, compact pause, 7 window sizes + fullscreen, upgrades, boss damage, exported music loop, three themes, persisted volume and bounded audio voices. Screenshots at "+directory);GetTree().Quit();
         }
