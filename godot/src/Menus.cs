@@ -151,8 +151,10 @@ public partial class Main
     private string RewardTitle(Choice option)=>option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Title,"upgrade"=>content.ById[option.Id].Title,"gold"=>$"{MathF.Floor(option.Value*.45f*game.Greed)} золота","xp"=>$"{MathF.Floor(option.Value*game.Growth*game.XpEfficiency)} опыта",_=>"Три защитных заряда"};
     private void ShowEnding()
     {
-        var body=Modal("ending","Ночь победила",game.IsTest?"Тест окончен. Обычный прогресс не изменился.":$"Сохранено {game.GoldAvailable} золота · на рероллы потрачено {game.RerollGoldSpent}");body.Alignment=BoxContainer.AlignmentMode.Center;
-        body.AddChild(Label(" .-.\n(x x)\n |=|\n_|_|_",40,red));body.AddChild(Label($"ВРЕМЯ {FormatTime(game.Time)} · ИЗГНАНО {game.Kills} · УРОВЕНЬ {game.Level}",23,amber));body.AddChild(Button("ЕЩЁ ОДИН ЗАБЕГ →",StartNew,true));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{MakeReady();ShowIntro();}));
+        var body=Modal("ending","",width:620);
+        body.AddChild(CenterText("Ночь победила",30,parchment));
+        body.AddChild(CenterText(game.IsTest?"Тест окончен. Обычный прогресс не изменился.":$"Сохранено {game.GoldAvailable} золота · на рероллы потрачено {game.RerollGoldSpent}",14,muted));
+        body.AddChild(CenterText(" .-. \n(x x)\n |=| \n_|_|_",40,red));body.AddChild(CenterText($"ВРЕМЯ {FormatTime(game.Time)} · ИЗГНАНО {game.Kills} · УРОВЕНЬ {game.Level}",16,amber));body.AddChild(Button("ЕЩЁ ОДИН ЗАБЕГ →",StartNew,true));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{MakeReady();ShowIntro();}));
     }
     private void ShowShop()
     {

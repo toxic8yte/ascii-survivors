@@ -60,6 +60,10 @@ public partial class Main
                 Press("Play");await Shot("heroes-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" hero selection fits");
                 Press("ChooseStage");await Settle();Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" stage selection fits");
                 CloseOverlay();game=run;renderer.Game=run;game.Status=RunStatus.Running;ShowPause();await Settle();Assert(centeredBody!.Size.X<=540&&overlay.GetGlobalRect().Encloses(centeredBody.GetGlobalRect()),tag+" pause stays compact");
+                ShowEnding();await Shot("ending-"+tag);
+                var ending=centeredBody!.GetGlobalRect();Assert(ending.Size.X<=620&&overlay.GetGlobalRect().Encloses(ending),tag+" death screen fits compact panel");
+                Assert(ending.GetCenter().DistanceTo(overlay.GetGlobalRect().GetCenter())<2,tag+" death screen centered on both axes");
+                Assert(centeredBody.FindChildren("*","Label",true,false).Cast<Label>().All(l=>l.HorizontalAlignment==HorizontalAlignment.Center&&ending.Grow(1).Encloses(l.GetGlobalRect())),tag+" death text centered and contained");
                 game.Status=RunStatus.Upgrading;game.OfferSelection=-1;ShowChoices(false);await Settle();
                 Assert(confirmChoice!.Disabled,tag+" choice requires selection");
                 choiceButtons[1].EmitSignal(Godot.Button.SignalName.Pressed);await Shot("upgrades-"+tag);
