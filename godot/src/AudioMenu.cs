@@ -25,6 +25,9 @@ public partial class Main
         }
         sound.AddChild(Paragraph("0% — выключить канал. Музыка в меню паузы звучит тише.",14,muted));
         sound.AddChild(Button("ПРОВЕРИТЬ ЭФФЕКТ",()=>audio.Play(SoundCue.Chest)));
+        var testMargin=Margin(18);testMargin.Name="Тесты";tabs.AddChild(testMargin);var tests=new VBoxContainer();Gap(tests,14);testMargin.AddChild(tests);
+        tests.AddChild(Paragraph("Золото, открытие героев и сборка тестовых билдов доступны в мастерской. Быстрый доступ — F8.",16,parchment));
+        tests.AddChild(MenuAction("Developer","ТЕСТЫ И ЗОЛОТО [F8]",ShowDeveloper));tests.AddChild(MenuAction("Laboratory","ПЕСОЧНИЦА И НАГРУЗОЧНЫЙ ТЕСТ",ShowLab));
         body.AddChild(Button("ГОТОВО →",CloseAux,true));
     }
     private void ApplyVideo(int fps,bool sync)

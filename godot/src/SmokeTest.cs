@@ -17,11 +17,13 @@ public partial class Main
             Assert(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen,"Game starts fullscreen");
             await Shot("00-startup-fullscreen");DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);DisplayServer.WindowSetSize(new(1440,900));await Settle();
             await Shot("01-title");Assert(overlayKind=="intro"&&!overlay.FindChildren("HeroGrid","",true,false).Any(),"Title separate from hero selection");
+            Press("Developer");await Shot("developer-from-title");Assert(overlayKind=="developer","Test tools reachable directly from title");int initialDevGold=store.Profile.Gold;Press("DevGoldMillion");Assert(store.Profile.Gold==initialDevGold+10000000,"Large gold button grants ten million");CloseAux();Assert(overlayKind=="intro","Test tools return to title");
             Assert(audio.Track=="menu","Title music starts");
             var playingMusic=audio.GetChildren().OfType<AudioStreamPlayer>().Single(p=>p.Playing&&p.Stream is AudioStreamWav w&&w.LoopMode==AudioStreamWav.LoopModeEnum.Forward);
             playingMusic.Seek((float)playingMusic.Stream.GetLength()-.1f);for(int i=0;i<30;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
             Assert(playingMusic.Playing&&playingMusic.GetPlaybackPosition()<2,"Exported music loops after end");
             Press("Settings");await Shot("01-settings");Assert(overlayKind=="settings"&&overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),"Audio menu fits");
+            var testTabs=overlay.FindChildren("SettingsTabs","TabContainer",true,false).Cast<TabContainer>().Single();Assert(testTabs.GetTabCount()==3,"Settings exposes Tests tab");testTabs.CurrentTab=2;await Shot("settings-tests");Press("Developer");Assert(overlayKind=="developer","Developer menu reachable from settings");CloseAux();Press("Settings");
             await CheckVideoSettingsUi(directory);
             overlay.FindChildren("SettingsTabs","TabContainer",true,false).Cast<TabContainer>().Single().CurrentTab=1;await Shot("01-audio");
             var musicVolume=overlay.FindChildren("Volume-music","HSlider",true,false).Cast<HSlider>().Single();musicVolume.Value=23;await Settle();Assert(Math.Abs(audio.Music-.23f)<.001f,"Volume slider applies immediately");

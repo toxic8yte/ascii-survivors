@@ -6,19 +6,21 @@ public partial class Main
 {
     private void ShowDeveloper()
     {
-        PrepareAux();var body=Modal("developer","Мастерская разработчика · F8","Любое оружие доступно в песочнице. Золото и открытия ниже меняют профиль; выдача арсенала — только в тесте. Исключения сохраняются и влияют на карточки и сундуки, но не отнимают уже взятые предметы.",true);
-        var top=new HBoxContainer();body.AddChild(top);
-        top.AddChild(MenuAction("DevGold","+1000 ЗОЛОТА",()=>
+        PrepareAux();var body=Modal("developer","Тесты и золото · F8","Добавь золото в кошелёк или открой песочницу, выбери героя и начни тест. Затем F8 — выдай нужное оружие и пассивки кнопками «Дать +1». Тестовый арсенал не меняет прогресс; золото и открытия меняют профиль.",true);
+        var top=new GridContainer{Columns=2};top.AddThemeConstantOverride("h_separation",12);top.AddThemeConstantOverride("v_separation",8);body.AddChild(top);
+        void GiveGold(int amount)
         {
-            int before=store.Profile.Gold;store.Profile.Gold=Math.Min(100000000,store.Profile.Gold+1000);
+            int before=store.Profile.Gold;store.Profile.Gold=(int)Math.Min(100000000,(long)store.Profile.Gold+amount);
             if(!store.Write()){store.Profile.Gold=before;Toast(store.LastError);}else Toast("КОШЕЛЁК: "+store.Profile.Gold);
-        }));
+        }
+        top.AddChild(MenuAction("DevGold","+1000 ЗОЛОТА",()=>GiveGold(1000)));
+        top.AddChild(MenuAction("DevGoldMillion","+10 000 000 ЗОЛОТА",()=>GiveGold(10000000)));
         top.AddChild(MenuAction("DevUnlockHeroes","ОТКРЫТЬ ВСЕХ ГЕРОЕВ",()=>
         {
             var before=new HashSet<string>(store.Profile.Heroes);store.Profile.Heroes.UnionWith(content.Heroes.Keys);
             if(!store.Write()){store.Profile.Heroes=before;Toast(store.LastError);}else Toast("ВСЕ ГЕРОИ ОТКРЫТЫ");
         }));
-        top.AddChild(MenuAction("DevSandbox","ЛЮБОЙ ГЕРОЙ / ОРУЖИЕ →",OpenSandbox));
+        top.AddChild(MenuAction("DevSandbox","СОБРАТЬ БИЛД В ПЕСОЧНИЦЕ →",OpenSandbox));
         body.AddChild(MenuAction("ArtGallery","ГАЛЕРЕЯ ГЕРОЕВ И БОССОВ",ShowArtGallery));
         var test=new HBoxContainer();body.AddChild(test);
         test.AddChild(MenuAction("DevClear","ОЧИСТИТЬ ТЕСТОВЫЙ БИЛД",()=>

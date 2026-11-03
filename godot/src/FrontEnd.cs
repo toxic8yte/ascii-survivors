@@ -37,7 +37,7 @@ public partial class Main
         sections.AddChild(MenuAction("Legacy","[+]  НАСЛЕДИЕ",ShowShop));
         sections.AddChild(MenuAction("Recipes","[?]  НЕКРОНОМИКОН"+(store.Profile.Features.Contains("necronomicon")?"":"\nОТКРЫТЬ · "+content.Features.First(f=>f.Id=="necronomicon").Cost+" ЗОЛ."),()=>OpenFeature("necronomicon")));
         sections.AddChild(MenuAction("Bestiary","(x)  БЕСТИАРИЙ"+(store.Profile.Features.Contains("bestiary")?"":"\nОТКРЫТЬ · "+content.Features.First(f=>f.Id=="bestiary").Cost+" ЗОЛ."),()=>OpenFeature("bestiary")));
-        sections.AddChild(MenuAction("Laboratory","[>]  ИСПЫТАНИЯ",ShowLab));
+        sections.AddChild(MenuAction("Developer","ТЕСТЫ И ЗОЛОТО\n[F8]",ShowDeveloper));
         body.AddChild(CenterText($"ОТКРЫТО ГЕРОЕВ {store.Profile.Heroes.Count} / {content.Heroes.Count}   ·   ЛУЧШИЙ ЗАБЕГ {FormatTime((float)store.Profile.BestTime)}",13,muted));
         body.AddChild(CenterText("ОДИН ГЕРОЙ. ОЧЕНЬ ДОЛГАЯ НОЧЬ.",12,muted));
         if(store.LastError.Length>0)body.AddChild(CenterText(store.LastError,13,red));
