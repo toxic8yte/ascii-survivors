@@ -142,6 +142,6 @@ public sealed partial class Simulation
         if(Kills%5==0)AwardGold(1);
         if(e.Def.Boss){BossKills++;AwardGold(e.Def.Mega?125:25);if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК");else Notice="БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК";NextBossAt=Math.Max(NextBossAt,PressureTime+90);Chests.Add(new(){Id=NextChestId++,Pos=e.Pos,Source=e.Kind,CanEvolve=e.Def.Mega||e.BornAt>=600});if(Chests.Count>64)Chests.RemoveAt(0);}
         if(e.Def.Xp>0&&(e.Def.Boss||Options.Stress||Random()<.5f))AddGem(e.Pos,e.Def.Xp);
-        if(!IsTest&&Random()<(e.Def.Boss?.25f:.00875f*Luck)){Hearts.Add(new(){Pos=e.Pos+new Vector2(14,0),Value=e.Def.Boss?60:20,Expires=Time+120});Combat.HeartsDropped++;}
+        if(!IsTest&&Random()<(e.Def.Boss?.275f:.009625f*Luck)){Hearts.Add(new(){Pos=e.Pos+new Vector2(14,0),Value=e.Def.Boss?60:20,Expires=Time+120});Combat.HeartsDropped++;}
     }
 }

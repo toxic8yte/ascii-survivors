@@ -13,7 +13,7 @@
   const BALLISTICS = Object.fromEntries(EXTRA_WEAPONS.filter(w => w.projectile).map(w => [w.id, w.projectile]));
   const WEAPON_DAMAGE = Object.fromEntries(UPGRADES.filter(u => u.weapon).map(u => [u.id, u.damageMultiplier]));
   const WORLD = Object.freeze({ width: 12800, height: 9600 });
-  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .00875, bossHeartDropChance: .25, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4, firstBossHealth: .25, firstBossDamage: .65, firstBossSkill: 3.5, firstBossMinions: 2 });
+  const BALANCE = Object.freeze({ xpDropChance: .5, heartDropChance: .009625, bossHeartDropChance: .275, xpDecay: .08, goldMultiplier: .45, weaponCooldown: .85, dashCooldown: .6, arenaSeconds: 15, arenaBossHealth: 1.25, arenaBossDamage: .75, arenaSummonLimit: 4, firstBossHealth: .25, firstBossDamage: .65, firstBossSkill: 3.5, firstBossMinions: 2 });
   const BOSSES = ['lichLord', 'british', 'freddy', 'jason', 'alienQueen', 'reaper'];
   const EnemySystem = root.NightEnemySystem || require('./enemy-system.js');
   const Combat = root.NightCombat || require('./combat.js');
