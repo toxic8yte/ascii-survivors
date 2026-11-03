@@ -59,6 +59,7 @@ public partial class Main : Node
     private void BuildHud()
     {
         var layer=new CanvasLayer{Layer=5};AddChild(layer);root=new Control{Theme=theme,MouseFilter=Control.MouseFilterEnum.Ignore};layer.AddChild(root);Fill(root);
+        root.Resized+=UpdateChoiceLayout;
         layout=new VBoxContainer{MouseFilter=Control.MouseFilterEnum.Ignore};root.AddChild(layout);Fill(layout);Gap(layout,0);
         var header=Margin(16);layout.AddChild(header);var head=new VBoxContainer();header.AddChild(head);Gap(head,8);
         var top=new HBoxContainer();head.AddChild(top);top.AddChild(Label("[+] ASCII SURVIVORS",22,amber));var tag=Label("ПОКА НЕ РАССВЕЛО · C# / GODOT",12,muted);tag.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;top.AddChild(tag);
@@ -90,7 +91,7 @@ public partial class Main : Node
     private void SaveCurrent()
     {if(game.IsTest)return;bool ok=game.Status==RunStatus.Dead?store.Finish(game):store.Checkpoint(game);saveLabel.Text=ok?"ПРОГРЕСС СОХРАНЁН":store.LastError.Length>0?"ОШИБКА СОХРАНЕНИЯ":"АВТОСОХРАНЕНИЕ";if(!ok&&store.LastError.Length>0)Toast(store.LastError);}
     private void Toast(string value){noticeLabel.Text=value;noticeClock=4;}
-    private void ToggleFullscreen()=>DisplayServer.WindowSetMode(DisplayServer.WindowGetMode()==DisplayServer.WindowMode.Fullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.Fullscreen);
+    private void ToggleFullscreen()=>DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.ExclusiveFullscreen);
     public override void _PhysicsProcess(double delta)
     {
         if(game is null)return;
