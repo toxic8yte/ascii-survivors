@@ -29,13 +29,17 @@ public partial class Main : Node
         try
         {
             content=Catalog.Load(file=>Godot.FileAccess.GetFileAsString("res://Data/"+file));
+            string? benchmark=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--benchmark="));
+            if(benchmark is not null){Benchmarks.Run(content,benchmark[12..]);GetTree().Quit();return;}
             if(OS.GetCmdlineUserArgs().Contains("--verify"))
             {PortTests.Run(content,Godot.FileAccess.GetFileAsString("res://Tests/reference.json"));GetTree().Quit();return;}
-            string? smoke=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--smoke-test="));smokeTesting=smoke is not null;
-            store=new(content,smokeTesting?Path.Combine(smoke![13..],"state.json"):ProjectSettings.GlobalizePath("user://state.json"));edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
+            string? smoke=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--smoke-test="));
+            string? renderBench=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--render-benchmark="));smokeTesting=smoke is not null||renderBench is not null;
+            string savePath=smoke is not null?Path.Combine(smoke[13..],"state.json"):renderBench is not null?Path.Combine(renderBench[19..],"state.json"):ProjectSettings.GlobalizePath("user://state.json");
+            store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
             renderer=new();AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
             GetTree().AutoAcceptQuit=false;
-            if(smokeTesting)_=SmokeTest(smoke![13..]);
+            if(smoke is not null)_=SmokeTest(smoke[13..]);else if(renderBench is not null)_=RenderBenchmarks(renderBench[19..]);
         }
         catch(Exception e){GD.PushError(e.ToString());GetTree().Quit(1);}
     }

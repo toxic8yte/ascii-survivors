@@ -7,7 +7,9 @@ public sealed partial class Simulation
 {
     [JsonIgnore] public Catalog Content=null!;
     [JsonIgnore] public World MapWorld=null!;
+    [JsonIgnore] public TickTimings? Timings;
     [JsonIgnore] private readonly Dictionary<int,List<Enemy>> grid=[];
+    [JsonIgnore] private readonly Stack<List<Enemy>> gridPool=[];
     [JsonIgnore] private readonly Dictionary<int,Gem> gemBins=[];
     [JsonIgnore] public Vector2 MoveInput,Aim;
     [JsonIgnore] public bool Firing,AimActive;
@@ -169,7 +171,8 @@ public sealed partial class Simulation
     }
     public void RebuildGrid()
     {
-        grid.Clear();foreach(var e in Enemies.Where(x=>x.Alive)){int key=(int)MathF.Floor(e.Pos.X/80)+(int)MathF.Floor(e.Pos.Y/80)*1024;if(!grid.TryGetValue(key,out var list))grid[key]=list=[];list.Add(e);}
+        foreach(var cell in grid.Values){cell.Clear();gridPool.Push(cell);}grid.Clear();
+        foreach(var e in Enemies)if(e.Alive){int key=(int)MathF.Floor(e.Pos.X/80)+(int)MathF.Floor(e.Pos.Y/80)*1024;if(!grid.TryGetValue(key,out var list))grid[key]=list=gridPool.Count>0?gridPool.Pop():[];list.Add(e);}
     }
     public IEnumerable<Enemy> Near(Vector2 pos,float radius)
     {
