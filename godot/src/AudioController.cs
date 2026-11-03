@@ -13,6 +13,7 @@ public partial class AudioController : Node
         new(SoundCue.Dash,"dash",5,.15f,-10),new(SoundCue.Shield,"shield",5,.15f,-10),
         new(SoundCue.Electric,"electric",3,.12f,-12),new(SoundCue.Energy,"energy",3,.15f,-12),new(SoundCue.Whip,"whip",3,.12f,-12),
         new(SoundCue.Explosion,"explosion",3,.18f,-14),new(SoundCue.Ice,"ice",3,.2f,-13),new(SoundCue.Magic,"magic",3,.2f,-15),
+        new(SoundCue.Metal,"metal",3,.12f,-10),new(SoundCue.Punch,"punch",3,.12f,-10),
         new(SoundCue.Shot,"shot",2,.1f,-14),new(SoundCue.Fire,"fire",2,.16f,-16),new(SoundCue.Melee,"melee",2,.12f,-14),
         new(SoundCue.Water,"water",2,.2f,-15),new(SoundCue.Acid,"acid",2,.25f,-16),new(SoundCue.Orbit,"orbit",2,.25f,-18),
         new(SoundCue.Gem,"gem",1,.11f,-17),new(SoundCue.Kill,"kill",0,.16f,-23),new(SoundCue.Hit,"hit",0,.12f,-25)

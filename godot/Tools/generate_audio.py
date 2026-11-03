@@ -4,13 +4,14 @@ from pathlib import Path
 import json
 import math
 import random
+import sys
 import wave
 
 RATE = 22050
 TAU = math.tau
 OUT = Path(__file__).resolve().parents[1] / "Audio"
 OUT.mkdir(exist_ok=True)
-report = {}
+report = json.loads((OUT / "analysis.json").read_text()) if "--sfx-only" in sys.argv and (OUT / "analysis.json").exists() else {}
 
 
 def save(name, channels, music=False):
@@ -35,20 +36,51 @@ def save(name, channels, music=False):
 def effect(name, length, start, end, noise=0, bell=False, notes=None):
     rng = random.Random(174 + sum(map(ord, name)))
     data = array("f")
-    phase = smooth = 0
+    phase = smooth = previous = 0
     for i in range(round(length * RATE)):
         t = i / RATE
         u = t / length
         phase += TAU * (start + (end - start) * u) / RATE
-        smooth = smooth * .55 + rng.uniform(-1, 1) * .45
+        white = rng.uniform(-1, 1)
+        smooth = smooth * .55 + white * .45
+        high = white - previous
+        previous = white
         env = min(1, t / .006) * (1 - u) ** 2
         tone = math.sin(phase) * .7 + math.sin(phase * (2.76 if bell else 2)) * .2
         if notes:
             index = min(len(notes) - 1, int(u * len(notes)))
             local = t - index * length / len(notes)
             tone = sum(math.sin(TAU * notes[index] * harmonic * local) / harmonic ** 2 for harmonic in (1, 2, 3))
-            tone *= min(1, local / .008) * math.exp(-local * 5)
-        data.append(env * ((1 - noise) * tone + noise * smooth))
+            note_length = length / len(notes)
+            tone *= min(1, local / .008) * min(1, (note_length-local)/.018) * math.exp(-local * 5)
+        sample = env * ((1 - noise) * tone + noise * smooth)
+        if name == "shot":
+            sample = .7*high*math.exp(-t*130) + .6*math.sin(TAU*85*t)*math.exp(-t*45) + .3*smooth*math.exp(-abs(t-.065)*180)
+        elif name in ("melee", "whip", "dash"):
+            swish = math.sin(math.pi*u)**2 * smooth
+            sample = swish + (1.3*high*math.exp(-abs(t-.10)*230) if name == "whip" else 0)
+        elif name == "metal":
+            sample = .7*high*math.exp(-t*140) + sum(a*math.sin(TAU*f*t)*math.exp(-t*d) for f,a,d in [(310,.4,18),(827,.22,24),(1733,.12,32)])
+        elif name in ("punch", "hit", "kill"):
+            sample = .9*math.sin(TAU*(70*t-65*t*t))*math.exp(-t*30) + .8*smooth*math.exp(-t*65) + .4*high*math.exp(-t*180)
+            if name == "kill": sample += .3*math.sin(phase+3*math.sin(TAU*35*t))*math.exp(-t*22)
+        elif name == "electric":
+            gate = .2 + .8*max(0, math.sin(TAU*43*t))**4
+            sample = gate*(.65*high+.3*math.sin(phase+5*math.sin(TAU*79*t)))*math.exp(-t*8)
+        elif name == "fire":
+            sample = smooth*math.sin(math.pi*u)**.5 + .12*high*max(0,math.sin(TAU*61*t))**12
+        elif name == "energy":
+            sample = (.5*math.sin(phase+2*math.sin(phase*.501))+.2*smooth)*math.sin(math.pi*u)**.7
+        elif name == "explosion":
+            sample = (.7*smooth+.45*math.sin(TAU*(48*t-25*t*t)))*min(1,t/.003)*math.exp(-t*9)
+        elif name in ("acid", "water"):
+            sample = .45*smooth*math.exp(-t*8)
+            for onset,freq in [(.015,550),(.085,360),(.16,700)]:
+                age=t-onset
+                if age>0: sample += .3*math.sin(TAU*(freq*age-650*age*age))*math.exp(-age*45)
+        elif name == "ice":
+            sample = sum(math.sin(TAU*f*t)*math.exp(-t*d)*a for f,d,a in [(1700,18,.3),(2717,25,.2),(3981,35,.12)]) + .35*high*math.exp(-t*65)
+        data.append(sample * min(1,t/.002) * min(1,(length-t)/.008))
     data[0] = data[-1] = 0
     save(name, [data])
 
@@ -124,6 +156,7 @@ for args in [
     ("shot", .12, 180, 55, .65), ("fire", .32, 120, 55, .85),
     ("electric", .24, 950, 170, .45), ("energy", .32, 180, 650, .12),
     ("melee", .18, 220, 70, .7), ("whip", .22, 500, 90, .8),
+    ("metal", .3, 310, 310, .1), ("punch", .18, 85, 40, .4),
     ("magic", .55, 260, 390, .08, True), ("explosion", .5, 80, 25, .75),
     ("ice", .42, 1100, 520, .2, True), ("acid", .3, 140, 75, .55),
     ("water", .3, 300, 100, .8), ("orbit", .3, 560, 330, .05, True),
@@ -141,9 +174,10 @@ for name, notes, length in [
     ("start", [146.83, 174.61, 220], .8),
 ]:
     effect(name, length, 0, 0, notes=notes)
-score("menu", 64, 0)
-score("night", 64, 1)
-score("boss_music", 48, 2)
+if "--sfx-only" not in sys.argv:
+    score("menu", 64, 0)
+    score("night", 64, 1)
+    score("boss_music", 48, 2)
 (OUT / "analysis.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 assert all(row["peak"] <= .64 for row in report.values())
 assert all(report[k]["seamDelta"] < .0001 for k in ("menu", "night", "boss_music"))
