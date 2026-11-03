@@ -10,6 +10,7 @@ public partial class Main : Node
     private Simulation game=null!;
     private AsciiRenderer renderer=null!;
     private AudioController audio=null!;
+    private Telemetry telemetry=null!;
     private Control root=null!,overlay=null!,arenaSpace=null!;
     private VBoxContainer layout=null!;
     private Label hpLabel=null!,timeLabel=null!,enemyLabel=null!,levelLabel=null!,modeLabel=null!,waveLabel=null!,goldLabel=null!,saveLabel=null!,noticeLabel=null!;
@@ -39,6 +40,7 @@ public partial class Main : Node
             string savePath=smoke is not null?Path.Combine(smoke[13..],"state.json"):renderBench is not null?Path.Combine(renderBench[19..],"state.json"):ProjectSettings.GlobalizePath("user://state.json");
             store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
             audio=new();AddChild(audio);audio.Initialize(Path.Combine(Path.GetDirectoryName(savePath)!,"audio.cfg"),smokeTesting);
+            telemetry=new(Path.Combine(Path.GetDirectoryName(savePath)!,"telemetry"));
             renderer=new();AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
             GetTree().AutoAcceptQuit=false;
             if(smoke is not null)_=SmokeTest(smoke[13..]);else if(renderBench is not null)_=RenderBenchmarks(renderBench[19..]);
@@ -104,14 +106,14 @@ public partial class Main : Node
         if(overlayKind.Length==0&&game.Status==RunStatus.Running)
         {
             float x=(Input.IsPhysicalKeyPressed(Key.D)||Input.IsKeyPressed(Key.Right)?1:0)-(Input.IsPhysicalKeyPressed(Key.A)||Input.IsKeyPressed(Key.Left)?1:0),y=(Input.IsPhysicalKeyPressed(Key.S)||Input.IsKeyPressed(Key.Down)?1:0)-(Input.IsPhysicalKeyPressed(Key.W)||Input.IsKeyPressed(Key.Up)?1:0);
-            game.MoveInput=new(x,y);game.Firing=Input.IsPhysicalKeyPressed(Key.F)||Input.IsMouseButtonPressed(MouseButton.Left)&&renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Aim=renderer.ToWorld(GetViewport().GetMousePosition());game.AimActive=renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Tick((float)delta);
+            game.MoveInput=new(x,y);game.Firing=Input.IsPhysicalKeyPressed(Key.F)||Input.IsMouseButtonPressed(MouseButton.Left)&&renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Aim=renderer.ToWorld(GetViewport().GetMousePosition());game.AimActive=renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Timings??=new();long tickStart=System.Diagnostics.Stopwatch.GetTimestamp();game.Tick((float)delta);telemetry.Tick(System.Diagnostics.Stopwatch.GetElapsedTime(tickStart).TotalMilliseconds,game.Timings);
             saveClock+=delta;if(saveClock>=5){saveClock=0;SaveCurrent();}
         }
         HandleStatus();
     }
     public override void _Process(double delta)
     {
-        if(game is null)return;audio.Update(game,overlayKind.Length>0,delta);var rect=arenaSpace.GetGlobalRect();renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
+        if(game is null)return;long audioStart=System.Diagnostics.Stopwatch.GetTimestamp();audio.Update(game,overlayKind.Length>0,delta);double audioMs=System.Diagnostics.Stopwatch.GetElapsedTime(audioStart).TotalMilliseconds;var rect=arenaSpace.GetGlobalRect();telemetry.Frame(game,renderer.LastDrawMs,audioMs,game.Status==RunStatus.Running&&overlayKind.Length==0,renderer.VisibleEnemies,renderer.RenderedEnemies,audio.ActiveVoices,(int)root.Size.X,(int)root.Size.Y);renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
         var target=game.Arena?.Phase=="locked"?game.Arena.Pos:game.Player.Pos;renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.Interpolation=1;renderer.QueueRedraw();
         if(noticeClock>0){noticeClock-=delta;if(noticeClock<=0)noticeLabel.Text="";}
         if(game.Notice.Length>0){Toast(game.Notice);game.Notice="";}
@@ -119,7 +121,7 @@ public partial class Main : Node
     }
     private void HandleStatus()
     {
-        if(lastStatus==game.Status)return;lastStatus=game.Status;
+        if(lastStatus==game.Status)return;lastStatus=game.Status;telemetry.Flush();
         if(game.Status==RunStatus.Upgrading){ShowChoices(false);SaveCurrent();}
         else if(game.Status==RunStatus.Reward){ShowChoices(true);SaveCurrent();}
         else if(game.Status==RunStatus.Dead){if(!finished){SaveCurrent();finished=true;}ShowEnding();}
@@ -178,5 +180,6 @@ public partial class Main : Node
         if(what==NotificationWMCloseRequest){if(game is not null)SaveCurrent();GetTree().Quit();}
         else if(what==NotificationApplicationFocusOut&&!smokeTesting&&game is not null&&game.Status==RunStatus.Running&&overlayKind.Length==0)ShowPause();
     }
+    public override void _ExitTree()=>telemetry?.Dispose();
     private static string FormatTime(float seconds)=>$"{(int)seconds/60:00}:{(int)seconds%60:00}";
 }

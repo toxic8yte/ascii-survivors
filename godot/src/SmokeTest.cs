@@ -43,6 +43,7 @@ public partial class Main
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Assert(game.Status==RunStatus.Upgrading,"Space does not confirm");
             await Shot("03-upgrades");Assert(confirmChoice.GetGlobalRect().End.Y<=root.Size.Y+1,"Choice actions fit viewport");
             game.Choose(0);CloseOverlay();game.Status=RunStatus.Running;ShowPause();await Shot("04-pause");Assert(centeredBody!.Size.X<=540,"Pause buttons stay compact");
+            ShowMetrics();await Shot("04-telemetry");Press("ExportTelemetry");Assert(Directory.GetFiles(telemetry.DirectoryPath,"snapshot-*.json").Length>0,"Telemetry report exported from metrics UI");CloseAux();
             string runId=game.RunId;ShowIntro();Assert(store.SavedRun?.RunId==runId,"Title preserves current battle");Press("Continue");Assert(game.RunId==runId&&game.Status==RunStatus.Running,"Continue resumes same battle");
             MakeReady();ShowShop();await Shot("05-legacy");
             edit.Sandbox=true;MakeReady();OpenSandbox();await Shot("06-sandbox-settings");
