@@ -12,6 +12,10 @@ public partial class AsciiRenderer : Node2D
     public string? HighlightedWeapon;
     public int RenderedEnemies,VisibleEnemies;
     public double LastDrawMs;
+    public bool UseGlyphBatch=true;
+    private readonly GlyphBatch glyphBatch=new();
+    public int GlyphDrawCalls=>glyphBatch.DrawCalls;
+    public int BatchedGlyphs=>glyphBatch.GlyphCount;
     public Font Font=new SystemFont{FontNames=["Courier New","Consolas"],FontWeight=500};
     public static readonly Color[] Palette=new[]{"3d5840","82916b","82d2ad","acb77e","cfc7af","ac8db8","df7054","f4c77f","f0edd0","79bace","c6ffdc","ffd0b8","ff8b2b","ff3c52","080b09","389fff","a0dcff","588452","8a7950","4e898b"}.Select(x=>new Color(x)).ToArray();
     private readonly Dictionary<(int,string),(TextLine Line,float Width)> textCache=[];
@@ -26,15 +30,18 @@ public partial class AsciiRenderer : Node2D
     public Vector2 Screen(V point)=>Field.GetCenter()+new Vector2(point.X-Camera.X,point.Y-Camera.Y)*ProjectionScale;
     public V ToWorld(Vector2 point){var offset=(point-Field.GetCenter())/ProjectionScale;return Camera+new V(offset.X,offset.Y);}
     private int Ink(string weapon,int normal)=>weapon.Length>0&&(weapon==HighlightedWeapon||Game is {} g&&g.Manual&&weapon==g.SelectedWeapon)?13:normal;
-    private void Text(Vector2 point,string value,int ink=4,int size=16,bool center=true,float alpha=1)
+    private void Text(Vector2 point,string value,int ink=4,int size=16,bool center=true,float alpha=1,bool batch=false)
     {
-        if(value.Length==0)return;var key=(size,value);
+        if(value.Length==0)return;
+        var color=Palette[Math.Clamp(ink,0,Palette.Length-1)];color.A*=alpha;
+        if(UseGlyphBatch&&batch){glyphBatch.Text(drawCanvas,Font,point,value,size,color,center);return;}
+        glyphBatch.Flush(drawCanvas);var key=(size,value);
         if(!textCache.TryGetValue(key,out var line))
         {
             if(textCache.Count>4096){foreach(var t in textCache.Values)t.Line.Dispose();textCache.Clear();}
             var shaped=new TextLine();shaped.AddString(value,Font,size);textCache[key]=line=(shaped,shaped.GetSize().X);
         }
-        var color=Palette[Math.Clamp(ink,0,Palette.Length-1)];color.A*=alpha;var pos=point;if(center)pos.X-=line.Width/2;line.Line.Draw(drawCanvas,pos,color);
+        var pos=point;if(center)pos.X-=line.Width/2;line.Line.Draw(drawCanvas,pos,color);
     }
     private void Stamp(V point,string value,int ink=4,float alpha=1)
     {
@@ -46,7 +53,7 @@ public partial class AsciiRenderer : Node2D
             var p=screen+new Vector2(-width*cellW*ProjectionScale/2,-height/2+i*16*ProjectionScale);
             if(p.Y<Field.Position.Y||p.Y+16*ProjectionScale>Field.End.Y)continue;
             if(p.X<Field.Position.X||p.X+lines[i].Length*cellW*ProjectionScale>Field.End.X)continue;
-            Text(p,lines[i],ink,(int)(16*ProjectionScale),false,alpha);
+            Text(p,lines[i],ink,(int)(16*ProjectionScale),false,alpha,true);
         }
     }
     private void Line(V start,V end,int ink,string glyph=":",float alpha=1)
@@ -63,7 +70,7 @@ public partial class AsciiRenderer : Node2D
     private V Interpolated(Projectile e)=>V.Lerp(e.Prev,e.Pos,Interpolation);
     public override void _Draw()
     {
-        if(Game is not {} g)return;long started=System.Diagnostics.Stopwatch.GetTimestamp();drawCanvas=GetCanvasItem();RenderedEnemies=VisibleEnemies=0;crowdedGlyphs.Clear();ProjectionScale=Math.Clamp(Field.Size.X/1440f,.72f,1);cellW=Font.GetStringSize("M",HorizontalAlignment.Left,-1,(int)(16*ProjectionScale)).X/ProjectionScale;
+        if(Game is not {} g)return;long started=System.Diagnostics.Stopwatch.GetTimestamp();drawCanvas=GetCanvasItem();Material=UseGlyphBatch?glyphBatch.Material:null;glyphBatch.Begin();RenderedEnemies=VisibleEnemies=0;crowdedGlyphs.Clear();ProjectionScale=Math.Clamp(Field.Size.X/1440f,.72f,1);cellW=Font.GetStringSize("M",HorizontalAlignment.Left,-1,(int)(16*ProjectionScale)).X/ProjectionScale;
         crowdedEffects=g.Enemies.Count>=4000;drawingEffects=false;effectGlyphs.Clear();
         DrawRect(Field,new Color(g.MapId=="forest"?"10291c":"101b12"));DrawTerrain(g);drawingEffects=true;
         foreach(var pool in g.Pools){int ink=Ink(pool.Weapon,pool.Kind=="water"?9:3);Circle(pool.Pos,pool.Radius,ink,"~",.65f);Stamp(pool.Pos,pool.Kind=="water"?"{~}":"~x~",ink);}
@@ -190,5 +197,5 @@ public partial class AsciiRenderer : Node2D
         Stamp(censer,Game?.Evolved("garlic")==true?"(G)":"(g)",ink,alpha);
         Stamp(censer+new V(0,-21),MathF.Sin(angle*3)>0?"~":"'",Ink("garlic",4),alpha*.8f);
     }
-    public override void _ExitTree(){foreach(var line in textCache.Values)line.Line.Dispose();textCache.Clear();spriteCache.Clear();}
+    public override void _ExitTree(){foreach(var line in textCache.Values)line.Line.Dispose();textCache.Clear();spriteCache.Clear();glyphBatch.Dispose();}
 }

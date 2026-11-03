@@ -19,7 +19,7 @@ public sealed class Telemetry : IDisposable
     public Telemetry(string directory)=>this.directory=directory;
     public void Tick(double milliseconds,TickTimings timing)
     {ticks++;ticksMs+=milliseconds;aiMs+=timing.EnemiesMs;crowdMs+=timing.CrowdMs;weaponsMs+=timing.WeaponsMs;}
-    public void Frame(Simulation game,double draw,double audio,bool active,int visible,int stamps,int voices,int width,int height)
+    public void Frame(Simulation game,double draw,double audio,bool active,int visible,int stamps,int voices,int width,int height,int glyphs=0,int packets=0)
     {
         long now=Stopwatch.GetTimestamp();double dt=lastFrame==0?0:Stopwatch.GetElapsedTime(lastFrame,now).TotalSeconds;lastFrame=now;
         if(!active){Reset();return;}if(dt<=0)return;
@@ -31,7 +31,7 @@ public sealed class Telemetry : IDisposable
         try
         {
             EnsureWriter();
-            object[] values=[DateTime.UtcNow.ToString("O"),game.RunId,game.Time,game.Enemies.Count,visible,stamps,game.Shots.Count,game.EnemyShots.Count,game.Pools.Count,game.Blasts.Count,game.Visuals.Count,game.Gems.Count,game.Hearts.Count,fps,elapsed/frameCount*1000,p95,frames.Count>0?frames[^1]:0,ticks,tick,aiMs/Math.Max(1,ticks),crowdMs/Math.Max(1,ticks),weaponsMs/Math.Max(1,ticks),drawMs/frameCount,audioMs/frameCount,voices,memory,GC.GetTotalMemory(false),GC.CollectionCount(0),GC.CollectionCount(1),GC.CollectionCount(2),width,height,game.Kills,game.Level];
+            object[] values=[DateTime.UtcNow.ToString("O"),game.RunId,game.Time,game.Enemies.Count,visible,stamps,game.Shots.Count,game.EnemyShots.Count,game.Pools.Count,game.Blasts.Count,game.Visuals.Count,game.Gems.Count,game.Hearts.Count,fps,elapsed/frameCount*1000,p95,frames.Count>0?frames[^1]:0,ticks,tick,aiMs/Math.Max(1,ticks),crowdMs/Math.Max(1,ticks),weaponsMs/Math.Max(1,ticks),drawMs/frameCount,audioMs/frameCount,voices,memory,GC.GetTotalMemory(false),GC.CollectionCount(0),GC.CollectionCount(1),GC.CollectionCount(2),width,height,game.Kills,game.Level,glyphs,packets];
             writer!.WriteLine(string.Join(',',values.Select(v=>Convert.ToString(v,CultureInfo.InvariantCulture))));if(++rows%5==0)Flush();
         }
         catch(Exception e)when(e is IOException or UnauthorizedAccessException){Error=e.Message;Dispose();}
@@ -44,7 +44,7 @@ public sealed class Telemetry : IDisposable
         if(writer is not null)return;Directory.CreateDirectory(directory);
         if(FilePath.Length==0)FilePath=Path.Combine(directory,"session-"+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N")[..6]+".csv");
         bool exists=File.Exists(FilePath);writer=new(FilePath,true);if(exists)return;
-        writer.WriteLine("utc,run_id,game_seconds,enemies,visible,stamps,shots,enemy_shots,pools,blasts,visuals,gems,hearts,fps,frame_mean_ms,frame_p95_ms,frame_max_ms,physics_ticks,tick_mean_ms,ai_mean_ms,crowd_mean_ms,weapons_mean_ms,draw_cpu_mean_ms,audio_cpu_mean_ms,audio_voices,working_set_bytes,managed_bytes,gc0,gc1,gc2,viewport_width,viewport_height,kills,level");
+        writer.WriteLine("utc,run_id,game_seconds,enemies,visible,stamps,shots,enemy_shots,pools,blasts,visuals,gems,hearts,fps,frame_mean_ms,frame_p95_ms,frame_max_ms,physics_ticks,tick_mean_ms,ai_mean_ms,crowd_mean_ms,weapons_mean_ms,draw_cpu_mean_ms,audio_cpu_mean_ms,audio_voices,working_set_bytes,managed_bytes,gc0,gc1,gc2,viewport_width,viewport_height,kills,level,batched_glyphs,glyph_packets");
         writer.Flush();
     }
     public string Export(Simulation game)

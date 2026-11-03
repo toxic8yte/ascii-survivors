@@ -22,7 +22,7 @@ public partial class Main
             Press("Audio");await Shot("01-audio");Assert(overlayKind=="audio"&&overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),"Audio menu fits");
             var musicVolume=overlay.FindChildren("Volume-music","HSlider",true,false).Cast<HSlider>().Single();musicVolume.Value=23;await Settle();Assert(Math.Abs(audio.Music-.23f)<.001f,"Volume slider applies immediately");
             var audioConfig=new ConfigFile();Assert(audioConfig.Load(Path.Combine(directory,"audio.cfg"))==Error.Ok&&Math.Abs((float)audioConfig.GetValue("audio","music").AsDouble()-.23f)<.001f,"Volume persists without touching profile");
-            var restoredAudio=new AudioController();AddChild(restoredAudio);restoredAudio.Initialize(Path.Combine(directory,"audio.cfg"),true);Assert(Math.Abs(restoredAudio.Music-.23f)<.001f,"Saved volume restored on initialization");RemoveChild(restoredAudio);restoredAudio.Free();
+            var restoredAudio=new AudioController();AddChild(restoredAudio);restoredAudio.Initialize(Path.Combine(directory,"audio.cfg"),true);Assert(Math.Abs(restoredAudio.Music-.23f)<.001f,"Saved volume restored on initialization");restoredAudio.Play(SoundCue.Shot);RemoveChild(restoredAudio);Assert(restoredAudio.GetChildren().OfType<AudioStreamPlayer>().All(p=>!p.Playing&&p.Stream is null),"Audio releases playbacks when leaving tree");restoredAudio.Free();
             musicVolume.Value=45;CloseAux();Assert(overlayKind=="intro","Audio back returns to title");
             Press("Recipes");Assert(overlayKind=="shop","Locked collection opens Legacy");CloseAux();Assert(overlayKind=="intro","Legacy returns to title");
             Press("Play");await Shot("01-heroes");Assert(overlayKind=="characters"&&overlay.FindChildren("Hero-*","Button",true,false).Count==30,"All hero portrait tiles");
@@ -35,6 +35,7 @@ public partial class Main
             Press("ChooseStage");Press("Stage-forest");Press("StartRun");Assert(game.Status==RunStatus.Running&&game.MapId=="forest"&&!game.IsTest,"Title to heroes to stage starts normal run");game.Status=RunStatus.Paused;
             for(int i=0;i<35;i++)game.Spawn(i%4==0?"pumpkin":"skeleton",game.Player.Pos+World.Direction(i*.73f)*(160+i*9));
             game.RebuildGrid();game.Cast(game.SelectedWeapon);RefreshHud(true);await Shot("02-arena");
+            await CheckGlyphRenderer(directory,"normal");
             audio.Update(game,false,.5);Assert(audio.Track=="night","Night music selected");
             int played=audio.Played;for(int i=0;i<5000;i++)audio.Play(SoundCue.Hit);Assert(audio.Played-played<=1&&audio.ActiveVoices<=12,"Audio flood is rate-limited with bounded voices");
             game.Status=RunStatus.Running;game.GainXp(10);game.CheckLevel();game.Status=RunStatus.Upgrading;ShowChoices(false);await Settle();
@@ -72,6 +73,7 @@ public partial class Main
                 DisplayServer.WindowSetSize(resolution);await Settle();
                 string tag=$"{resolution.X}x{resolution.Y}";
                 CloseOverlay();game.Status=RunStatus.Paused;await Shot("arena-"+tag);
+                if(resolution.X==960)await CheckGlyphRenderer(directory,"small");
                 var viewport=GetViewport().GetVisibleRect().Size;var window=GetWindow().Size;
                 Assert(Math.Abs(viewport.X/viewport.Y-window.X/(float)window.Y)<.002f,tag+" viewport matches window aspect, no letterbox");
                 Assert(Math.Abs(root.Size.X-viewport.X)<2&&Math.Abs(root.Size.Y-viewport.Y)<2,tag+" HUD covers viewport");

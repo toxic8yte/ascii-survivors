@@ -88,4 +88,10 @@ public partial class AudioController : Node
             if(i!=current&&fades[i]==0&&music[i].Playing)music[i].Stop();
         }
     }
+    public override void _ExitTree()
+    {
+        foreach(var player in music){player.Stop();player.Stream=null;}
+        foreach(var voice in voices){voice.Player.Stop();voice.Player.Stream=null;voice.Effect=null;}
+        streams.Clear();
+    }
 }

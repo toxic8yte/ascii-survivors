@@ -41,7 +41,7 @@ public partial class Main : Node
             store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
             audio=new();AddChild(audio);audio.Initialize(Path.Combine(Path.GetDirectoryName(savePath)!,"audio.cfg"),smokeTesting);
             telemetry=new(Path.Combine(Path.GetDirectoryName(savePath)!,"telemetry"));
-            renderer=new();AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
+            renderer=new();if(renderBench is not null)renderer.UseGlyphBatch=!OS.GetCmdlineUserArgs().Contains("--legacy-renderer");AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
             GetTree().AutoAcceptQuit=false;
             if(smoke is not null)_=SmokeTest(smoke[13..]);else if(renderBench is not null)_=RenderBenchmarks(renderBench[19..]);
         }
@@ -113,7 +113,7 @@ public partial class Main : Node
     }
     public override void _Process(double delta)
     {
-        if(game is null)return;long audioStart=System.Diagnostics.Stopwatch.GetTimestamp();audio.Update(game,overlayKind.Length>0,delta);double audioMs=System.Diagnostics.Stopwatch.GetElapsedTime(audioStart).TotalMilliseconds;var rect=arenaSpace.GetGlobalRect();telemetry.Frame(game,renderer.LastDrawMs,audioMs,game.Status==RunStatus.Running&&overlayKind.Length==0,renderer.VisibleEnemies,renderer.RenderedEnemies,audio.ActiveVoices,(int)root.Size.X,(int)root.Size.Y);renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
+        if(game is null)return;long audioStart=System.Diagnostics.Stopwatch.GetTimestamp();audio.Update(game,overlayKind.Length>0,delta);double audioMs=System.Diagnostics.Stopwatch.GetElapsedTime(audioStart).TotalMilliseconds;var rect=arenaSpace.GetGlobalRect();telemetry.Frame(game,renderer.LastDrawMs,audioMs,game.Status==RunStatus.Running&&overlayKind.Length==0,renderer.VisibleEnemies,renderer.RenderedEnemies,audio.ActiveVoices,(int)root.Size.X,(int)root.Size.Y,renderer.BatchedGlyphs,renderer.GlyphDrawCalls);renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
         var target=game.Arena?.Phase=="locked"?game.Arena.Pos:game.Player.Pos;renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.Interpolation=1;renderer.QueueRedraw();
         if(noticeClock>0){noticeClock-=delta;if(noticeClock<=0)noticeLabel.Text="";}
         if(game.Notice.Length>0){Toast(game.Notice);game.Notice="";}
