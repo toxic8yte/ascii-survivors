@@ -13,7 +13,7 @@ public sealed partial class Simulation
     public bool OpenSupply(PickupBox box)
     {
         if(IsTest||Status!=RunStatus.Running||SuppliesTaken.Contains(box.Id)||!MapWorld.Supplies.Contains(box)||Vector2.Distance(box.Pos,Player.Pos)>=32)return false;
-        SuppliesTaken.Add(box.Id);
+        SuppliesTaken.Add(box.Id);SoundSignals|=box.Kind=="heal"?SoundCue.Heal:box.Kind=="level"?SoundCue.Upgrade:SoundCue.Gem;
         if(box.Kind=="heal"){Heal(30);Notice="ЯЩИК: ЛЕЧЕНИЕ ДО 30 HP";}
         else if(box.Kind=="level"){Xp+=XpNeed;CheckLevel();Notice="ЯЩИК: БЕСПЛАТНЫЙ УРОВЕНЬ";}
         else{float xp=Gems.Sum(g=>g.Value);Gems.Clear();gemBins.Clear();GainXp(xp);Notice="ЯЩИК: ВСЕ КРИСТАЛЛЫ СОБРАНЫ";}
@@ -27,7 +27,7 @@ public sealed partial class Simulation
         bool mega=Content.Enemies[chest.Source].Mega;List<Choice> pool=[new(){Kind="gold",Value=mega?150:50},new(){Kind="xp",Value=mega?200:75}];
         foreach(bool weapon in new[]{true,false}){var candidates=Content.Items.Where(u=>u.Weapon==weapon&&CanUpgrade(u.Id)).Select(u=>u.Id).ToList();var id=Pick(candidates);if(id is not null)pool.Add(new(){Kind="upgrade",Id=id,Rank=L(id)+1});}
         while(Rewards.Count<3&&pool.Count>0){int index=(int)(Random()*pool.Count);Rewards.Add(pool[index]);pool.RemoveAt(index);}if(Rewards.Count<3)Rewards.Add(new(){Kind="shield",Value=3});
-        Status=RunStatus.Reward;OfferSelection=-1;return true;
+        SoundSignals|=SoundCue.Chest;Status=RunStatus.Reward;OfferSelection=-1;return true;
     }
     public bool ClaimReward(int index)
     {
@@ -37,7 +37,7 @@ public sealed partial class Simulation
         else if(choice.Kind=="gold")AwardGold(choice.Value);
         else if(choice.Kind=="xp")GainXp(choice.Value,false);
         else if(choice.Kind=="shield"){ShieldCharges=(int)choice.Value;ShieldUntil=Time+30;}
-        AwardGold(10);Player.Invulnerable=Math.Max(Player.Invulnerable,1);Rewards=[];OfferSelection=-1;Status=RunStatus.Running;CheckLevel();return true;
+        SoundSignals|=SoundCue.Upgrade;AwardGold(10);Player.Invulnerable=Math.Max(Player.Invulnerable,1);Rewards=[];OfferSelection=-1;Status=RunStatus.Running;CheckLevel();return true;
     }
     private void SeparateCrowd()
     {
@@ -99,10 +99,10 @@ public sealed partial class Simulation
         {
             var delta=Player.Pos-gem.Pos;float d=delta.Length();if(d<Magnet)gem.Magnetized=true;
             if(gem.Magnetized&&d>1)gem.Pos+=delta/d*Math.Min(d,(290+(1-Math.Min(d/300,1))*280)*dt);
-            if(d<18&&Status==RunStatus.Running){gem.Taken=true;if(gemBins.GetValueOrDefault(gem.Bin)==gem)gemBins.Remove(gem.Bin);GainXp(gem.Value);}
+            if(d<18&&Status==RunStatus.Running){SoundSignals|=SoundCue.Gem;gem.Taken=true;if(gemBins.GetValueOrDefault(gem.Bin)==gem)gemBins.Remove(gem.Bin);GainXp(gem.Value);}
         }
         Gems.RemoveAll(g=>g.Taken);CheckLevel();
-        foreach(var heart in Hearts)if(Player.Hp<Player.MaxHp&&Vector2.Distance(Player.Pos,heart.Pos)<27&&Status==RunStatus.Running){Heal(heart.Value);Combat.HeartsTaken++;heart.Taken=true;}
+        foreach(var heart in Hearts)if(Player.Hp<Player.MaxHp&&Vector2.Distance(Player.Pos,heart.Pos)<27&&Status==RunStatus.Running){SoundSignals|=SoundCue.Heal;Heal(heart.Value);Combat.HeartsTaken++;heart.Taken=true;}
         Hearts.RemoveAll(h=>h.Taken||h.Expires>0&&h.Expires<=Time);if(Hearts.Count>128)Hearts.RemoveRange(0,Hearts.Count-128);
         if(!IsTest&&Status==RunStatus.Running)foreach(var box in MapWorld.Supplies)if(!SuppliesTaken.Contains(box.Id)&&Vector2.Distance(box.Pos,Player.Pos)<32){OpenSupply(box);break;}
         if(!Options.Sandbox&&Status==RunStatus.Running)

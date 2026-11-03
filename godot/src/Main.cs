@@ -9,6 +9,7 @@ public partial class Main : Node
     private SaveStore store=null!;
     private Simulation game=null!;
     private AsciiRenderer renderer=null!;
+    private AudioController audio=null!;
     private Control root=null!,overlay=null!,arenaSpace=null!;
     private VBoxContainer layout=null!;
     private Label hpLabel=null!,timeLabel=null!,enemyLabel=null!,levelLabel=null!,modeLabel=null!,waveLabel=null!,goldLabel=null!,saveLabel=null!,noticeLabel=null!;
@@ -37,6 +38,7 @@ public partial class Main : Node
             string? renderBench=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--render-benchmark="));smokeTesting=smoke is not null||renderBench is not null;
             string savePath=smoke is not null?Path.Combine(smoke[13..],"state.json"):renderBench is not null?Path.Combine(renderBench[19..],"state.json"):ProjectSettings.GlobalizePath("user://state.json");
             store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
+            audio=new();AddChild(audio);audio.Initialize(Path.Combine(Path.GetDirectoryName(savePath)!,"audio.cfg"),smokeTesting);
             renderer=new();AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
             GetTree().AutoAcceptQuit=false;
             if(smoke is not null)_=SmokeTest(smoke[13..]);else if(renderBench is not null)_=RenderBenchmarks(renderBench[19..]);
@@ -56,7 +58,7 @@ public partial class Main : Node
     private Label Label(string value,int size=16,Color? color=null)
     {var l=new Label{Text=value};l.AddThemeFontSizeOverride("font_size",size);if(color is {} c)l.AddThemeColorOverride("font_color",c);return l;}
     private Button Button(string text,Action action,bool primary=false)
-    {var b=new Button{Text=text,MouseDefaultCursorShape=Control.CursorShape.PointingHand,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill,CustomMinimumSize=new(0,42)};if(primary){b.AddThemeStyleboxOverride("normal",Box(red,new Color("f48761"),14));b.AddThemeColorOverride("font_color",new Color("170e09"));}b.Pressed+=action;return b;}
+    {var b=new Button{Text=text,MouseDefaultCursorShape=Control.CursorShape.PointingHand,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill,CustomMinimumSize=new(0,42)};if(primary){b.AddThemeStyleboxOverride("normal",Box(red,new Color("f48761"),14));b.AddThemeColorOverride("font_color",new Color("170e09"));}b.Pressed+=()=>{audio.Play(SoundCue.Ui);action();};return b;}
     private static void Fill(Control control)=>control.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
     private static MarginContainer Margin(int size){var c=new MarginContainer();foreach(string side in new[]{"left","right","top","bottom"})c.AddThemeConstantOverride("margin_"+side,size);return c;}
     private static void Gap(BoxContainer container,int size=10)=>container.AddThemeConstantOverride("separation",size);
@@ -109,7 +111,7 @@ public partial class Main : Node
     }
     public override void _Process(double delta)
     {
-        if(game is null)return;var rect=arenaSpace.GetGlobalRect();renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
+        if(game is null)return;audio.Update(game,overlayKind.Length>0,delta);var rect=arenaSpace.GetGlobalRect();renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
         var target=game.Arena?.Phase=="locked"?game.Arena.Pos:game.Player.Pos;renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.Interpolation=1;renderer.QueueRedraw();
         if(noticeClock>0){noticeClock-=delta;if(noticeClock<=0)noticeLabel.Text="";}
         if(game.Notice.Length>0){Toast(game.Notice);game.Notice="";}

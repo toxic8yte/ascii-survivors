@@ -7,7 +7,7 @@ public sealed partial class Simulation
     public void Ring(string weapon,Vector2 pos,float radius,float life=.45f,int ink=7,string glyph="*")=>Visuals.Add(new(){Weapon=weapon,Pos=pos,Radius=radius,Life=life,MaxLife=life,Ink=ink,Glyph=glyph});
     public void Arc(string weapon,Vector2[] points,float life=.24f,int ink=15)=>Visuals.Add(new(){Shape="arc",Weapon=weapon,Points=points,Life=life,MaxLife=life,Ink=ink});
     public void Explode(Vector2 pos,float radius,float damage,string weapon,int ink=7,float knockback=18)
-    {Ring(weapon,pos,radius,.45f,ink);foreach(var e in Near(pos,radius+50))if(Vector2.Distance(e.Pos,pos)<radius+e.Radius)HurtEnemy(e,damage,knockback,weapon);}
+    {SoundSignals|=SoundCue.Explosion;Ring(weapon,pos,radius,.45f,ink);foreach(var e in Near(pos,radius+50))if(Vector2.Distance(e.Pos,pos)<radius+e.Radius)HurtEnemy(e,damage,knockback,weapon);}
     public IEnumerable<Vector2> BladePositions()
     {
         int count=!Manual&&L("blades")>0?L("blades")+L("fork")+(Evolved("blades")?2:0):0;
@@ -28,6 +28,12 @@ public sealed partial class Simulation
         return basic*rapid*.85f/Haste/(Content.ById[id].Cooldown>0?1+(level-1)*.05f:1);
     }
     public void Cast(string id)
+    {
+        int before=Shots.Count+Pools.Count+Blasts.Count+Visuals.Count;float protectedUntil=BibleUntil+ShieldUntil;
+        CastWeapon(id);
+        if(Shots.Count+Pools.Count+Blasts.Count+Visuals.Count>before||BibleUntil+ShieldUntil>protectedUntil)SoundSignals|=WeaponSound(id);
+    }
+    private void CastWeapon(string id)
     {
         if(L(id)<=0)return;int level=L(id);bool evolved=Evolved(id);Vector2 p=Player.Pos;var target=Manual?(Vector2?)AimPoint():Targets(p).FirstOrDefault()?.Pos;
         float angle=target is {} point?World.Angle(point-p):World.Angle(Player.Facing);

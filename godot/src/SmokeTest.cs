@@ -15,6 +15,15 @@ public partial class Main
             Button FindButton(string name)=>overlay.FindChildren(name,"Button",true,false).Cast<Button>().Single();
             void Press(string name)=>FindButton(name).EmitSignal(Godot.Button.SignalName.Pressed);
             await Shot("01-title");Assert(overlayKind=="intro"&&!overlay.FindChildren("HeroGrid","",true,false).Any(),"Title separate from hero selection");
+            Assert(audio.Track=="menu","Title music starts");
+            var playingMusic=audio.GetChildren().OfType<AudioStreamPlayer>().Single(p=>p.Playing&&p.Stream is AudioStreamWav w&&w.LoopMode==AudioStreamWav.LoopModeEnum.Forward);
+            playingMusic.Seek((float)playingMusic.Stream.GetLength()-.1f);for(int i=0;i<30;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+            Assert(playingMusic.Playing&&playingMusic.GetPlaybackPosition()<2,"Exported music loops after end");
+            Press("Audio");await Shot("01-audio");Assert(overlayKind=="audio"&&overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),"Audio menu fits");
+            var musicVolume=overlay.FindChildren("Volume-music","HSlider",true,false).Cast<HSlider>().Single();musicVolume.Value=23;await Settle();Assert(Math.Abs(audio.Music-.23f)<.001f,"Volume slider applies immediately");
+            var audioConfig=new ConfigFile();Assert(audioConfig.Load(Path.Combine(directory,"audio.cfg"))==Error.Ok&&Math.Abs((float)audioConfig.GetValue("audio","music").AsDouble()-.23f)<.001f,"Volume persists without touching profile");
+            var restoredAudio=new AudioController();AddChild(restoredAudio);restoredAudio.Initialize(Path.Combine(directory,"audio.cfg"),true);Assert(Math.Abs(restoredAudio.Music-.23f)<.001f,"Saved volume restored on initialization");RemoveChild(restoredAudio);restoredAudio.Free();
+            musicVolume.Value=45;CloseAux();Assert(overlayKind=="intro","Audio back returns to title");
             Press("Recipes");Assert(overlayKind=="shop","Locked collection opens Legacy");CloseAux();Assert(overlayKind=="intro","Legacy returns to title");
             Press("Play");await Shot("01-heroes");Assert(overlayKind=="characters"&&overlay.FindChildren("Hero-*","Button",true,false).Count==30,"All hero portrait tiles");
             string locked=content.Heroes.Keys.First(id=>!store.Profile.Heroes.Contains(id));Press("Hero-"+locked);Assert(FindButton("ChooseStage").Disabled&&FindButton("BuyHero").Visible,"Locked hero cannot start");
@@ -26,6 +35,8 @@ public partial class Main
             Press("ChooseStage");Press("Stage-forest");Press("StartRun");Assert(game.Status==RunStatus.Running&&game.MapId=="forest"&&!game.IsTest,"Title to heroes to stage starts normal run");game.Status=RunStatus.Paused;
             for(int i=0;i<35;i++)game.Spawn(i%4==0?"pumpkin":"skeleton",game.Player.Pos+World.Direction(i*.73f)*(160+i*9));
             game.RebuildGrid();game.Cast(game.SelectedWeapon);RefreshHud(true);await Shot("02-arena");
+            audio.Update(game,false,.5);Assert(audio.Track=="night","Night music selected");
+            int played=audio.Played;for(int i=0;i<5000;i++)audio.Play(SoundCue.Hit);Assert(audio.Played-played<=1&&audio.ActiveVoices<=12,"Audio flood is rate-limited with bounded voices");
             game.Status=RunStatus.Running;game.GainXp(10);game.CheckLevel();game.Status=RunStatus.Upgrading;ShowChoices(false);await Settle();
             Assert(!confirmChoice!.Visible||confirmChoice.Disabled,"No accidental default selection");
             SelectChoice(0);Assert(!confirmChoice.Disabled&&game.OfferSelection==0,"Explicit selection");
@@ -37,6 +48,7 @@ public partial class Main
             edit.Sandbox=true;MakeReady();OpenSandbox();await Shot("06-sandbox-settings");
             edit.Hero="hunter";edit.Enemy="lichLord";edit.Weapon="lightning";edit.Rank=4;edit.Invulnerable=false;StartNew();game.Status=RunStatus.Paused;game.Manual=true;game.Player.Hp=game.Player.MaxHp=1000;
             var boss=game.Enemies.First(e=>e.Def.Boss);boss.SkillClock=0;game.Status=RunStatus.Running;for(int i=0;i<240&&game.Status==RunStatus.Running;i++)game.Tick(1/60f);game.Status=RunStatus.Paused;game.Cast("lightning");renderer.HighlightedWeapon="lightning";RefreshHud(true);await Shot("07-boss-ring");Assert(game.Combat.Hurt>0,"Sandbox boss deals damage");
+            audio.Update(game,true,.5);Assert(audio.Track=="boss_music","Boss theme selected");
             ShowBestiary();await Shot("08-bestiary");ShowRecipes();await Shot("09-necronomicon");ShowMap();await Shot("10-map");
             foreach(string weapon in new[]{"needle","garlic"})
             {
@@ -98,7 +110,7 @@ public partial class Main
             Assert(overlay.GetGlobalRect().Encloses(choiceBody!.GetGlobalRect()),"Fullscreen choice panel fits");
             DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
             File.WriteAllText(Path.Combine(directory,"resolutions.json"),System.Text.Json.JsonSerializer.Serialize(matrix,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
-            GD.Print("PASS: native UI smoke test, title/hero/stage navigation, hero locks, saved-run resume, isolated test modes, compact pause, 7 window sizes + fullscreen, upgrades and boss damage. Screenshots at "+directory);GetTree().Quit();
+            GD.Print("PASS: native UI smoke test, title/hero/stage navigation, hero locks, saved-run resume, isolated test modes, compact pause, 7 window sizes + fullscreen, upgrades, boss damage, exported music loop, three themes, persisted volume and bounded audio voices. Screenshots at "+directory);GetTree().Quit();
         }
         catch(Exception e){GD.PushError("UI SMOKE FAILED: "+e);GetTree().Quit(1);}
     }

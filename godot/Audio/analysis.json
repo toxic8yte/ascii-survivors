@@ -1,0 +1,226 @@
+{
+  "shot": {
+    "seconds": 0.12,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.11926043751021391,
+    "seamDelta": 0.0
+  },
+  "fire": {
+    "seconds": 0.32,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.1173469433201679,
+    "seamDelta": 0.0
+  },
+  "electric": {
+    "seconds": 0.24,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.1298015080261116,
+    "seamDelta": 0.0
+  },
+  "energy": {
+    "seconds": 0.32,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.17270068146915607,
+    "seamDelta": 0.0
+  },
+  "melee": {
+    "seconds": 0.18,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.11886380303928731,
+    "seamDelta": 0.0
+  },
+  "whip": {
+    "seconds": 0.22,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.12988860915473946,
+    "seamDelta": 0.0
+  },
+  "magic": {
+    "seconds": 0.5500226757369614,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.15747089586953733,
+    "seamDelta": 0.0
+  },
+  "explosion": {
+    "seconds": 0.5,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.10733030848241643,
+    "seamDelta": 0.0
+  },
+  "ice": {
+    "seconds": 0.42,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.15439739904621558,
+    "seamDelta": 0.0
+  },
+  "acid": {
+    "seconds": 0.3,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.11970681494233815,
+    "seamDelta": 0.0
+  },
+  "water": {
+    "seconds": 0.3,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.12026124801950552,
+    "seamDelta": 0.0
+  },
+  "orbit": {
+    "seconds": 0.3,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.17015654839056296,
+    "seamDelta": 0.0
+  },
+  "hit": {
+    "seconds": 0.06498866213151927,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.14728702111962189,
+    "seamDelta": 0.0
+  },
+  "kill": {
+    "seconds": 0.12,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.1304566849505231,
+    "seamDelta": 0.0
+  },
+  "hurt": {
+    "seconds": 0.28,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.15487504683551517,
+    "seamDelta": 0.0
+  },
+  "gem": {
+    "seconds": 0.11002267573696145,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.17198624646408578,
+    "seamDelta": 0.0
+  },
+  "dash": {
+    "seconds": 0.22,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.117546887648008,
+    "seamDelta": 0.0
+  },
+  "shield": {
+    "seconds": 0.34997732426303857,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.16860091804718136,
+    "seamDelta": 0.0
+  },
+  "boss": {
+    "seconds": 1.4,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.17094858866958956,
+    "seamDelta": 0.0
+  },
+  "death": {
+    "seconds": 1.5,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.17744016189161912,
+    "seamDelta": 0.0
+  },
+  "ui": {
+    "seconds": 0.07501133786848073,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.19182755451109373,
+    "seamDelta": 0.0
+  },
+  "pause": {
+    "seconds": 0.18,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.1910424621610955,
+    "seamDelta": 0.0
+  },
+  "heal": {
+    "seconds": 0.44997732426303855,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.14909405456825303,
+    "seamDelta": 0.0
+  },
+  "chest": {
+    "seconds": 0.8,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.13272857987997616,
+    "seamDelta": 0.0
+  },
+  "upgrade": {
+    "seconds": 0.8499773242630385,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.13162515796038626,
+    "seamDelta": 0.0
+  },
+  "evolution": {
+    "seconds": 1.3,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.12012860545361534,
+    "seamDelta": 0.0
+  },
+  "boss_death": {
+    "seconds": 1.4,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.11084759147313494,
+    "seamDelta": 0.0
+  },
+  "revive": {
+    "seconds": 1.2,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.11714020812899435,
+    "seamDelta": 0.0
+  },
+  "start": {
+    "seconds": 0.8,
+    "channels": 1,
+    "peak": 0.63,
+    "rms": 0.133448452313901,
+    "seamDelta": 0.0
+  },
+  "menu": {
+    "seconds": 64.0,
+    "channels": 2,
+    "peak": 0.5,
+    "rms": 0.16829600523363003,
+    "seamDelta": 0.0
+  },
+  "night": {
+    "seconds": 64.0,
+    "channels": 2,
+    "peak": 0.5,
+    "rms": 0.16996467948334854,
+    "seamDelta": 0.0
+  },
+  "boss_music": {
+    "seconds": 48.0,
+    "channels": 2,
+    "peak": 0.5,
+    "rms": 0.15092944695308336,
+    "seamDelta": 0.0
+  }
+}

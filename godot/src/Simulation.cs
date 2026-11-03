@@ -94,7 +94,7 @@ public sealed partial class Simulation
     }
     public void Start()
     {
-        if(Status!=RunStatus.Ready)return;Status=RunStatus.Running;
+        if(Status!=RunStatus.Ready)return;Status=RunStatus.Running;SoundSignals|=SoundCue.Start;
         if(Options.Sandbox){SpawnSandbox();return;}
         for(int i=0;i<8;i++){float a=i/8f*MathF.Tau+Random()*.2f;Spawn(MapId=="forest"?"grave_bat":"ghoul",Player.Pos+World.Direction(a)*(310+Random()*100));}
     }
@@ -112,7 +112,7 @@ public sealed partial class Simulation
         if(!CanEvolve(r))return false;Evolutions.Add(r.Id);
         foreach(string id in r.Weapons){Levels[id]=0;if(SelectedWeapon==id)SelectedWeapon=r.Weapon;}
         Clocks[r.Weapon]=0;if(r.Id=="mikolenin"){Shots.RemoveAll(s=>s.Weapon=="boomerang");Blasts.RemoveAll(b=>b.Weapon=="hammer");}
-        Notice="ЭВОЛЮЦИЯ: "+r.Title;return true;
+        SoundSignals|=SoundCue.Evolution;Notice="ЭВОЛЮЦИЯ: "+r.Title;return true;
     }
     public bool CanUpgrade(string id)=>Content.ById.TryGetValue(id,out var u)&&!Banished.Contains(id)&&!Consumed(id)&&L(id)<u.Max&&(L(id)>0||IsTest||Inventory(u.Weapon).Count<5);
     public bool ApplyUpgrade(string id)
@@ -145,7 +145,7 @@ public sealed partial class Simulation
         if(replacement is null)Offers.RemoveAt(index);else Offers[index]=replacement;OfferSelection=-1;if(Offers.Count==0)FinishUpgrade();return true;
     }
     public bool Choose(int index)
-    {if(Status!=RunStatus.Upgrading||index<0||index>=Offers.Count||!ApplyUpgrade(Offers[index]))return false;FinishUpgrade();return true;}
+    {if(Status!=RunStatus.Upgrading||index<0||index>=Offers.Count||!ApplyUpgrade(Offers[index]))return false;SoundSignals|=SoundCue.Upgrade;FinishUpgrade();return true;}
     public void FinishUpgrade(){Player.Invulnerable=Math.Max(Player.Invulnerable,.65f);Offers=[];OfferSelection=-1;Status=RunStatus.Running;CheckLevel();}
     public void GainXp(float value,bool check=true)
     {
@@ -154,20 +154,20 @@ public sealed partial class Simulation
     public void CheckLevel()
     {
         if(Options.Sandbox||Status!=RunStatus.Running||Xp<XpNeed)return;Xp-=XpNeed;Level++;XpNeed=Math.Min(5000,(int)MathF.Ceiling(XpNeed*1.22f+3));
-        if(!Content.Items.Any(u=>CanUpgrade(u.Id))){Heal(30);return;}DrawOffers();Status=RunStatus.Upgrading;
+        SoundSignals|=SoundCue.Upgrade;if(!Content.Items.Any(u=>CanUpgrade(u.Id))){Heal(30);return;}DrawOffers();Status=RunStatus.Upgrading;
     }
     public void AwardGold(float value)
     {if(IsTest)return;float total=value*.45f*Greed+GoldCarry;int whole=(int)MathF.Floor(total+1e-7f);GoldEarned+=whole;GoldCarry=Math.Max(0,total-whole);Combat.Gold+=whole;}
     public float Heal(float value){float actual=Math.Max(0,Math.Min(value,Player.MaxHp-Player.Hp));Player.Hp+=actual;Combat.Healing+=actual;return actual;}
     public bool Dash()
-    {if(Status!=RunStatus.Running||Player.DashReady>0)return false;if(MoveInput.LengthSquared()>.001f)Player.Facing=Vector2.Normalize(MoveInput);Player.Dash=.22f;Player.DashReady=DashCooldown;Player.Invulnerable=Math.Max(Player.Invulnerable,.3f);return true;}
+    {if(Status!=RunStatus.Running||Player.DashReady>0)return false;SoundSignals|=SoundCue.Dash;if(MoveInput.LengthSquared()>.001f)Player.Facing=Vector2.Normalize(MoveInput);Player.Dash=.22f;Player.DashReady=DashCooldown;Player.Invulnerable=Math.Max(Player.Invulnerable,.3f);return true;}
     public void HurtPlayer(float damage,Enemy? source=null)
     {
         if(damage<=0||Invincible||Player.Invulnerable>0||Status!=RunStatus.Running)return;if(Evolved("laurel"))damage=Math.Min(10,damage);
-        if(ShieldCharges>0&&ShieldUntil>Time){ShieldCharges--;Player.Invulnerable=.4f;if(Evolved("laurel"))Explode(Player.Pos,180*Area,70*Power,"laurel",13);return;}
-        float before=Player.Hp;Player.Hp=Math.Max(0,Player.Hp-Math.Max(1,Math.Max(damage*.25f,damage-Armor)));Combat.Hurt+=before-Player.Hp;Player.Invulnerable=.85f;
+        if(ShieldCharges>0&&ShieldUntil>Time){SoundSignals|=SoundCue.Shield;ShieldCharges--;Player.Invulnerable=.4f;if(Evolved("laurel"))Explode(Player.Pos,180*Area,70*Power,"laurel",13);return;}
+        SoundSignals|=SoundCue.Hurt;float before=Player.Hp;Player.Hp=Math.Max(0,Player.Hp-Math.Max(1,Math.Max(damage*.25f,damage-Armor)));Combat.Hurt+=before-Player.Hp;Player.Invulnerable=.85f;
         if(source is not null){if(source.Def.Slow>0)Player.SlowUntil=Time+source.Def.Slow;var d=source.Pos-Player.Pos;MoveEnemy(source,(d.LengthSquared()>.001f?Vector2.Normalize(d):Vector2.UnitX)*48);}
-        if(Player.Hp<=0){if(RevivesUsed<L("revive")+M("revive")){RevivesUsed++;Player.Hp=MathF.Ceiling(Player.MaxHp/2);Player.Invulnerable=3;Player.SlowUntil=0;Notice="ВОЗРОЖДЕНИЕ";}else Status=RunStatus.Dead;}
+        if(Player.Hp<=0){if(RevivesUsed<L("revive")+M("revive")){SoundSignals|=SoundCue.Revive;RevivesUsed++;Player.Hp=MathF.Ceiling(Player.MaxHp/2);Player.Invulnerable=3;Player.SlowUntil=0;Notice="ВОЗРОЖДЕНИЕ";}else{SoundSignals|=SoundCue.Death;Status=RunStatus.Dead;}}
     }
     public void RebuildGrid()
     {

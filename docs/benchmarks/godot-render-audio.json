@@ -1,0 +1,67 @@
+[
+  {
+    "count": 1000,
+    "dense": false,
+    "frameMs": 1.750629509379509,
+    "p95Ms": 2.0833333333333335,
+    "drawCpuMs": 0.8965895833333334,
+    "visible": 361,
+    "drawn": 361
+  },
+  {
+    "count": 5000,
+    "dense": false,
+    "frameMs": 3.1251527777777786,
+    "p95Ms": 3.3333333333333335,
+    "drawCpuMs": 2.2002916666666676,
+    "visible": 1815,
+    "drawn": 1807
+  },
+  {
+    "count": 10000,
+    "dense": false,
+    "frameMs": 4.944881944444443,
+    "p95Ms": 5.5555555555555545,
+    "drawCpuMs": 3.795125000000001,
+    "visible": 3621,
+    "drawn": 3312
+  },
+  {
+    "count": 1000,
+    "dense": true,
+    "frameMs": 7.928217171717168,
+    "p95Ms": 8.333333333333334,
+    "drawCpuMs": 5.701508333333333,
+    "visible": 1000,
+    "drawn": 1000
+  },
+  {
+    "count": 5000,
+    "dense": true,
+    "frameMs": 1.079701388888889,
+    "p95Ms": 1.5151515151515151,
+    "drawCpuMs": 0.6503125,
+    "visible": 5000,
+    "drawn": 305
+  },
+  {
+    "count": 10000,
+    "dense": true,
+    "frameMs": 1.4962279040404036,
+    "p95Ms": 1.7859999999999994,
+    "drawCpuMs": 0.8879604166666665,
+    "visible": 10000,
+    "drawn": 309
+  },
+  {
+    "live": true,
+    "count": 5000,
+    "arsenal": true,
+    "samples": 1800,
+    "simulatedSeconds": 24.099976,
+    "frameMs": 12.694996111111323,
+    "p95Ms": 15.15151515151515,
+    "visible": 2477,
+    "drawn": 1336
+  }
+]
