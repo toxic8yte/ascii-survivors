@@ -137,7 +137,7 @@ public partial class Main : Node
         timeLabel.Text=FormatTime(game.Time);enemyLabel.Text=$"ВРАГОВ {game.Enemies.Count} · ИЗГНАНО {game.Kills}";levelLabel.Text="УРОВЕНЬ "+game.Level;
         xpLabel.Text=game.Options.Sandbox?"ПЕСОЧНИЦА · БЕЗ ОПЫТА":$"ОПЫТ {game.Xp} / {game.XpNeed} · УРОВЕНЬ {game.Level}";
         modeButton.Text=game.Manual?"РУЧНОЙ ОГОНЬ [M]":"АВТОАТАКА [M]";modeLabel.Text=game.Content.ById[game.SelectedWeapon].Title;
-        if(game.IsTest)waveLabel.Text=game.Options.Sandbox?"ПЕСОЧНИЦА · БЕЗ ПРОГРЕССИИ":"НАГРУЗОЧНЫЙ ТЕСТ";else waveLabel.Text=game.GetWave().Title+" · ОПЫТ "+game.Xp+" / "+game.XpNeed+" · КРИСТАЛЛЫ "+(game.XpEfficiency*100).ToString("0")+"%";
+        if(game.IsTest)waveLabel.Text=game.Options.Sandbox?"ПЕСОЧНИЦА · БЕЗ ПРОГРЕССИИ":"НАГРУЗОЧНЫЙ ТЕСТ";else waveLabel.Text=game.GetWave().Title+" · ОПЫТ "+game.Xp+" / "+game.XpNeed+" · КРИСТАЛЛЫ "+(game.XpEfficiency*1.15f*100).ToString("0")+"%";
         goldLabel.Text="ЗОЛОТО ЗАБЕГА +"+game.GoldAvailable;if(game.IsTest)saveLabel.Text="ТЕСТ НЕ МЕНЯЕТ СОХРАНЕНИЕ";
         var weapons=game.Inventory(true);var passives=game.Inventory(false);string key=string.Join(';',weapons.Concat(passives).Select(id=>id+game.L(id)+game.Evolved(id)))+game.SelectedWeapon+game.Manual;
         if(!force&&key==slotKey)return;slotKey=key;foreach(var node in weaponSlots.GetChildren())node.QueueFree();foreach(var node in passiveSlots.GetChildren())node.QueueFree();

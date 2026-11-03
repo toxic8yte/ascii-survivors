@@ -7,6 +7,12 @@ public static partial class PortTests
 {
     private static void CheckXpAndLoot(Catalog c)
     {
+        var boosted=Fixture(c);boosted.GainCrystalXp(100);Check(boosted.Combat.Xp==115,"Crystals grant fifteen percent more experience");
+        var rings=Fixture(c);Close(rings.BossHealth(1),1050,"Ring boss one thirty percent less HP");Close(rings.BossHealth(2),2240,"Ring boss two thirty percent less HP");
+        Close(c.Enemies["lichLord"].Hp,1540,"Ordinary Lich base HP reduced");Close(c.Enemies["darVetro"].Hp,11340,"Mega boss base HP reduced");
+        var migratedBoss=Fixture(c);var oldBoss=migratedBoss.Spawn("lichLord");oldBoss.Hp=1000;oldBoss.MaxHp=2000;migratedBoss.BossHealthVersion=0;
+        var bossJson=JsonSerializer.Serialize(migratedBoss,SaveStore.JsonOptions);var restoredBoss=JsonSerializer.Deserialize<Simulation>(bossJson,SaveStore.JsonOptions)!;restoredBoss.RepairAfterLoad(c);
+        Close(restoredBoss.Enemies[0].Hp,700,"Existing boss current HP reduced");Close(restoredBoss.Enemies[0].MaxHp,1400,"Existing boss max HP reduced");restoredBoss.RepairAfterLoad(c);Close(restoredBoss.Enemies[0].MaxHp,1400,"Boss balance migration runs only once");
         var g=Fixture(c,"duelist");g.Level=5;g.Xp=23;g.XpNeed=33;g.XpCarry=.7417251f;g.AddGem(g.Player.Pos,15);
         g.AddGem(g.Player.Pos+new Vector2(200,0),8,true);g.Hearts.Add(new(){Pos=g.Player.Pos+new Vector2(200,0)});
         g.AddGem(g.Player.Pos+new Vector2(300,0),7,true,"campfire");g.Hearts.Add(new(){Pos=g.Player.Pos+new Vector2(300,0),Source="campfire"});

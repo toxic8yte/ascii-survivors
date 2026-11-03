@@ -93,6 +93,7 @@ public sealed class Catalog
             if(visual.TryGetProperty("frames",out var frames))d.Frames=JsonSerializer.Deserialize<string[]>(frames.GetRawText(),Options)!;
             c.Enemies.Add(d.Id,d);
         }
+        foreach(var boss in c.Enemies.Values.Where(e=>e.Boss))boss.Hp*=.7f;
         c.ScheduledBosses=c.Enemies.Values.Where(e=>e.Roster&&e.Boss).OrderBy(e=>e.At).ToArray();
         c.Recipes=Read<List<RecipeDef>>("evolutions");c.Permanents=Read<List<ShopDef>>("permanents");c.Features=Read<List<ShopDef>>("features");c.Stages=Read<List<StageDef>>("stages").ToDictionary(x=>x.Id);
         using(var additions=JsonDocument.Parse(readFile("desktop-additions.json")))

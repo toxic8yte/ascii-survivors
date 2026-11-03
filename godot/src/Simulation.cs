@@ -19,6 +19,7 @@ public sealed partial class Simulation
     public RunStatus Status=RunStatus.Ready;
     public string HeroId="hunter",MapId="forest",RunId="",SelectedWeapon="needle",LastBoss="",Notice="";
     public uint Seed=1,RandomState=1;
+    public int BossHealthVersion;
     public double Elapsed;
     public long Steps;
     public int Level=1,Xp,XpNeed=6,Kills,BossKills,ChestsOpened,NextId=1,NextChestId=1,PeakEnemies,BossIndex,RosterBossIndex,ClockStep,RevivesUsed,RerollsUsed,RerollGoldSpent,BanishesLeft,PreservedRerolls,OfferSelection=-1;
@@ -52,7 +53,7 @@ public sealed partial class Simulation
     public Simulation(){}
     public Simulation(Catalog content,uint seed,RunOptions options)
     {
-        Content=content;Options=options;Seed=seed==0?1:seed;RandomState=Seed;HeroId=options.Hero;MapId=options.Map;Manual=options.Manual;
+        Content=content;Options=options;Seed=seed==0?1:seed;RandomState=Seed;HeroId=options.Hero;MapId=options.Map;Manual=options.Manual;BossHealthVersion=1;
         if(!content.Heroes.ContainsKey(HeroId)||!content.Stages.ContainsKey(MapId))throw new ArgumentException("Unknown hero or stage");
         RunId=$"{Seed}-{Guid.NewGuid():N}";MapWorld=new World(MapId,Seed);
         Levels=content.Items.ToDictionary(x=>x.Id,_=>0);Meta=content.Permanents.ToDictionary(x=>x.Id,x=>options.Sandbox?0:Math.Clamp(options.Meta.GetValueOrDefault(x.Id),0,x.Max));
@@ -171,6 +172,7 @@ public sealed partial class Simulation
     {
         if(Options.Sandbox)return;float total=value*Growth*XpEfficiency+XpCarry;int whole=(int)MathF.Floor(total+1e-7f);XpCarry=Math.Max(0,total-whole);Xp+=whole;Combat.Xp+=whole;if(check)CheckLevel();
     }
+    public void GainCrystalXp(float value)=>GainXp(value*1.15f);
     public void CheckLevel()
     {
         if(Options.Sandbox||Status!=RunStatus.Running||Xp<XpNeed)return;Xp-=XpNeed;Level++;XpNeed=Math.Min(5000,(int)MathF.Ceiling(XpNeed*1.22f+3));

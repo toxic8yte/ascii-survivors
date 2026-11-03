@@ -16,7 +16,7 @@ public sealed partial class Simulation
         SuppliesTaken.Add(box.Id);SoundSignals|=box.Kind=="heal"?SoundCue.Heal:box.Kind=="level"?SoundCue.Upgrade:SoundCue.Gem;
         if(box.Kind=="heal"){Heal(30);Notice="ЯЩИК: ЛЕЧЕНИЕ ДО 30 HP";}
         else if(box.Kind=="level"){Xp+=XpNeed;CheckLevel();Notice="ЯЩИК: БЕСПЛАТНЫЙ УРОВЕНЬ";}
-        else{float xp=Gems.Where(g=>!g.Gold).Sum(g=>g.Value);foreach(var coin in Gems.Where(g=>g.Gold))AwardGold(coin.Value);Gems.Clear();gemBins.Clear();GainXp(xp);Notice="ЯЩИК: ВСЕ КРИСТАЛЛЫ СОБРАНЫ";}
+        else{float xp=Gems.Where(g=>!g.Gold).Sum(g=>g.Value);foreach(var coin in Gems.Where(g=>g.Gold))AwardGold(coin.Value);Gems.Clear();gemBins.Clear();GainCrystalXp(xp);Notice="ЯЩИК: ВСЕ КРИСТАЛЛЫ СОБРАНЫ";}
         Ring("",box.Pos,90,.65f,box.Kind=="heal"?11:box.Kind=="level"?7:16,"+");return true;
     }
     public bool OpenChest(Chest chest)
@@ -127,7 +127,7 @@ public sealed partial class Simulation
         {
             var delta=Player.Pos-gem.Pos;float d=delta.Length();if(d<Magnet)gem.Magnetized=true;
             if(gem.Magnetized&&d>1)gem.Pos+=delta/d*Math.Min(d,(290+(1-Math.Min(d/300,1))*280)*dt);
-            if(d<18&&Status==RunStatus.Running){SoundSignals|=SoundCue.Gem;gem.Taken=true;if(gemBins.GetValueOrDefault(gem.Bin)==gem)gemBins.Remove(gem.Bin);if(gem.Gold)AwardGold(gem.Value);else GainXp(gem.Value);}
+            if(d<18&&Status==RunStatus.Running){SoundSignals|=SoundCue.Gem;gem.Taken=true;if(gemBins.GetValueOrDefault(gem.Bin)==gem)gemBins.Remove(gem.Bin);if(gem.Gold)AwardGold(gem.Value);else GainCrystalXp(gem.Value);}
         }
         Gems.RemoveAll(g=>g.Taken);CheckLevel();
         foreach(var heart in Hearts)if(Player.Hp<Player.MaxHp&&Vector2.Distance(Player.Pos,heart.Pos)<27&&Status==RunStatus.Running){SoundSignals|=SoundCue.Heal;Heal(heart.Value);Combat.HeartsTaken++;heart.Taken=true;}
@@ -155,7 +155,9 @@ public sealed partial class Simulation
         if(Inventory(true).Count>5||Inventory(false).Count>5)throw new InvalidDataException("Too many inventory slots");
         if(!float.IsFinite(Player.Pos.X+Player.Pos.Y+Player.Hp+Player.MaxHp)||Player.Hp<=0||Player.Hp>Player.MaxHp||Elapsed<0||!double.IsFinite(Elapsed))throw new InvalidDataException("Invalid player");
         MapWorld=new(MapId,Seed);foreach(int id in CampfiresBroken)if(id>=0&&id<MapWorld.Cells.Length&&MapWorld.Cells[id]?.Kind=="campfire")MapWorld.Cells[id]=null;Player.Pos=Player.Prev=World.Bound(Player.Pos);Player.Dash=0;MoveInput=Vector2.Zero;Firing=false;AimActive=false;QueuedWeapon=null;
-        foreach(var e in Enemies){if(!content.Enemies.TryGetValue(e.Kind,out var def)||e.Hp<=0||e.Hp>e.MaxHp||!float.IsFinite(e.Pos.X+e.Pos.Y+e.Hp))throw new InvalidDataException("Invalid enemy");e.Def=def;e.Prev=e.Pos;}
+        if(BossHealthVersion is <0 or >1)throw new InvalidDataException("Invalid boss balance version");
+        foreach(var e in Enemies){if(!content.Enemies.TryGetValue(e.Kind,out var def)||e.Hp<=0||e.Hp>e.MaxHp||!float.IsFinite(e.Pos.X+e.Pos.Y+e.Hp))throw new InvalidDataException("Invalid enemy");e.Def=def;e.Prev=e.Pos;if(BossHealthVersion==0&&def.Boss){e.Hp*=.7f;e.MaxHp*=.7f;}}
+        BossHealthVersion=1;
         if(Enemies.Select(e=>e.Id).Distinct().Count()!=Enemies.Count)throw new InvalidDataException("Duplicate enemy IDs");
         foreach(var shot in Shots){if(!content.ById.ContainsKey(shot.Weapon)||!float.IsFinite(shot.Pos.X+shot.Pos.Y+shot.Life+shot.Damage))throw new InvalidDataException("Invalid projectile");shot.Prev=shot.Pos;}
         // Remove the old monster loot on resume, keeping every XP gem and already banked coin.

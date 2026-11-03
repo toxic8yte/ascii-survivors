@@ -82,7 +82,7 @@ public sealed partial class Simulation
         RebuildGrid();
     }
     public bool FirstBoss(Enemy e)=>BossIndex==1&&e.Def.Boss&&e.Kind==Catalog.BossOrder[0];
-    public float BossHealth(int index)=> ((index==1?1500:3200+Math.Max(0,index-2)*1000)+Math.Max(0,Level-1)*200)*(1+M("curse")*.1f);
+    public float BossHealth(int index)=> ((index==1?1500:3200+Math.Max(0,index-2)*1000)+Math.Max(0,Level-1)*200)*(1+M("curse")*.1f)*.7f;
     public void BeginEncounter(){SoundSignals|=SoundCue.Boss;Arena=new(){Pos=Player.Pos,Radius=ArenaRadius,Kind=Catalog.BossOrder[BossIndex%Catalog.BossOrder.Length]};Notice="ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ КОЛЬЦА";}
     private void UpdateEncounter(float dt)
     {
