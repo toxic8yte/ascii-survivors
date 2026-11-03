@@ -23,12 +23,13 @@
   }
   function wave(enemies, age, stress, map, elapsed=age, seed=0) {
     const minute = Math.floor(age / 60), stage = stages.find(s => age >= s.from && age < s.to) || stages[5 + minute % 3];
-    const roles = age >= 360 && !stress ? ['normal', ...stage.roles] : ['swarm', 'normal', ...stage.roles];
-    const available = Object.entries(enemies).filter(([, e]) => !e.boss && (e.roster ? e.at <= age : e.at <= age * .65));
+    const roles = age>=1500?['heavy','special']:age >= 360 && !stress ? ['normal', ...stage.roles] : ['swarm', 'normal', ...stage.roles];
+    const oldest=age<600?0:Math.min(1440,age-300);
+    const available = Object.entries(enemies).filter(([, e]) => !e.boss && (e.roster ? e.at <= age : e.at <= age * .65) && (!oldest || e.roster&&e.at>=oldest));
     const selected = [];
     // Early waves keep two filler roles; later waves reserve room for all pressure roles.
     for (const role of roles) {
-      const pool = available.filter(([, e]) => e.roster && e.role === role).sort((a, b) => b[1].at - a[1].at);
+      const pool = available.filter(([, e]) => e.roster && e.role === role).sort((a, b) => age>=1500&&role==='heavy'?b[1].hp-a[1].hp:b[1].at-a[1].at);
       if (pool.length && selected.length < 4) selected.push(pool[Math.floor(minute / 3) % Math.min(2, pool.length)]);
     }
     const old = available.filter(([, e]) => !e.roster);
@@ -39,7 +40,9 @@
     const support = new Set();
     if (!stress && elapsed >= 45) for (const ai of ['ranged','charge']) {
       if (selected.some(([,e])=>e.ai===ai)) continue;
-      const pool = Object.entries(enemies).filter(([,e])=>!e.boss && e.ai===ai && e.at<=elapsed);
+      const supportFloor=elapsed<600?0:Math.min(1440,elapsed-300);
+      let pool = Object.entries(enemies).filter(([,e])=>!e.boss && e.ai===ai && e.at<=elapsed);
+      if(ai==='charge'&&supportFloor>0){const newer=pool.filter(([,e])=>e.at>=supportFloor);pool=newer.length?newer:pool.sort((a,b)=>b[1].at-a[1].at).slice(0,1);}
       if (!pool.length) continue;
       const entry = pool[(Math.floor(elapsed/20)+(seed>>>0))%pool.length];selected.push(entry);support.add(entry[0]);
     }
@@ -53,7 +56,7 @@
     const group = stress ? Math.min(8, 2 + Math.floor(age / 180)) : Math.max(3, Math.min(32, 3 + Math.floor(Math.min(age, 360) / 60) + Math.floor(afterSix / 20) + (surge ? 2 : recovery ? -2 : 0)));
     const danger = !stress && age >= 360;
     const quotas = { ranged: Math.max(1, Math.min(danger ? 18 : 8, Math.floor(target * (danger ? .07 : .06)))), charge:Math.max(1,Math.min(danger?8:4,Math.floor(target*.03))), special: Math.max(3, Math.min(danger ? 70 : 40, Math.floor(target * (danger ? .18 : .14)))), elite: Math.max(1, Math.min(danger ? 45 : 28, Math.floor(target * (danger ? .09 : .04)))) };
-    return { id: forestWave?'forest-'+forestMinute:stage.id, title: forestWave?.title||stage.title, phase, phaseTitle: stress ? 'Нагрузочный тест' : surge ? 'Наплыв' : recovery ? 'Передышка' : 'Натиск', target, interval, group, surge, quotas, entries: selected.map(([id, e]) => ({ id, role: roleOf(e), ranged: e.ai === 'ranged', charge:e.ai==='charge', elite: e.rank === 'elite', weight:support.has(id)?e.ai==='ranged'?20:16:forestWave?forestWave.enemies[id]:e.ai === 'ranged' ? danger ? 12 : 5 : stage.weights[['swarm', 'normal', 'fast', 'heavy', 'special'].indexOf(roleOf(e))] || 6 })) };
+    return { id: forestWave?'forest-'+forestMinute:stage.id, title: forestWave?.title||stage.title, phase, phaseTitle: stress ? 'Нагрузочный тест' : surge ? 'Наплыв' : recovery ? 'Передышка' : 'Натиск', target, interval, group, surge, quotas, entries: selected.map(([id, e]) => ({ id, role: roleOf(e), ranged: e.ai === 'ranged', charge:e.ai==='charge', elite: e.rank === 'elite', weight:support.has(id)?e.ai==='ranged'?20:16:forestWave?forestWave.enemies[id]:age>=1500&&roleOf(e)==='heavy'?60:e.ai === 'ranged' ? danger ? 12 : 5 : stage.weights[['swarm', 'normal', 'fast', 'heavy', 'special'].indexOf(roleOf(e))] || 6 })) };
   }
   function weighted(entries, random) {
     let roll = random() * entries.reduce((sum, e) => sum + e.weight, 0);

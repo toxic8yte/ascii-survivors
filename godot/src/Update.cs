@@ -75,7 +75,7 @@ public sealed partial class Simulation
             if(Arena is null&&megaAge>=NextMegaAt&&Enemies.Count<Options.EnemyLimit&&!Enemies.Any(e=>e.Alive&&e.Def.Boss)){var boss=Spawn("darVetro");NextMegaAt=((int)(megaAge/600)+1)*600;LastBoss=boss.Def.Title;Notice="МЕГАБОСС: "+LastBoss;}
             else if(Arena is null&&PressureTime>=NextBossAt&&Enemies.Count<Options.EnemyLimit&&!Enemies.Any(e=>e.Alive&&e.Def.Boss))BeginEncounter();
             UpdateEncounter(dt);
-            var roster=Content.Enemies.Values.Where(e=>e.Roster&&e.Boss).OrderBy(e=>e.At).ToArray();var def=roster[RosterBossIndex%roster.Length];float at=def.At+RosterBossIndex/roster.Length*1800;
+            var roster=Content.ScheduledBosses;var def=roster[RosterBossIndex%roster.Length];float at=def.At+RosterBossIndex/roster.Length*1800;
             if(Arena is null&&megaAge>=at&&!Enemies.Any(e=>e.Alive&&e.Def.Boss)&&Enemies.Count<Options.EnemyLimit){var boss=Spawn(def.Id);RosterBossIndex++;LastBoss=boss.Def.Title;Notice="БОСС: "+LastBoss;}
         }
         else{UpdateEncounter(dt);if(!Enemies.Any(e=>e.Alive)){SandboxClock+=dt;if(SandboxClock>=1){SpawnSandbox();SandboxClock=0;}}else SandboxClock=0;}

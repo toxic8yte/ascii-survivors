@@ -81,157 +81,163 @@
         }
       },
       {
-        "title": "Гробовая сырость",
+        "title": "Траурный караул",
         "enemies": {
-          "mold_corpse": 60,
-          "coffin_crawler": 30
+          "mourning_nun": 60,
+          "bone_walker": 25,
+          "crooked_angel": 20
         }
       },
       {
-        "title": "Костяной ливень",
-        "enemies": {
-          "skeleton": 60,
-          "bone_walker": 30,
-          "screaming_skull": 20
-        }
-      },
-      {
-        "title": "Лунная охота",
-        "enemies": {
-          "werewolf": 60,
-          "lantern_wraith": 30,
-          "skeleton": 20
-        }
-      },
-      {
-        "title": "Призрачный вой",
-        "enemies": {
-          "werewolf": 60,
-          "lantern_wraith": 30
-        }
-      },
-      {
-        "title": "Крылья и клыки",
-        "enemies": {
-          "bat": 60,
-          "werewolf": 30,
-          "black_hound": 20
-        }
-      },
-      {
-        "title": "Голодный лес",
-        "enemies": {
-          "werewolf": 60,
-          "bat": 30,
-          "mold_corpse": 20
-        }
-      },
-      {
-        "title": "Мясная просека",
-        "enemies": {
-          "chapel_butcher": 60,
-          "coffin_crawler": 30,
-          "mold_corpse": 20
-        }
-      },
-      {
-        "title": "Погребальные бинты",
-        "enemies": {
-          "mummy": 60,
-          "brute": 30
-        }
-      },
-      {
-        "title": "Гробовой обоз",
-        "enemies": {
-          "mummy": 60,
-          "coffin_crawler": 30
-        }
-      },
-      {
-        "title": "Железная погребальная",
-        "enemies": {
-          "mummy": 60,
-          "coffin_crawler": 30,
-          "iron_martyr": 20
-        }
-      },
-      {
-        "title": "Стая над склепом",
-        "enemies": {
-          "mummy": 60,
-          "mold_corpse": 30,
-          "bat": 20
-        }
-      },
-      {
-        "title": "Похоронный сад",
+        "title": "Невесты из чащи",
         "enemies": {
           "corpse_bride": 60,
           "mourning_nun": 30,
-          "rotting_choir": 20
+          "gallows_crow": 20
         }
       },
       {
-        "title": "Траурный венок",
+        "title": "Святая засада",
         "enemies": {
           "corpse_bride": 60,
-          "mummy": 30
+          "knife_saint": 25,
+          "mother_superior": 18
         }
       },
       {
-        "title": "Чёрная процессия",
+        "title": "Красное покаяние",
         "enemies": {
-          "mourning_nun": 60,
-          "mummy": 30
+          "red_penitent": 60,
+          "corpse_bride": 35,
+          "knife_saint": 20
         }
       },
       {
-        "title": "Сад забвения",
+        "title": "Гнилой хор",
         "enemies": {
-          "corpse_bride": 60,
-          "mummy": 30,
-          "mold_corpse": 20
+          "rotting_choir": 60,
+          "red_penitent": 30,
+          "mother_superior": 18
         }
       },
       {
-        "title": "Красный урожай",
+        "title": "Похоронная месса",
         "enemies": {
-          "grand_martyr": 60,
-          "pumpkin": 30,
-          "werewolf": 20
+          "rotting_choir": 60,
+          "corpse_bride": 35,
+          "lantern_wraith": 20
         }
       },
       {
-        "title": "Пылающая изгородь",
+        "title": "Кровавая просека",
         "enemies": {
-          "pumpkin": 60,
-          "corpse_bride": 30,
-          "brute": 20
+          "rotting_choir": 60,
+          "red_penitent": 35,
+          "knife_saint": 20
         }
       },
       {
-        "title": "Последний обоз",
+        "title": "Настоятельницы тьмы",
         "enemies": {
-          "mummy": 60,
-          "coffin_crawler": 30,
-          "mold_corpse": 20
+          "rotting_choir": 60,
+          "corpse_bride": 35,
+          "mother_superior": 20
         }
       },
       {
-        "title": "Кровавые крылья",
+        "title": "Мясная литургия",
         "enemies": {
-          "bat": 60,
-          "black_hound": 30,
-          "screaming_crown": 20
+          "chapel_butcher": 60,
+          "rotting_choir": 35,
+          "knife_saint": 20
         }
       },
       {
-        "title": "Лес не отпускает",
+        "title": "Паучья процессия",
         "enemies": {
-          "grave_bat": 60,
-          "bat": 30,
-          "black_knight": 20
+          "chapel_butcher": 60,
+          "widow_engine": 30,
+          "rotting_choir": 25
+        }
+      },
+      {
+        "title": "Слепая исповедь",
+        "enemies": {
+          "chapel_butcher": 60,
+          "widow_engine": 30,
+          "blind_confessor": 20
+        }
+      },
+      {
+        "title": "Пустые доспехи",
+        "enemies": {
+          "hollow_knight": 60,
+          "rotting_choir": 35,
+          "blind_confessor": 20
+        }
+      },
+      {
+        "title": "Железная охота",
+        "enemies": {
+          "hollow_knight": 60,
+          "chapel_butcher": 35,
+          "widow_engine": 25
+        }
+      },
+      {
+        "title": "Мученический марш",
+        "enemies": {
+          "iron_martyr": 60,
+          "hollow_knight": 35,
+          "chapel_butcher": 25
+        }
+      },
+      {
+        "title": "Чёрные нимбы",
+        "enemies": {
+          "iron_martyr": 60,
+          "hollow_knight": 35,
+          "black_halo": 20
+        }
+      },
+      {
+        "title": "Рыцари последней ночи",
+        "enemies": {
+          "iron_martyr": 60,
+          "hollow_knight": 35,
+          "black_knight": 18
+        }
+      },
+      {
+        "title": "Собор шагает",
+        "enemies": {
+          "cathedral_head": 60,
+          "iron_martyr": 35,
+          "black_halo": 20
+        }
+      },
+      {
+        "title": "Великие мученики",
+        "enemies": {
+          "cathedral_head": 60,
+          "pale_hunter": 30,
+          "grand_martyr": 18
+        }
+      },
+      {
+        "title": "Похоронный конвейер",
+        "enemies": {
+          "funeral_machine": 60,
+          "black_halo": 25,
+          "grand_martyr": 18
+        }
+      },
+      {
+        "title": "Последние свидетели",
+        "enemies": {
+          "funeral_machine": 60,
+          "last_witness": 25,
+          "grand_martyr": 18
         }
       }
     ]
