@@ -18,6 +18,8 @@ public partial class AsciiRenderer : Node2D
     private readonly Dictionary<string,string[]> spriteCache=[];
     private Rid drawCanvas;
     private readonly HashSet<(int X,int Y,string Kind,int Appearance)> crowdedGlyphs=[];
+    private readonly HashSet<(int X,int Y,int Ink,string Glyph)> effectGlyphs=[];
+    private bool crowdedEffects,drawingEffects;
     private string[] Lines(string value)
     {if(!spriteCache.TryGetValue(value,out var lines)){if(spriteCache.Count>4096)spriteCache.Clear();spriteCache[value]=lines=value.Split('\n');}return lines;}
     private float cellW=9.6f;
@@ -37,6 +39,7 @@ public partial class AsciiRenderer : Node2D
     private void Stamp(V point,string value,int ink=4,float alpha=1)
     {
         var screen=Screen(point);if(screen.X<Field.Position.X-80||screen.X>Field.End.X+80||screen.Y<Field.Position.Y-80||screen.Y>Field.End.Y+80)return;
+        if(crowdedEffects&&drawingEffects&&!effectGlyphs.Add(((int)MathF.Floor(screen.X/12),(int)MathF.Floor(screen.Y/12),ink,value)))return;
         var lines=Lines(value);float height=lines.Length*16*ProjectionScale;int width=0;foreach(string row in lines)width=Math.Max(width,row.Length);
         for(int i=0;i<lines.Length;i++)
         {
@@ -54,17 +57,18 @@ public partial class AsciiRenderer : Node2D
     private void Circle(V pos,float radius,int ink,string glyph=".",float alpha=1)
     {
         var screen=Screen(pos);if(screen.X+radius*ProjectionScale<Field.Position.X||screen.X-radius*ProjectionScale>Field.End.X||screen.Y+radius*ProjectionScale<Field.Position.Y||screen.Y-radius*ProjectionScale>Field.End.Y)return;
-        int count=Math.Clamp((int)(radius*MathF.Tau/12),12,220);for(int i=0;i<count;i++)Stamp(pos+World.Direction(i*MathF.Tau/count)*radius,glyph,ink,alpha);
+        int count=Math.Clamp((int)(radius*MathF.Tau/(crowdedEffects&&drawingEffects?22:12)),12,220);for(int i=0;i<count;i++)Stamp(pos+World.Direction(i*MathF.Tau/count)*radius,glyph,ink,alpha);
     }
     private V Interpolated(Enemy e)=>V.Lerp(e.Prev,e.Pos,Interpolation);
     private V Interpolated(Projectile e)=>V.Lerp(e.Prev,e.Pos,Interpolation);
     public override void _Draw()
     {
         if(Game is not {} g)return;long started=System.Diagnostics.Stopwatch.GetTimestamp();drawCanvas=GetCanvasItem();RenderedEnemies=VisibleEnemies=0;crowdedGlyphs.Clear();ProjectionScale=Math.Clamp(Field.Size.X/1440f,.72f,1);cellW=Font.GetStringSize("M",HorizontalAlignment.Left,-1,(int)(16*ProjectionScale)).X/ProjectionScale;
-        DrawRect(Field,new Color(g.MapId=="forest"?"10291c":"101b12"));DrawTerrain(g);
+        crowdedEffects=g.Enemies.Count>=4000;drawingEffects=false;effectGlyphs.Clear();
+        DrawRect(Field,new Color(g.MapId=="forest"?"10291c":"101b12"));DrawTerrain(g);drawingEffects=true;
         foreach(var pool in g.Pools){int ink=Ink(pool.Weapon,pool.Kind=="water"?9:3);Circle(pool.Pos,pool.Radius,ink,"~",.65f);Stamp(pool.Pos,pool.Kind=="water"?"{~}":"~x~",ink);}
         foreach(var b in g.Blasts){Circle(b.Pos,b.Radius,Ink(b.Weapon,6),":");Stamp(b.Pos,"[!]",Ink(b.Weapon,7));}
-        foreach(var v in g.Visuals)DrawVisual(v);
+        foreach(var v in g.Visuals){drawingEffects=v.Weapon.Length>0;DrawVisual(v);}drawingEffects=true;
         if(g.L("garlic")>0&&!g.Manual)
         {
             float radius=(75+g.L("garlic")*15)*g.Area*(g.Evolved("garlic")?1.4f:1);
@@ -88,6 +92,7 @@ public partial class AsciiRenderer : Node2D
         }
         foreach(var pos in g.BladePositions())Stamp(pos,g.Evolved("blades")?"/+":MathF.Sin(g.Time*4)>0?"/":"\\",Ink("blades",g.Evolved("blades")?9:8));
         foreach(var pos in g.BiblePositions())Stamp(pos,"[B]",Ink("bible",7));
+        drawingEffects=false;
         foreach(var e in g.Enemies)
         {
             if(!e.Alive)continue;var pos=Interpolated(e);var screen=Screen(pos);if(screen.X<Field.Position.X-50||screen.X>Field.End.X+50||screen.Y<Field.Position.Y-70||screen.Y>Field.End.Y+70)continue;
@@ -102,12 +107,13 @@ public partial class AsciiRenderer : Node2D
                 art=def.Glyph;
             }
             else if(!important&&g.Enemies.Count>180&&V.DistanceSquared(pos,g.Player.Pos)>360*360)art=def.Glyph;
+            if(crowdedEffects&&def.Rank=="elite"&&!def.Boss&&!e.TrainingDummy&&e.Windup<=0&&e.ChargeTime<=0&&V.DistanceSquared(pos,g.Player.Pos)>260*260)art=def.Glyph;
             RenderedEnemies++;
             Stamp(pos,art,ink);int top=Lines(art).Length*8;
             if(def.Ai=="darklord"){Stamp(pos+new V(0,-8),"o o",13);if(e.Windup>0)foreach(float offset in new[]{-.45f,0,.45f})Line(pos,pos+World.Direction(World.Angle(e.Charge)+offset)*4800,13,":",.7f);}
-            if(e.HolyUntil>g.Time)Stamp(pos+new V(0,-top-10),"+",Ink("lightStaff",7));
-            if(e.BurnUntil>g.Time)Stamp(pos+new V(-16,-top-10),"*",Ink("flamethrower",12));
-            if(e.Hp<e.MaxHp&&e.MaxHp>70)Stamp(pos+new V(0,-top-12),new string('-',Math.Clamp((int)MathF.Ceiling(e.Hp/e.MaxHp*5),1,5)),6);
+            if(e.HolyUntil>g.Time&&(!crowdedEffects||important||HighlightedWeapon=="lightStaff"))Stamp(pos+new V(0,-top-10),"+",Ink("lightStaff",7));
+            if(e.BurnUntil>g.Time&&(!crowdedEffects||important||HighlightedWeapon=="flamethrower"))Stamp(pos+new V(-16,-top-10),"*",Ink("flamethrower",12));
+            if(e.Hp<e.MaxHp&&e.MaxHp>70&&(!crowdedEffects||important))Stamp(pos+new V(0,-top-12),new string('-',Math.Clamp((int)MathF.Ceiling(e.Hp/e.MaxHp*5),1,5)),6);
             if(e.Windup>0)
             {
                 Stamp(pos+new V(0,-top-26),"!",7);

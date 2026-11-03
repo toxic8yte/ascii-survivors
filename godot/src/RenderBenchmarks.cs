@@ -20,13 +20,13 @@ public partial class Main
                 if(game.Enemies.Count!=count||renderer.VisibleEnemies<renderer.RenderedEnemies)throw new InvalidOperationException("Render benchmark lost enemies");
                 GD.Print($"RENDER {count} {(dense?"dense":"spread")}: {frames.Average():0.00} ms/frame, draw CPU {draw/48:0.00} ms; {renderer.VisibleEnemies} visible, {renderer.RenderedEnemies} stamps");
             }
-            CloseOverlay();game=Benchmarks.Scene(content,5000,true,true);renderer.Game=game;renderer.Camera=game.Player.Pos;RefreshHud(true);
+            CloseOverlay();game=Benchmarks.Scene(content,6000,true,true,true);renderer.Game=game;renderer.Camera=game.Player.Pos;RefreshHud(true);
             for(int i=0;i<100;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
-            var live=new List<double>();for(int i=0;i<1800;i++){await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);live.Add(GetProcessDeltaTime()*1000);}
-            live.Sort();rows.Add(new{live=true,count=game.Enemies.Count,arsenal=true,samples=live.Count,simulatedSeconds=game.Time-900,frameMs=live.Average(),p95Ms=live[(int)(live.Count*.95)],visible=renderer.VisibleEnemies,drawn=renderer.RenderedEnemies});
-            if(game.Enemies.Count!=5000)throw new InvalidOperationException("Live benchmark lost enemies");
+            var live=new List<double>();for(int i=0;i<600;i++){await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);live.Add(GetProcessDeltaTime()*1000);}
+            live.Sort();rows.Add(new{live=true,count=game.Enemies.Count,arsenal=true,mixed=true,samples=live.Count,simulatedSeconds=game.Time-900,frameMs=live.Average(),p95Ms=live[(int)(live.Count*.95)],visible=renderer.VisibleEnemies,drawn=renderer.RenderedEnemies});
+            if(game.Enemies.Count!=6000)throw new InvalidOperationException("Live benchmark lost enemies");
             GD.Print($"LIVE {game.Enemies.Count} all weapons: {live.Average():0.00} ms/frame, p95 {live[(int)(live.Count*.95)]:0.00}; {game.Time-900:0.00} simulated seconds");
-            await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);using(var snapshot=GetViewport().GetTexture().GetImage())snapshot.SavePng(Path.Combine(directory,"live-5000.png"));
+            await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);using(var snapshot=GetViewport().GetTexture().GetImage())snapshot.SavePng(Path.Combine(directory,"live-crowd.png"));
             File.WriteAllText(Path.Combine(directory,"render.json"),System.Text.Json.JsonSerializer.Serialize(rows,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));GetTree().Quit();
         }
         catch(Exception e){GD.PushError(e.ToString());GetTree().Quit(1);}

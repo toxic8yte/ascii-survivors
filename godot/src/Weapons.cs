@@ -4,7 +4,19 @@ namespace AsciiSurvivors;
 
 public sealed partial class Simulation
 {
-    public void Ring(string weapon,Vector2 pos,float radius,float life=.45f,int ink=7,string glyph="*")=>Visuals.Add(new(){Weapon=weapon,Pos=pos,Radius=radius,Life=life,MaxLife=life,Ink=ink,Glyph=glyph});
+    [System.Text.Json.Serialization.JsonIgnore] private readonly HashSet<int> liveHitIds=[];
+    [System.Text.Json.Serialization.JsonIgnore] private readonly List<int> staleHitIds=[];
+    public void CompactHitHistory()
+    {
+        liveHitIds.Clear();foreach(var enemy in Enemies)if(enemy.Alive)liveHitIds.Add(enemy.Id);
+        foreach(var shot in Shots)if(shot.Hits.Count>64)
+        {
+            staleHitIds.Clear();foreach(var hit in shot.Hits)if(!liveHitIds.Contains(hit.Key))staleHitIds.Add(hit.Key);
+            foreach(int id in staleHitIds)shot.Hits.Remove(id);
+        }
+        liveHitIds.Clear();staleHitIds.Clear();
+    }
+    public void Ring(string weapon,Vector2 pos,float radius,float life=.45f,int ink=7,string glyph="*"){if(Enemies.Count>=4000&&weapon.Length>0)life=Math.Min(life,.18f);Visuals.Add(new(){Weapon=weapon,Pos=pos,Radius=radius,Life=life,MaxLife=life,Ink=ink,Glyph=glyph});}
     public void Arc(string weapon,Vector2[] points,float life=.24f,int ink=15)=>Visuals.Add(new(){Shape="arc",Weapon=weapon,Points=points,Life=life,MaxLife=life,Ink=ink});
     public void Explode(Vector2 pos,float radius,float damage,string weapon,int ink=7,float knockback=18)
     {SoundSignals|=SoundCue.Explosion;Ring(weapon,pos,radius,.45f,ink);foreach(var e in Near(pos,radius+50))if(Vector2.Distance(e.Pos,pos)<radius+e.Radius)HurtEnemy(e,damage,knockback,weapon);}
@@ -143,9 +155,10 @@ public sealed partial class Simulation
         for(int shotIndex=0,shotCount=Shots.Count;shotIndex<shotCount;shotIndex++)
         {
             var s=Shots[shotIndex];
+            if(s.Life<=0||s.Remaining<=0)continue;
             if(s.ChargeLeft>0){s.ChargeLeft=Math.Max(0,s.ChargeLeft-dt);s.Pos=s.Prev=Player.Pos;if(s.ChargeLeft>0)continue;}
             if(s.Evolved&&s.Weapon=="chozo"){var target=Near(s.Pos,290).Where(e=>!s.Hits.ContainsKey(e.Id)&&Vector2.Distance(e.Pos,s.Pos)<240).OrderBy(e=>Vector2.DistanceSquared(e.Pos,s.Pos)).FirstOrDefault();if(target is not null){float a=World.Angle(s.Velocity),delta=World.AngleDelta(World.Angle(target.Pos-s.Pos)-a);s.Velocity=World.Direction(a+Math.Clamp(delta,-dt*3,dt*3))*s.Velocity.Length();}}
-            s.Prev=s.Pos;s.Life-=dt;s.Age+=dt;if(s.Weapon=="axe"&&!s.Evolved)s.Velocity.Y+=360*dt;
+            s.Prev=s.Pos;s.Life-=dt;if(s.Life<=0)continue;s.Age+=dt;if(s.Weapon=="axe"&&!s.Evolved)s.Velocity.Y+=360*dt;
             if(s.Returning&&s.Age>=.65f){var delta=Player.Pos-s.Pos;if(delta.Length()<24){s.Life=0;continue;}s.Velocity=SafeDirection(delta)*570*ProjectileSpeed;}
             s.Pos+=s.Velocity*dt;
             if(s.Weapon=="rune"){bool bounced=false;if(s.Pos.X<s.MinX||s.Pos.X>s.MaxX){s.Velocity.X*=-1;s.Pos.X=Math.Clamp(s.Pos.X,s.MinX,s.MaxX);bounced=true;}if(s.Pos.Y<s.MinY||s.Pos.Y>s.MaxY){s.Velocity.Y*=-1;s.Pos.Y=Math.Clamp(s.Pos.Y,s.MinY,s.MaxY);bounced=true;}if(bounced&&s.Evolved)Explode(s.Pos,80*Area,s.Damage*.6f,s.Weapon,9);}
@@ -174,7 +187,7 @@ public sealed partial class Simulation
         foreach(var pos in BiblePositions())foreach(var e in Near(pos,50+20*Area))if(Time>=BibleHits.GetValueOrDefault(e.Id)&&Vector2.Distance(e.Pos,pos)<e.Radius+20*Area){BibleHits[e.Id]=Time+.35f;HurtEnemy(e,(15+L("bible")*8)*Power*(Evolved("bible")?1.6f:1),22,"bible");}
         foreach(var pool in Pools)
         {
-            pool.Life-=dt;if(pool.Home){var d=Player.Pos-pool.Pos;pool.Pos+=SafeDirection(d)*Math.Min(d.Length(),35*dt);pool.Radius=Math.Min(180*Area,pool.Radius+dt*8);}
+            pool.Life-=dt;if(pool.Life<=0)continue;if(pool.Home){var d=Player.Pos-pool.Pos;pool.Pos+=SafeDirection(d)*Math.Min(d.Length(),35*dt);pool.Radius=Math.Min(180*Area,pool.Radius+dt*8);}
             foreach(var e in Near(pool.Pos,pool.Radius+35))if(Time>=(pool.Kind=="water"?WaterHits.GetValueOrDefault(e.Id):e.PoisonAt)&&Vector2.Distance(e.Pos,pool.Pos)<pool.Radius+e.Radius){if(pool.Kind=="water")WaterHits[e.Id]=Time+.4f;else e.PoisonAt=Time+.4f;HurtEnemy(e,pool.Kind=="water"?pool.Damage:(5+L("poison")*3)*Power*(pool.Acid?2:1),0,pool.Weapon);if(pool.Acid)e.ChilledUntil=Time+1;}
         }
         Pools.RemoveAll(p=>p.Life<=0);
@@ -185,6 +198,6 @@ public sealed partial class Simulation
         }
         foreach(var blast in Blasts){blast.Wait-=dt;if(blast.Wait<=0)Explode(blast.Pos,blast.Radius,blast.Damage,blast.Weapon,blast.Ink,blast.Weapon=="hammer"?48:24);}
         Blasts.RemoveAll(b=>b.Wait<=0);
-        if(Steps%60==0){foreach(int key in BibleHits.Where(x=>x.Value<=Time).Select(x=>x.Key).ToArray())BibleHits.Remove(key);foreach(int key in WaterHits.Where(x=>x.Value<=Time).Select(x=>x.Key).ToArray())WaterHits.Remove(key);}
+        if(Steps%60==0){CompactHitHistory();foreach(int key in BibleHits.Where(x=>x.Value<=Time).Select(x=>x.Key).ToArray())BibleHits.Remove(key);foreach(int key in WaterHits.Where(x=>x.Value<=Time).Select(x=>x.Key).ToArray())WaterHits.Remove(key);}
     }
 }
