@@ -15,7 +15,7 @@ public partial class Main
     private void CloseOverlay()
     {
         if(overlay is not null&&GodotObject.IsInstanceValid(overlay)){root.RemoveChild(overlay);overlay.QueueFree();}
-        overlay=null!;overlayKind="";choiceButtons.Clear();choiceColors.Clear();choiceBody=null;choiceScroll=null;centeredBody=null;confirmChoice=banishChoice=rerollChoice=null;choiceSelection=choiceMoney=null;
+        overlay=null!;overlayKind="";settingsFps=null;choiceButtons.Clear();choiceColors.Clear();choiceBody=null;choiceScroll=null;centeredBody=null;confirmChoice=banishChoice=rerollChoice=null;choiceSelection=choiceMoney=null;
     }
     private VBoxContainer Modal(string kind,string title,string subtitle="",bool back=false,float width=0)
     {
@@ -50,7 +50,7 @@ public partial class Main
         if(game.Status==RunStatus.Paused&&overlayKind=="pause"){Resume();return;}if(game.Status!=RunStatus.Running)return;game.Status=RunStatus.Paused;game.MoveInput=default;game.Firing=false;SaveCurrent();
         var body=Modal("pause","Передышка","Враги и таймер на паузе.",width:540);body.Alignment=BoxContainer.AlignmentMode.Center;
         audio.Play(SoundCue.Pause);
-        body.AddChild(Button("ПРОДОЛЖИТЬ →",Resume,true));body.AddChild(Button("ЗВУК",ShowAudio));body.AddChild(Button("ПЕСОЧНИЦА / НАСТРОИТЬ ТЕСТ",OpenSandbox));body.AddChild(Button("ДВИЖОК И УРОН",ShowMetrics));body.AddChild(Button("НАЧАТЬ ЗАНОВО",StartNew));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{SaveCurrent();MakeReady();ShowIntro();}));
+        body.AddChild(Button("ПРОДОЛЖИТЬ →",Resume,true));body.AddChild(MenuAction("Settings","НАСТРОЙКИ",ShowSettings));body.AddChild(Button("ПЕСОЧНИЦА / НАСТРОИТЬ ТЕСТ",OpenSandbox));body.AddChild(Button("ДВИЖОК И УРОН",ShowMetrics));body.AddChild(Button("НАЧАТЬ ЗАНОВО",StartNew));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{SaveCurrent();MakeReady();ShowIntro();}));
     }
     private void Resume(){CloseOverlay();if(game.Status==RunStatus.Paused)game.Status=RunStatus.Running;lastStatus=game.Status;}
     private void PrepareAux()
@@ -201,7 +201,7 @@ public partial class Main
     private void ShowMetrics()
     {
         PrepareAux();var body=Modal("metrics","Движок и вклад оружия","Симуляция — 60 шагов/с. Отрисовка — частота окна. Данные текущего забега.",true);var rows=new VBoxContainer();Scroll(body,rows);
-        foreach(string value in new[]{"FPS ОКНА (ВКЛЮЧАЯ ПАУЗУ): "+Engine.GetFramesPerSecond(),"ВРАГОВ: "+game.Enemies.Count+" · ВИДНО: "+renderer.VisibleEnemies+" · ASCII-ОТТИСКОВ: "+renderer.RenderedEnemies,"СИМВОЛОВ В КАДРЕ: "+renderer.BatchedGlyphs+" · ПАКЕТОВ: "+renderer.GlyphDrawCalls,"ПИК ВРАГОВ: "+game.PeakEnemies,"ПАМЯТЬ ПРОЦЕССА: "+(Telemetry.WorkingMemory()/1048576)+" МБ","ВРЕМЯ: "+FormatTime(game.Time),"ИЗГНАНО: "+game.Kills+" · БОССОВ: "+game.BossKills,"УРОН: "+game.Combat.Damage.ToString("0")+" · ЛИШНИЙ УРОН: "+game.Combat.Overkill.ToString("0"),"ПОЛУЧЕНО УРОНА: "+game.Combat.Hurt.ToString("0")+" · ЛЕЧЕНИЕ: "+game.Combat.Healing.ToString("0"),"АПТЕЧКИ: ВЫПАЛО "+game.Combat.HeartsDropped+" · ВЗЯТО "+game.Combat.HeartsTaken})rows.AddChild(Label(value,16,muted));
+        foreach(string value in new[]{"FPS ОКНА (ВКЛЮЧАЯ ПАУЗУ): "+Engine.GetFramesPerSecond(),"ВРАГОВ: "+game.Enemies.Count+" · ВИДНО: "+renderer.VisibleEnemies+" · ASCII-ОТТИСКОВ: "+renderer.RenderedEnemies,"СИМВОЛОВ В КАДРЕ: "+renderer.BatchedGlyphs+" · ПАКЕТОВ: "+renderer.GlyphDrawCalls,"ЛИМИТ FPS: "+(Engine.MaxFps==0?"БЕЗ ОГРАНИЧЕНИЯ":Engine.MaxFps.ToString())+" · VSYNC: "+(DisplayServer.WindowGetVsyncMode()==DisplayServer.VSyncMode.Enabled?"ВКЛ":"ВЫКЛ"),"ПИК ВРАГОВ: "+game.PeakEnemies,"ПАМЯТЬ ПРОЦЕССА: "+(Telemetry.WorkingMemory()/1048576)+" МБ","ВРЕМЯ: "+FormatTime(game.Time),"ИЗГНАНО: "+game.Kills+" · БОССОВ: "+game.BossKills,"УРОН: "+game.Combat.Damage.ToString("0")+" · ЛИШНИЙ УРОН: "+game.Combat.Overkill.ToString("0"),"ПОЛУЧЕНО УРОНА: "+game.Combat.Hurt.ToString("0")+" · ЛЕЧЕНИЕ: "+game.Combat.Healing.ToString("0"),"АПТЕЧКИ: ВЫПАЛО "+game.Combat.HeartsDropped+" · ВЗЯТО "+game.Combat.HeartsTaken})rows.AddChild(Label(value,16,muted));
         rows.AddChild(Paragraph(telemetry.LastSummary,14,amber));
         body.AddChild(MenuAction("ExportTelemetry","СОХРАНИТЬ ОТЧЁТ ТЕЛЕМЕТРИИ",()=>{try{string path=telemetry.Export(game);Toast("ОТЧЁТ: "+path);}catch(Exception e)when(e is IOException or UnauthorizedAccessException){Toast("ОШИБКА ОТЧЁТА: "+e.Message);}}));
         body.AddChild(MenuAction("OpenTelemetry","ОТКРЫТЬ ПАПКУ ТЕЛЕМЕТРИИ",()=>{try{Directory.CreateDirectory(telemetry.DirectoryPath);OS.ShellOpen(telemetry.DirectoryPath);}catch(Exception e)when(e is IOException or UnauthorizedAccessException){Toast(e.Message);}}));

@@ -19,7 +19,9 @@ public partial class Main
             var playingMusic=audio.GetChildren().OfType<AudioStreamPlayer>().Single(p=>p.Playing&&p.Stream is AudioStreamWav w&&w.LoopMode==AudioStreamWav.LoopModeEnum.Forward);
             playingMusic.Seek((float)playingMusic.Stream.GetLength()-.1f);for(int i=0;i<30;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
             Assert(playingMusic.Playing&&playingMusic.GetPlaybackPosition()<2,"Exported music loops after end");
-            Press("Audio");await Shot("01-audio");Assert(overlayKind=="audio"&&overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),"Audio menu fits");
+            Press("Settings");await Shot("01-settings");Assert(overlayKind=="settings"&&overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),"Audio menu fits");
+            await CheckVideoSettingsUi(directory);
+            overlay.FindChildren("SettingsTabs","TabContainer",true,false).Cast<TabContainer>().Single().CurrentTab=1;await Shot("01-audio");
             var musicVolume=overlay.FindChildren("Volume-music","HSlider",true,false).Cast<HSlider>().Single();musicVolume.Value=23;await Settle();Assert(Math.Abs(audio.Music-.23f)<.001f,"Volume slider applies immediately");
             var audioConfig=new ConfigFile();Assert(audioConfig.Load(Path.Combine(directory,"audio.cfg"))==Error.Ok&&Math.Abs((float)audioConfig.GetValue("audio","music").AsDouble()-.23f)<.001f,"Volume persists without touching profile");
             var restoredAudio=new AudioController();AddChild(restoredAudio);restoredAudio.Initialize(Path.Combine(directory,"audio.cfg"),true);Assert(Math.Abs(restoredAudio.Music-.23f)<.001f,"Saved volume restored on initialization");restoredAudio.Play(SoundCue.Shot);RemoveChild(restoredAudio);Assert(restoredAudio.GetChildren().OfType<AudioStreamPlayer>().All(p=>!p.Playing&&p.Stream is null),"Audio releases playbacks when leaving tree");restoredAudio.Free();
@@ -32,7 +34,7 @@ public partial class Main
             ShowLab();await Shot("01-laboratory");Press("Sandbox");CloseAux();Assert(overlayKind=="lab","Sandbox back returns to lab");
             Press("StressSetup");await Shot("01-stress-setup");edit.Hero=locked;int bank=store.Profile.Gold;Press("StartStress");Assert(game.Options.Stress&&game.Invincible,"Stress mode reachable with locked hero");
             ShowIntro();Press("Play");Assert(!edit.Stress&&!edit.Sandbox&&store.Profile.Heroes.Contains(edit.Hero)&&store.Profile.Gold==bank,"Play clears test mode without unlocking or spending");
-            Press("ChooseStage");Press("Stage-forest");Press("StartRun");Assert(game.Status==RunStatus.Running&&game.MapId=="forest"&&!game.IsTest,"Title to heroes to stage starts normal run");game.Status=RunStatus.Paused;
+            Press("ChooseStage");Press("Stage-forest");Press("StartRun");Assert(game.Status==RunStatus.Running&&game.MapId=="forest"&&!game.IsTest,"Title to heroes to stage starts normal run");await CheckRenderInterpolation();game.Status=RunStatus.Paused;
             for(int i=0;i<35;i++)game.Spawn(i%4==0?"pumpkin":"skeleton",game.Player.Pos+World.Direction(i*.73f)*(160+i*9));
             game.RebuildGrid();game.Cast(game.SelectedWeapon);RefreshHud(true);await Shot("02-arena");
             await CheckGlyphRenderer(directory,"normal");
@@ -82,6 +84,7 @@ public partial class Main
                 Press("Play");await Shot("heroes-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" hero selection fits");
                 Press("ChooseStage");await Settle();Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" stage selection fits");
                 CloseOverlay();game=run;renderer.Game=run;game.Status=RunStatus.Running;ShowPause();await Settle();Assert(centeredBody!.Size.X<=540&&overlay.GetGlobalRect().Encloses(centeredBody.GetGlobalRect()),tag+" pause stays compact");
+                Press("Settings");await Shot("settings-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" settings fit");CloseAux();Assert(overlayKind=="pause"&&game.Status==RunStatus.Paused,tag+" settings return to paused battle");
                 ShowEnding();await Shot("ending-"+tag);
                 var ending=centeredBody!.GetGlobalRect();Assert(ending.Size.X<=620&&overlay.GetGlobalRect().Encloses(ending),tag+" death screen fits compact panel");
                 Assert(ending.GetCenter().DistanceTo(overlay.GetGlobalRect().GetCenter())<2,tag+" death screen centered on both axes");

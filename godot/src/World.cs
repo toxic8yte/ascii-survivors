@@ -62,9 +62,9 @@ public sealed class World
     }
     public void Move(ref Vector2 pos,float radius,Vector2 delta,Encounter? encounter,bool inside,bool terrain=true,int detour=0)
     {
-        var start=pos;int steps=Math.Max(1,(int)MathF.Ceiling(delta.Length()/8));bool blocked=false;
-        for(int i=0;i<steps;i++){pos=Bound(pos+delta/steps);if(terrain)blocked|=Resolve(ref pos,radius,encounter);ResolveRing(ref pos,radius,encounter,inside);}
-        if(blocked&&detour!=0&&Vector2.Distance(pos,start)<delta.Length()*.5f)Move(ref pos,radius,new(-delta.Y*detour,delta.X*detour),encounter,inside,terrain);
+        var start=pos;float squared=delta.LengthSquared();int steps=squared<=64?1:(int)MathF.Ceiling(MathF.Sqrt(squared)/8);bool blocked=false;var step=delta/steps;
+        for(int i=0;i<steps;i++){pos=Bound(pos+step);if(terrain)blocked|=Resolve(ref pos,radius,encounter);ResolveRing(ref pos,radius,encounter,inside);}
+        if(blocked&&detour!=0&&Vector2.DistanceSquared(pos,start)<squared*.25f)Move(ref pos,radius,new(-delta.Y*detour,delta.X*detour),encounter,inside,terrain);
     }
     public static void ResolveRing(ref Vector2 pos,float radius,Encounter? encounter,bool inside)
     {

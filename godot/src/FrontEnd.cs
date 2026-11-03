@@ -22,7 +22,7 @@ public partial class Main
         var top=new HBoxContainer();Gap(top,20);body.AddChild(top);
         var quit=MenuAction("Quit","ВЫХОД",()=>GetTree().Quit());quit.SizeFlagsHorizontal=Control.SizeFlags.Fill;quit.CustomMinimumSize=new(160,42);top.AddChild(quit);
         top.AddChild(CenterText("[$] "+store.Profile.Gold+" ЗОЛОТА",20,amber));
-        var sound=MenuAction("Audio","[~] ЗВУК",ShowAudio);sound.SizeFlagsHorizontal=Control.SizeFlags.Fill;sound.CustomMinimumSize=new(140,42);top.AddChild(sound);
+        var sound=MenuAction("Settings","[=] НАСТРОЙКИ",ShowSettings);sound.SizeFlagsHorizontal=Control.SizeFlags.Fill;sound.CustomMinimumSize=new(200,42);top.AddChild(sound);
         var screen=MenuAction("Fullscreen","ПОЛНЫЙ ЭКРАН",ToggleFullscreen);screen.SizeFlagsHorizontal=Control.SizeFlags.Fill;screen.CustomMinimumSize=new(180,42);top.AddChild(screen);
         body.AddChild(new Control{CustomMinimumSize=new(0,14)});
         var ascii=CenterText("ASCII",48,amber);ascii.AddThemeColorOverride("font_shadow_color",new Color("050604"));ascii.AddThemeConstantOverride("shadow_offset_y",4);body.AddChild(ascii);

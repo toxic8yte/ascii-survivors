@@ -41,7 +41,8 @@ public sealed partial class Simulation
     }
     private void SeparateCrowd()
     {
-        if(Timings is {} timing)timing.CrowdCandidates=0;
+        if(Timings is {} timing){timing.CrowdCandidates=0;timing.CrowdMoves=0;}
+        foreach(var e in Enemies)e.CrowdPosition=e.Pos;
         foreach(var e in Enemies)
         {
             if(!e.Alive)continue;
@@ -53,12 +54,25 @@ public sealed partial class Simulation
                 int samples=Math.Min(4,cell.Count),start=(int)(((long)e.Id*17+Steps*13)%cell.Count);
                 for(int i=0;i<samples&&tested<32&&resolved<8;i++)
                 {
-                    var other=cell[(start+(int)((long)i*cell.Count/samples))%cell.Count];tested++;if(Timings is {} t)t.CrowdCandidates++;
-                    if(!other.Alive||other.Id>=e.Id)continue;var delta=e.Pos-other.Pos;float minimum=(e.Radius+other.Radius)*.7f,squared=delta.LengthSquared();if(squared>=minimum*minimum)continue;
-                    float distance=MathF.Sqrt(squared);var direction=distance>.001f?delta/distance:World.Direction(e.Phase);float amount=Math.Min(3,(minimum-distance)*.25f);MoveEnemy(e,direction*amount);MoveEnemy(other,-direction*amount);resolved++;
+                    var other=cell[CrowdSampleIndex(cell.Count,start,i)];tested++;if(Timings is {} t)t.CrowdCandidates++;
+                    if(!other.Alive||other.Id>=e.Id)continue;var delta=e.CrowdPosition-other.CrowdPosition;float minimum=(e.Radius+other.Radius)*.7f,squared=delta.LengthSquared();if(squared>=minimum*minimum)continue;
+                    float distance=MathF.Sqrt(squared);var direction=distance>.001f?delta/distance:World.Direction(e.Phase);float amount=Math.Min(3,(minimum-distance)*.25f);var push=direction*amount;e.CrowdPosition+=push;other.CrowdPosition-=push;resolved++;
                 }
             }
         }
+        foreach(var e in Enemies)
+        {
+            var displacement=e.CrowdPosition-e.Pos;float squared=displacement.LengthSquared();if(!e.Alive||squared<.000001f)continue;
+            // Resolve terrain/ring once per body, retaining the pair solver's virtual positions above.
+            var push=squared>24*24?displacement*(24/MathF.Sqrt(squared)):displacement;
+            MoveEnemy(e,push);if(Timings is {} t)t.CrowdMoves++;
+        }
+    }
+    internal static int CrowdSampleIndex(int count,int start,int sample)
+    {
+        // The cell takes min(4, count) samples: division is by four, or the offset is the sample itself.
+        int index=start+(count>=4?(int)((long)sample*count>>2):sample);
+        return index>=count?index-count:index;
     }
     public void Tick(float dt)
     {

@@ -42,6 +42,8 @@ public static partial class PortTests
         CheckTelemetry(c);
         CheckCleanup(c);
         CheckLateWaves(c);
+        CheckVideoSettings();
+        CheckCrowd(c);
         var crowd=Benchmarks.Scene(c,512,true,false);foreach(var e in crowd.Enemies)e.Pos=crowd.Player.Pos+new Vector2(80,0);crowd.RebuildGrid();crowd.Tick(1/60f);
         Check(crowd.Enemies.Count==512&&crowd.Timings!.CrowdCandidates is >0 and <=512*32,"Dense crowd candidate work is bounded without dropping enemies");
         Check(crowd.Enemies.Select(e=>e.Pos).Distinct().Count()>1,"Bounded crowd solver separates overlapping bodies");

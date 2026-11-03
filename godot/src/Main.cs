@@ -10,6 +10,7 @@ public partial class Main : Node
     private Simulation game=null!;
     private AsciiRenderer renderer=null!;
     private AudioController audio=null!;
+    private VideoSettings video=null!;
     private Telemetry telemetry=null!;
     private Control root=null!,overlay=null!,arenaSpace=null!;
     private VBoxContainer layout=null!;
@@ -39,6 +40,7 @@ public partial class Main : Node
             string? renderBench=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--render-benchmark="));smokeTesting=smoke is not null||renderBench is not null;
             string savePath=smoke is not null?Path.Combine(smoke[13..],"state.json"):renderBench is not null?Path.Combine(renderBench[19..],"state.json"):ProjectSettings.GlobalizePath("user://state.json");
             store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
+            video=new(Path.Combine(Path.GetDirectoryName(savePath)!,"video.cfg"));video.Apply();
             audio=new();AddChild(audio);audio.Initialize(Path.Combine(Path.GetDirectoryName(savePath)!,"audio.cfg"),smokeTesting);
             telemetry=new(Path.Combine(Path.GetDirectoryName(savePath)!,"telemetry"));
             renderer=new();if(renderBench is not null)renderer.UseGlyphBatch=!OS.GetCmdlineUserArgs().Contains("--legacy-renderer");AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
@@ -99,7 +101,7 @@ public partial class Main : Node
     private void SaveCurrent()
     {if(game.IsTest)return;bool ok=game.Status==RunStatus.Dead?store.Finish(game):store.Checkpoint(game);saveLabel.Text=ok?"ПРОГРЕСС СОХРАНЁН":store.LastError.Length>0?"ОШИБКА СОХРАНЕНИЯ":"АВТОСОХРАНЕНИЕ";if(!ok&&store.LastError.Length>0)Toast(store.LastError);}
     private void Toast(string value){noticeLabel.Text=value;noticeClock=4;}
-    private void ToggleFullscreen()=>DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.ExclusiveFullscreen);
+    private void ToggleFullscreen(){DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.ExclusiveFullscreen);video.Apply();}
     public override void _PhysicsProcess(double delta)
     {
         if(game is null)return;
@@ -114,10 +116,11 @@ public partial class Main : Node
     public override void _Process(double delta)
     {
         if(game is null)return;long audioStart=System.Diagnostics.Stopwatch.GetTimestamp();audio.Update(game,overlayKind.Length>0,delta);double audioMs=System.Diagnostics.Stopwatch.GetElapsedTime(audioStart).TotalMilliseconds;var rect=arenaSpace.GetGlobalRect();telemetry.Frame(game,renderer.LastDrawMs,audioMs,game.Status==RunStatus.Running&&overlayKind.Length==0,renderer.VisibleEnemies,renderer.RenderedEnemies,audio.ActiveVoices,(int)root.Size.X,(int)root.Size.Y,renderer.BatchedGlyphs,renderer.GlyphDrawCalls);renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
-        var target=game.Arena?.Phase=="locked"?game.Arena.Pos:game.Player.Pos;renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.Interpolation=1;renderer.QueueRedraw();
+        renderer.Interpolation=game.Status==RunStatus.Running&&overlayKind.Length==0?(float)Engine.GetPhysicsInterpolationFraction():1;
+        var target=game.Arena?.Phase=="locked"?game.Arena.Pos:V.Lerp(game.Player.Prev,game.Player.Pos,renderer.Interpolation);renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.QueueRedraw();
         if(noticeClock>0){noticeClock-=delta;if(noticeClock<=0)noticeLabel.Text="";}
         if(game.Notice.Length>0){Toast(game.Notice);game.Notice="";}
-        uiClock+=delta;if(uiClock>=.1){uiClock=0;RefreshHud();}
+        uiClock+=delta;if(uiClock>=.1){uiClock=0;RefreshHud();if(settingsFps is not null)settingsFps.Text="ФАКТИЧЕСКИ: "+Engine.GetFramesPerSecond()+" FPS";}
     }
     private void HandleStatus()
     {

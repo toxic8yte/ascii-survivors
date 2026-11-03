@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace AsciiSurvivors;
 
-public sealed class TickTimings {public double EnemiesMs,CrowdMs,WeaponsMs;public int CrowdCandidates;}
+public sealed class TickTimings {public double EnemiesMs,CrowdMs,WeaponsMs;public int CrowdCandidates,CrowdMoves;}
 
 public static class Benchmarks
 {
