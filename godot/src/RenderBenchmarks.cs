@@ -8,7 +8,7 @@ public partial class Main
     {
         try
         {
-            Directory.CreateDirectory(directory);Engine.MaxFps=0;DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);DisplayServer.WindowSetSize(new(1920,1080));
+            Directory.CreateDirectory(directory);DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);Engine.MaxFps=0;DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);DisplayServer.WindowSetSize(new(1920,1080));
             bool late=OS.GetCmdlineUserArgs().Contains("--late-enemies"),terrain=OS.GetCmdlineUserArgs().Contains("--terrain");var rows=new List<object>();
             Simulation LiveScene()
             {

@@ -4,6 +4,16 @@ namespace AsciiSurvivors;
 
 public partial class MenuBackdrop : Control
 {
+    public const string Castle="""
+                        /\
+          |>           /  \           <|
+        ┌─┬─┐        ┌─┴──┴─┐        ┌─┬─┐
+        │░│░│   ┌─┬─┤  █   ├─┬─┐   │░│░│
+        │ █ ├───┤░│░│      │░│░├───┤ █ │
+        │   │ █ │   │ ┌──┐ │   │ █ │   │
+        │░░░│░░░│░░░│ │▓▓│ │░░░│░░░│░░░│
+      ══╧═══╧═══╧═══╧═╧══╧═╧═══╧═══╧═══╧══
+    """;
     public Font Font=null!;
     private double clock;
     public MenuBackdrop(){MouseFilter=MouseFilterEnum.Ignore;}
@@ -18,9 +28,10 @@ public partial class MenuBackdrop : Control
         for(int i=0;i<32;i++){float t=i/31f;DrawRect(new Rect2(0,i*h/32,w,h/32+1),new Color(.055f+t*.035f,.045f+t*.015f,.042f+t*.012f));}
         var center=new Vector2(w/2,h*.42f);float radius=Math.Min(w,h)*.56f;
         for(int i=7;i>0;i--)DrawCircle(center,radius*i/7,new Color(.27f,.07f,.045f,.035f));
-        const string left="        _____        \n     .-'     '-.     \n    /  _     _  \\    \n   |  (x)   (x)  |   \n   |      ^      |   \n    \\  .---.  /     \n     '-.|_|_.-'      \n       /| |\\        \n     _/ | | \\_      \n   _/   | |   \\_    \n  /_____|_|_____\\   ";
-        const string right="       /\\        \n      /  \\       \n     / .. \\      \n    /  __  \\     \n   /___||___\\    \n      /||\\       \n    _/ || \\_     \n   /   ||   \\    \n  /    ||    \\   \n /____/  \\____\\  ";
-        Art(new(w*.09f,h*.3f),left,20,new Color("634534"));Art(new(w*.78f,h*.31f),right,22,new Color("4f5140"));
+        const string tower="     /\\     \n    /  \\    \n   /____\\   \n   │ ▣  │   \n ┌─┬────┬─┐ \n │░│ ▣  │░│ \n │ │    │ │ \n │░│ ▣  │░│ \n │ │    │ │ \n │░│ ▣  │░│ \n │ │    │ │ \n═╧═╧════╧═╧═";
+        int towerSize=(int)Math.Clamp(w/65,16,28);float towerTop=h*.35f;
+        Art(new(w*.055f,towerTop),tower,towerSize,new Color("514432"));Art(new(w*.83f,towerTop),tower,towerSize,new Color("454b39"));
+        Art(new(w*.075f,towerTop-48),"   _..._\n .´  ░  `.\n(  ░░░░   )\n `·.___.·´",18,new Color("7d7653"));
         for(int i=0;i<55;i++)
         {
             float x=(i*773.13f)%Math.Max(w,1),y=(i*139.7f-(float)Time.GetTicksMsec()*.006f)%Math.Max(h,1);if(y<0)y+=h;

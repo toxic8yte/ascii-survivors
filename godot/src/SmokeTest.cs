@@ -14,6 +14,8 @@ public partial class Main
             void Assert(bool ok,string message){if(!ok)throw new Exception(message);}
             Button FindButton(string name)=>overlay.FindChildren(name,"Button",true,false).Cast<Button>().Single();
             void Press(string name)=>FindButton(name).EmitSignal(Godot.Button.SignalName.Pressed);
+            Assert(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen,"Game starts fullscreen");
+            await Shot("00-startup-fullscreen");DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);DisplayServer.WindowSetSize(new(1440,900));await Settle();
             await Shot("01-title");Assert(overlayKind=="intro"&&!overlay.FindChildren("HeroGrid","",true,false).Any(),"Title separate from hero selection");
             Assert(audio.Track=="menu","Title music starts");
             var playingMusic=audio.GetChildren().OfType<AudioStreamPlayer>().Single(p=>p.Playing&&p.Stream is AudioStreamWav w&&w.LoopMode==AudioStreamWav.LoopModeEnum.Forward);
@@ -81,6 +83,7 @@ public partial class Main
                 Assert(Math.Abs(root.Size.X-viewport.X)<2&&Math.Abs(root.Size.Y-viewport.Y)<2,tag+" HUD covers viewport");
                 Assert(renderer.Field.Position.X==0&&Math.Abs(renderer.Field.End.X-viewport.X)<2,tag+" arena fills full width");
                 var run=game;MakeReady();ShowIntro();await Shot("title-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" title fits");
+                var castle=overlay.FindChildren("TitleCastle","Label",true,false).Cast<Label>().Single();Assert(overlay.GetGlobalRect().Encloses(castle.GetGlobalRect()),tag+" castle fits without clipping");
                 Press("Play");await Shot("heroes-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" hero selection fits");
                 Press("ChooseStage");await Settle();Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" stage selection fits");
                 CloseOverlay();game=run;renderer.Game=run;game.Status=RunStatus.Running;ShowPause();await Settle();Assert(centeredBody!.Size.X<=540&&overlay.GetGlobalRect().Encloses(centeredBody.GetGlobalRect()),tag+" pause stays compact");
