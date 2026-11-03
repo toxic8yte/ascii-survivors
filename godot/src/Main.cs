@@ -59,7 +59,7 @@ public partial class Main : Node
     private void BuildHud()
     {
         var layer=new CanvasLayer{Layer=5};AddChild(layer);root=new Control{Theme=theme,MouseFilter=Control.MouseFilterEnum.Ignore};layer.AddChild(root);Fill(root);
-        root.Resized+=UpdateChoiceLayout;
+        root.Resized+=UpdateOverlayLayout;
         layout=new VBoxContainer{MouseFilter=Control.MouseFilterEnum.Ignore};root.AddChild(layout);Fill(layout);Gap(layout,0);
         var header=Margin(16);layout.AddChild(header);var head=new VBoxContainer();header.AddChild(head);Gap(head,8);
         var top=new HBoxContainer();head.AddChild(top);top.AddChild(Label("[+] ASCII SURVIVORS",22,amber));var tag=Label("ПОКА НЕ РАССВЕЛО · C# / GODOT",12,muted);tag.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;top.AddChild(tag);
@@ -86,7 +86,7 @@ public partial class Main : Node
     }
     private void ContinueRun()
     {
-        if(store.SavedRun is not {} saved)return;game=saved;renderer.Game=game;renderer.Camera=game.Player.Pos;edit.Hero=game.HeroId;edit.Map=game.MapId;edit.Sandbox=edit.Stress=false;CloseOverlay();if(game.Status==RunStatus.Paused)game.Status=RunStatus.Running;lastStatus=RunStatus.Ready;finished=false;RefreshHud(true);HandleStatus();
+        if(store.SavedRun is not {} saved)return;game=saved;renderer.Game=game;renderer.Camera=game.Player.Pos;edit.Hero=game.HeroId;edit.Map=game.MapId;edit.Manual=game.Manual;edit.Sandbox=edit.Stress=false;CloseOverlay();if(game.Status==RunStatus.Paused)game.Status=RunStatus.Running;lastStatus=RunStatus.Ready;finished=false;RefreshHud(true);HandleStatus();
     }
     private void SaveCurrent()
     {if(game.IsTest)return;bool ok=game.Status==RunStatus.Dead?store.Finish(game):store.Checkpoint(game);saveLabel.Text=ok?"ПРОГРЕСС СОХРАНЁН":store.LastError.Length>0?"ОШИБКА СОХРАНЕНИЯ":"АВТОСОХРАНЕНИЕ";if(!ok&&store.LastError.Length>0)Toast(store.LastError);}

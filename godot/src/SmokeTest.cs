@@ -12,8 +12,18 @@ public partial class Main
             async Task Settle(){for(int i=0;i<6;i++)await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);}
             async Task Shot(string name){await Settle();await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);using var image=GetViewport().GetTexture().GetImage();if(image.IsEmpty())throw new Exception("Empty viewport capture");if(image.SavePng(Path.Combine(directory,name+".png"))!=Error.Ok)throw new IOException("Screenshot failed");}
             void Assert(bool ok,string message){if(!ok)throw new Exception(message);}
-            await Shot("01-heroes");Assert(overlayKind=="intro","Intro view");
-            edit.Hero="hunter";edit.Sandbox=edit.Stress=false;StartNew();game.Status=RunStatus.Paused;
+            Button FindButton(string name)=>overlay.FindChildren(name,"Button",true,false).Cast<Button>().Single();
+            void Press(string name)=>FindButton(name).EmitSignal(Godot.Button.SignalName.Pressed);
+            await Shot("01-title");Assert(overlayKind=="intro"&&!overlay.FindChildren("HeroGrid","",true,false).Any(),"Title separate from hero selection");
+            Press("Recipes");Assert(overlayKind=="shop","Locked collection opens Legacy");CloseAux();Assert(overlayKind=="intro","Legacy returns to title");
+            Press("Play");await Shot("01-heroes");Assert(overlayKind=="characters"&&overlay.FindChildren("Hero-*","Button",true,false).Count==30,"All hero portrait tiles");
+            string locked=content.Heroes.Keys.First(id=>!store.Profile.Heroes.Contains(id));Press("Hero-"+locked);Assert(FindButton("ChooseStage").Disabled&&FindButton("BuyHero").Visible,"Locked hero cannot start");
+            Press("Hero-hunter");Press("ChooseStage");await Shot("01-stages");Assert(overlayKind=="stages","Separate stage selection");
+            Press("Stage-graveyard");Assert(edit.Map=="graveyard","Stage tile selects map");CloseAux();Assert(overlayKind=="characters","Stage back returns to heroes");CloseAux();Assert(overlayKind=="intro","Hero back returns to title");
+            ShowLab();await Shot("01-laboratory");Press("Sandbox");CloseAux();Assert(overlayKind=="lab","Sandbox back returns to lab");
+            Press("StressSetup");await Shot("01-stress-setup");edit.Hero=locked;int bank=store.Profile.Gold;Press("StartStress");Assert(game.Options.Stress&&game.Invincible,"Stress mode reachable with locked hero");
+            ShowIntro();Press("Play");Assert(!edit.Stress&&!edit.Sandbox&&store.Profile.Heroes.Contains(edit.Hero)&&store.Profile.Gold==bank,"Play clears test mode without unlocking or spending");
+            Press("ChooseStage");Press("Stage-forest");Press("StartRun");Assert(game.Status==RunStatus.Running&&game.MapId=="forest"&&!game.IsTest,"Title to heroes to stage starts normal run");game.Status=RunStatus.Paused;
             for(int i=0;i<35;i++)game.Spawn(i%4==0?"pumpkin":"skeleton",game.Player.Pos+World.Direction(i*.73f)*(160+i*9));
             game.RebuildGrid();game.Cast(game.SelectedWeapon);RefreshHud(true);await Shot("02-arena");
             game.Status=RunStatus.Running;game.GainXp(10);game.CheckLevel();game.Status=RunStatus.Upgrading;ShowChoices(false);await Settle();
@@ -21,7 +31,8 @@ public partial class Main
             SelectChoice(0);Assert(!confirmChoice.Disabled&&game.OfferSelection==0,"Explicit selection");
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Assert(game.Status==RunStatus.Upgrading,"Space does not confirm");
             await Shot("03-upgrades");Assert(confirmChoice.GetGlobalRect().End.Y<=root.Size.Y+1,"Choice actions fit viewport");
-            game.Choose(0);CloseOverlay();game.Status=RunStatus.Running;ShowPause();await Shot("04-pause");
+            game.Choose(0);CloseOverlay();game.Status=RunStatus.Running;ShowPause();await Shot("04-pause");Assert(centeredBody!.Size.X<=540,"Pause buttons stay compact");
+            string runId=game.RunId;ShowIntro();Assert(store.SavedRun?.RunId==runId,"Title preserves current battle");Press("Continue");Assert(game.RunId==runId&&game.Status==RunStatus.Running,"Continue resumes same battle");
             MakeReady();ShowShop();await Shot("05-legacy");
             edit.Sandbox=true;MakeReady();OpenSandbox();await Shot("06-sandbox-settings");
             edit.Hero="hunter";edit.Enemy="lichLord";edit.Weapon="lightning";edit.Rank=4;edit.Invulnerable=false;StartNew();game.Status=RunStatus.Paused;game.Manual=true;game.Player.Hp=game.Player.MaxHp=1000;
@@ -38,6 +49,10 @@ public partial class Main
                 Assert(Math.Abs(viewport.X/viewport.Y-window.X/(float)window.Y)<.002f,tag+" viewport matches window aspect, no letterbox");
                 Assert(Math.Abs(root.Size.X-viewport.X)<2&&Math.Abs(root.Size.Y-viewport.Y)<2,tag+" HUD covers viewport");
                 Assert(renderer.Field.Position.X==0&&Math.Abs(renderer.Field.End.X-viewport.X)<2,tag+" arena fills full width");
+                var run=game;MakeReady();ShowIntro();await Shot("title-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" title fits");
+                Press("Play");await Shot("heroes-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" hero selection fits");
+                Press("ChooseStage");await Settle();Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" stage selection fits");
+                CloseOverlay();game=run;renderer.Game=run;game.Status=RunStatus.Running;ShowPause();await Settle();Assert(centeredBody!.Size.X<=540&&overlay.GetGlobalRect().Encloses(centeredBody.GetGlobalRect()),tag+" pause stays compact");
                 game.Status=RunStatus.Upgrading;game.OfferSelection=-1;ShowChoices(false);await Settle();
                 Assert(confirmChoice!.Disabled,tag+" choice requires selection");
                 choiceButtons[1].EmitSignal(Godot.Button.SignalName.Pressed);await Shot("upgrades-"+tag);
@@ -65,7 +80,7 @@ public partial class Main
             Assert(overlay.GetGlobalRect().Encloses(choiceBody!.GetGlobalRect()),"Fullscreen choice panel fits");
             DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
             File.WriteAllText(Path.Combine(directory,"resolutions.json"),System.Text.Json.JsonSerializer.Serialize(matrix,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
-            GD.Print("PASS: native UI smoke test, 7 window sizes + fullscreen, full-width arena, compact readable cards, explicit choices, boss damage. Screenshots at "+directory);GetTree().Quit();
+            GD.Print("PASS: native UI smoke test, title/hero/stage navigation, hero locks, saved-run resume, isolated test modes, compact pause, 7 window sizes + fullscreen, upgrades and boss damage. Screenshots at "+directory);GetTree().Quit();
         }
         catch(Exception e){GD.PushError("UI SMOKE FAILED: "+e);GetTree().Quit(1);}
     }
