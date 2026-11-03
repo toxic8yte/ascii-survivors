@@ -124,16 +124,17 @@ public sealed partial class Simulation
             string id=item.Id;Clocks[id]=Math.Max(0,Clocks.GetValueOrDefault(id)-dt);if(id=="blades"&&!Manual)continue;
             if(Clocks[id]<=0&&WantsFire(id)){Cast(id);if(QueuedWeapon==id)QueuedWeapon=null;Clocks[id]=Cooldown(id);}
         }
-        foreach(var s in Shots.ToArray())
+        for(int shotIndex=0,shotCount=Shots.Count;shotIndex<shotCount;shotIndex++)
         {
+            var s=Shots[shotIndex];
             if(s.ChargeLeft>0){s.ChargeLeft=Math.Max(0,s.ChargeLeft-dt);s.Pos=s.Prev=Player.Pos;if(s.ChargeLeft>0)continue;}
             if(s.Evolved&&s.Weapon=="chozo"){var target=Near(s.Pos,290).Where(e=>!s.Hits.ContainsKey(e.Id)&&Vector2.Distance(e.Pos,s.Pos)<240).OrderBy(e=>Vector2.DistanceSquared(e.Pos,s.Pos)).FirstOrDefault();if(target is not null){float a=World.Angle(s.Velocity),delta=World.AngleDelta(World.Angle(target.Pos-s.Pos)-a);s.Velocity=World.Direction(a+Math.Clamp(delta,-dt*3,dt*3))*s.Velocity.Length();}}
             s.Prev=s.Pos;s.Life-=dt;s.Age+=dt;if(s.Weapon=="axe"&&!s.Evolved)s.Velocity.Y+=360*dt;
             if(s.Returning&&s.Age>=.65f){var delta=Player.Pos-s.Pos;if(delta.Length()<24){s.Life=0;continue;}s.Velocity=SafeDirection(delta)*570*ProjectileSpeed;}
             s.Pos+=s.Velocity*dt;
             if(s.Weapon=="rune"){bool bounced=false;if(s.Pos.X<s.MinX||s.Pos.X>s.MaxX){s.Velocity.X*=-1;s.Pos.X=Math.Clamp(s.Pos.X,s.MinX,s.MaxX);bounced=true;}if(s.Pos.Y<s.MinY||s.Pos.Y>s.MaxY){s.Velocity.Y*=-1;s.Pos.Y=Math.Clamp(s.Pos.Y,s.MinY,s.MaxY);bounced=true;}if(bounced&&s.Evolved)Explode(s.Pos,80*Area,s.Damage*.6f,s.Weapon,9);}
-            var deltaMove=s.Pos-s.Prev;var candidates=Near((s.Pos+s.Prev)/2,deltaMove.Length()/2+s.Radius+50).ToArray();
-            foreach(var e in candidates)
+            var deltaMove=s.Pos-s.Prev;
+            foreach(var e in Near((s.Pos+s.Prev)/2,deltaMove.Length()/2+s.Radius+50))
             {
                 if(!e.Alive||s.Remaining<=0||s.Hits.TryGetValue(e.Id,out float until)&&Time<until||World.SegmentDistance(e.Pos,s.Prev,s.Pos)>=e.Radius+s.Radius)continue;
                 s.Hits[e.Id]=Time+(s.Returning?.4f:s.Weapon=="rune"?.35f:100);s.Remaining--;bool critical=s.Evolved&&s.Weapon=="pistol"&&Random()<Math.Min(.75f,.3f*Luck);

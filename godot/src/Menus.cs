@@ -5,19 +5,31 @@ namespace AsciiSurvivors;
 public partial class Main
 {
     private readonly List<Button> choiceButtons=[];
+    private readonly List<Color> choiceColors=[];
+    private VBoxContainer? choiceBody;
+    private ScrollContainer? choiceScroll;
+    private VBoxContainer? centeredBody;
+    private float centeredWidth;
     private Button? confirmChoice,banishChoice,rerollChoice;
     private Label? choiceSelection,choiceMoney;
     private void CloseOverlay()
     {
         if(overlay is not null&&GodotObject.IsInstanceValid(overlay)){root.RemoveChild(overlay);overlay.QueueFree();}
-        overlay=null!;overlayKind="";choiceButtons.Clear();confirmChoice=banishChoice=rerollChoice=null;choiceSelection=choiceMoney=null;
+        overlay=null!;overlayKind="";choiceButtons.Clear();choiceColors.Clear();choiceBody=null;choiceScroll=null;centeredBody=null;confirmChoice=banishChoice=rerollChoice=null;choiceSelection=choiceMoney=null;
     }
-    private VBoxContainer Modal(string kind,string title,string subtitle="",bool back=false)
+    private VBoxContainer Modal(string kind,string title,string subtitle="",bool back=false,float width=0)
     {
         CloseOverlay();overlayKind=kind;overlay=new Control{MouseFilter=Control.MouseFilterEnum.Stop};root.AddChild(overlay);Fill(overlay);
-        var shade=new ColorRect{Color=new Color(.035f,.055f,.035f,.98f),MouseFilter=Control.MouseFilterEnum.Stop};overlay.AddChild(shade);Fill(shade);
-        var margin=Margin(28);overlay.AddChild(margin);Fill(margin);var body=new VBoxContainer();margin.AddChild(body);Gap(body,12);
-        var header=new HBoxContainer();body.AddChild(header);var h=Label(title,kind=="intro"?42:30,parchment);h.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;header.AddChild(h);if(back)header.AddChild(Button("ВЕРНУТЬСЯ ×",CloseAux));
+        var shade=new ColorRect{Color=new Color(.035f,.055f,.035f),MouseFilter=Control.MouseFilterEnum.Stop};overlay.AddChild(shade);Fill(shade);
+        var margin=Margin(28);overlay.AddChild(margin);Fill(margin);var body=new VBoxContainer();Gap(body,12);
+        if(kind is "level" or "reward"||width>0)
+        {
+            var center=new CenterContainer();margin.AddChild(center);center.AddChild(body);centeredBody=body;centeredWidth=width>0?width:1240;
+            if(kind is "level" or "reward")choiceBody=body;
+            body.CustomMinimumSize=new(Math.Min(centeredWidth,GetViewport().GetVisibleRect().Size.X-56),0);
+        }
+        else margin.AddChild(body);
+        if(title.Length>0){var header=new HBoxContainer();body.AddChild(header);var h=Label(title,30,parchment);h.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;header.AddChild(h);if(back){var close=Button("НАЗАД ×",CloseAux);close.SizeFlagsHorizontal=Control.SizeFlags.Fill;close.CustomMinimumSize=new(160,42);header.AddChild(close);}}
         if(subtitle.Length>0){var sub=Label(subtitle,14,muted);sub.AutowrapMode=TextServer.AutowrapMode.WordSmart;body.AddChild(sub);}
         return body;
     }
@@ -33,53 +45,20 @@ public partial class Main
     }
     private static VBoxContainer Field(string title,Control input)
     {var box=new VBoxContainer{SizeFlagsHorizontal=Control.SizeFlags.ExpandFill};box.AddChild(new Label{Text=title});box.AddChild(input);return box;}
-    private void ShowIntro()
-    {
-        if(game.Status is RunStatus.Running or RunStatus.Paused){SaveCurrent();MakeReady();}
-        var body=Modal("intro","ASCII SURVIVORS","ПОКА НЕ РАССВЕЛО · ОДИН ГЕРОЙ. ОЧЕНЬ ДОЛГАЯ НОЧЬ.");
-        var options=new HBoxContainer();Gap(options,12);body.AddChild(options);
-        options.AddChild(Combo(content.Stages.Values.Select(s=>(s.Id,s.Title)),edit.Map,id=>{edit.Map=id;MakeReady();}));
-        var sandbox=new CheckButton{Text="ПЕСОЧНИЦА",ButtonPressed=edit.Sandbox};var stress=new CheckButton{Text="НАГРУЗОЧНЫЙ ТЕСТ",ButtonPressed=edit.Stress};options.AddChild(sandbox);options.AddChild(stress);options.AddChild(Button("НАСТРОИТЬ ТЕСТ",OpenSandbox));options.AddChild(Button($"НАСЛЕДИЕ · {store.Profile.Gold} ЗОЛ.",ShowShop));
-        options.AddChild(Combo(new[]{1000,3000,6000,12000,24000}.Select(n=>(n.ToString(),"ПРЕДЕЛ "+n)),edit.EnemyLimit.ToString(),id=>edit.EnemyLimit=int.Parse(id)));
-        var searchInput=new LineEdit{PlaceholderText="Поиск героя по имени или роли",Text=search,ClearButtonEnabled=true};body.AddChild(searchInput);
-        var heroes=new GridContainer{Columns=5};heroes.AddThemeConstantOverride("h_separation",10);heroes.AddThemeConstantOverride("v_separation",8);Scroll(body,heroes);
-        var detail=new PanelContainer();body.AddChild(detail);var detailRow=new HBoxContainer();Gap(detailRow,18);detail.AddChild(detailRow);var art=Label("",18,amber);art.CustomMinimumSize=new(130,0);detailRow.AddChild(art);var info=new VBoxContainer{SizeFlagsHorizontal=Control.SizeFlags.ExpandFill};detailRow.AddChild(info);Label name=Label("",21,parchment),description=Paragraph("",14,muted),stats=Label("",13,amber);info.AddChild(name);info.AddChild(description);info.AddChild(stats);
-        var actions=new HBoxContainer();Gap(actions,12);body.AddChild(actions);var buy=Button("ОТКРЫТЬ ГЕРОЯ",()=>{if(store.Purchase(edit.Hero,"hero")){MakeReady();ShowIntro();}else Toast(store.LastError.Length>0?store.LastError:"Недостаточно золота");});actions.AddChild(buy);
-        if(store.SavedRun is {} saved)actions.AddChild(Button($"ПРОДОЛЖИТЬ · {saved.Hero.Name} · {FormatTime(saved.Time)}",ContinueRun));
-        var start=Button("ВОЙТИ В НОЧЬ →",StartNew,true);actions.AddChild(start);
-        void UpdateDetail()
-        {
-            var hero=content.Heroes[edit.Hero];art.Text=hero.Sprite;name.Text=hero.Name+" / "+hero.Role;description.Text=hero.Description;stats.Text=$"{hero.Hp} HP · {hero.Speed} СКОРОСТЬ · "+content.ById[hero.Weapon].Icon+" "+content.ById[hero.Weapon].Title;
-            bool locked=!store.Profile.Heroes.Contains(hero.Id)&&!edit.Sandbox&&!edit.Stress;buy.Visible=locked;buy.Text="ОТКРЫТЬ ЗА "+hero.Cost+" ЗОЛ.";buy.Disabled=store.Profile.Gold<hero.Cost;start.Disabled=locked;
-        }
-        void BuildHeroes()
-        {
-            ClearChildren(heroes);var group=new ButtonGroup();
-            foreach(var hero in content.Heroes.Values.Where(h=>(h.Name+" "+h.Role+" "+h.Id).Contains(search,StringComparison.OrdinalIgnoreCase)))
-            {
-                bool owned=store.Profile.Heroes.Contains(hero.Id);var b=Button(hero.Name+"\n"+(owned?"ОТКРЫТ":edit.Sandbox||edit.Stress?"ДОСТУПЕН В ТЕСТЕ":hero.Cost+" ЗОЛ."),()=>{edit.Hero=hero.Id;MakeReady();UpdateDetail();});b.ToggleMode=true;b.ButtonGroup=group;b.ButtonPressed=hero.Id==edit.Hero;b.AutowrapMode=TextServer.AutowrapMode.WordSmart;b.CustomMinimumSize=new(0,66);b.AddThemeFontSizeOverride("font_size",14);b.TooltipText=hero.Description;heroes.AddChild(b);
-            }
-        }
-        sandbox.Toggled+=value=>{edit.Sandbox=value;if(value){edit.Stress=false;stress.SetPressedNoSignal(false);}MakeReady();BuildHeroes();UpdateDetail();};
-        stress.Toggled+=value=>{edit.Stress=value;if(value){edit.Sandbox=false;sandbox.SetPressedNoSignal(false);}MakeReady();BuildHeroes();UpdateDetail();};
-        searchInput.TextChanged+=value=>{search=value;BuildHeroes();};BuildHeroes();UpdateDetail();
-        body.AddChild(Label($"30 ГЕРОЕВ · 33 ОРУЖИЯ · 22 ПАССИВКИ · 31 ЭВОЛЮЦИЯ · 58 ВРАГОВ · 5+5 СЛОТОВ\nЗАБЕГОВ {store.Profile.Runs} · ЛУЧШЕЕ ВРЕМЯ {FormatTime((float)store.Profile.BestTime)}",12,muted));
-        if(store.LastError.Length>0)body.AddChild(Paragraph(store.LastError,13,red));
-    }
     private void ShowPause()
     {
         if(game.Status==RunStatus.Paused&&overlayKind=="pause"){Resume();return;}if(game.Status!=RunStatus.Running)return;game.Status=RunStatus.Paused;game.MoveInput=default;game.Firing=false;SaveCurrent();
-        var body=Modal("pause","Передышка","Враги и таймер на паузе.");body.Alignment=BoxContainer.AlignmentMode.Center;
+        var body=Modal("pause","Передышка","Враги и таймер на паузе.",width:540);body.Alignment=BoxContainer.AlignmentMode.Center;
         body.AddChild(Button("ПРОДОЛЖИТЬ →",Resume,true));body.AddChild(Button("ПЕСОЧНИЦА / НАСТРОИТЬ ТЕСТ",OpenSandbox));body.AddChild(Button("ДВИЖОК И УРОН",ShowMetrics));body.AddChild(Button("НАЧАТЬ ЗАНОВО",StartNew));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{SaveCurrent();MakeReady();ShowIntro();}));
     }
     private void Resume(){CloseOverlay();if(game.Status==RunStatus.Paused)game.Status=RunStatus.Running;lastStatus=game.Status;}
     private void PrepareAux()
-    {returnView=overlayKind=="intro"?"intro":overlayKind=="pause"?"pause":overlayKind.Length==0?"game":returnView;if(game.Status==RunStatus.Running){game.Status=RunStatus.Paused;game.Firing=false;game.MoveInput=default;SaveCurrent();}}
+    {returnView=overlayKind is "intro" or "characters" or "stages" or "lab" or "stress" or "pause"?overlayKind:overlayKind.Length==0?"game":returnView;if(game.Status==RunStatus.Running){game.Status=RunStatus.Paused;game.Firing=false;game.MoveInput=default;SaveCurrent();}}
     private void CloseAux()
-    {string back=returnView;CloseOverlay();if(back=="intro")ShowIntro();else if(back=="pause"){game.Status=RunStatus.Running;ShowPause();}else Resume();}
+    {string back=returnView;CloseOverlay();if(back=="intro")ShowIntro();else if(back=="characters")ShowCharacters();else if(back=="stages")ShowStages();else if(back=="lab")ShowLab();else if(back=="stress")ShowStressSetup();else if(back=="pause"){game.Status=RunStatus.Running;ShowPause();}else Resume();}
     private void OpenSandbox()
     {
-        PrepareAux();var body=Modal("sandbox","Песочница","Любой герой и оружие. Без наград и случайных волн. Урон герою включён, если не отмечена неуязвимость.",true);
+        PrepareAux();var body=Modal("sandbox","Песочница","Любой герой и оружие. Без наград и случайных волн. Урон герою включён, если не отмечена неуязвимость.",true,width:1000);
         var grid=new GridContainer{Columns=2,SizeFlagsVertical=Control.SizeFlags.ExpandFill};grid.AddThemeConstantOverride("h_separation",18);grid.AddThemeConstantOverride("v_separation",12);body.AddChild(grid);
         grid.AddChild(Field("Герой",Combo(content.Heroes.Values.Select(h=>(h.Id,h.Name)),edit.Hero,id=>edit.Hero=id)));
         grid.AddChild(Field("Оружие",Combo(new[]{("starter","Стартовое оружие героя")}.Concat(content.Items.Where(u=>u.Weapon).Select(u=>(u.Id,u.Title))),edit.Weapon,id=>edit.Weapon=id)));
@@ -102,24 +81,37 @@ public partial class Main
     }
     private void ShowChoices(bool reward)
     {
-        var body=Modal(reward?"reward":"level",reward?game.RewardSource:"Новый уровень "+game.Level,"Сначала выдели карточку, затем нажми «Выбрать». Время остановлено. Пробел не подтверждает выбор.");
-        var cards=new HBoxContainer();Gap(cards,16);Scroll(body,cards);
+        var body=Modal(reward?"reward":"level",reward?game.RewardSource:"Новый уровень "+game.Level,"Время остановлено. Выдели карточку и нажми «Выбрать». Пробел не подтверждает выбор.");
+        var cards=new HBoxContainer();Gap(cards,16);choiceScroll=Scroll(body,cards);choiceScroll.SizeFlagsVertical=Control.SizeFlags.Fill;
+        cards.SizeFlagsVertical=Control.SizeFlags.ExpandFill;
         int count=reward?game.Rewards.Count:game.Offers.Count;
         for(int i=0;i<count;i++)
         {
-            int choice=i;string text;Color color=parchment;
+            int choice=i;string icon,category,title,description,hint="",rank;Color color=parchment;
             if(!reward)
             {
                 var item=content.ById[game.Offers[i]];bool fresh=game.L(item.Id)==0;int tier=Math.Max(0,Array.IndexOf(Catalog.RarityIds,item.Rarity));color=item.Weapon?rarityColors[tier]:new Color("8fc9b4");
-                var recipe=game.Recipe(item.Id)??content.Recipes.FirstOrDefault(r=>r.Weapons.Contains(item.Id));string hint=recipe is null?"":"\n\nСВЯЗКА: "+string.Join(" + ",recipe.Passives.Keys.Concat(recipe.Weapons).Select(id=>content.ById[id].Title));
-                text=$"{i+1}    {item.Icon}\n\n"+(item.Weapon?"ОРУЖИЕ · "+Catalog.RarityNames[tier]:"ПАССИВКА · "+item.Kind)+(fresh?" · НОВОЕ":"")+"\n\n"+item.Title+"\n\n"+item.Description+hint+$"\n\nСТУПЕНЬ {game.L(item.Id)+1} / {item.Max}";
+                var recipe=game.Recipe(item.Id)??content.Recipes.FirstOrDefault(r=>r.Weapons.Contains(item.Id));hint=recipe is null?"":"СВЯЗКА: "+string.Join(" + ",recipe.Passives.Keys.Concat(recipe.Weapons).Select(id=>content.ById[id].Title));
+                icon=item.Icon;category=(item.Weapon?"ОРУЖИЕ · "+Catalog.RarityNames[tier]:"ПАССИВКА · "+item.Kind)+(fresh?" · НОВОЕ":"");
+                title=item.Title;description=item.Description;rank=$"СТУПЕНЬ {game.L(item.Id)+1} / {item.Max}";
             }
             else
             {
-                var option=game.Rewards[i];text=$"{i+1}\n\n"+RewardText(option);
+                var option=game.Rewards[i];title=RewardTitle(option);rank="ОДНА НАГРАДА ИЗ ТРЁХ";
                 if(option.Kind=="evolution")color=rarityColors[4];else if(option.Kind=="upgrade"&&content.ById[option.Id].Weapon)color=rarityColors[Math.Max(0,Array.IndexOf(Catalog.RarityIds,content.ById[option.Id].Rarity))];
+                icon=option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Icon,"upgrade"=>content.ById[option.Id].Icon,"gold"=>"[$]","xp"=>"<*>",_=>"[+]"};
+                category=option.Kind switch{"evolution"=>"ЭВОЛЮЦИЯ","upgrade"=>content.ById[option.Id].Weapon?"ОРУЖИЕ":"ПАССИВКА","gold"=>"ЗОЛОТО","xp"=>"ОПЫТ",_=>"ЗАЩИТА"};
+                description=option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Description,"upgrade"=>content.ById[option.Id].Description,_=>"Начисляется после подтверждения выбора."};
             }
-            var b=Button(text,()=>SelectChoice(choice));b.Alignment=HorizontalAlignment.Left;b.AutowrapMode=TextServer.AutowrapMode.WordSmart;b.CustomMinimumSize=new(260,370);b.SizeFlagsVertical=Control.SizeFlags.ExpandFill;b.AddThemeFontSizeOverride("font_size",15);b.AddThemeStyleboxOverride("normal",Box(new Color("171e13"),color,22,2));b.AddThemeStyleboxOverride("hover",Box(new Color("28301d"),color,22,2));cards.AddChild(b);choiceButtons.Add(b);
+            var b=Button("",()=>SelectChoice(choice));b.Name="Choice"+(i+1);b.TooltipText=title;b.AccessibilityName=title;b.AccessibilityDescription=category+". "+description+". "+rank;b.CustomMinimumSize=new(0,400);b.SizeFlagsVertical=Control.SizeFlags.ExpandFill;
+            b.AddThemeStyleboxOverride("normal",Box(new Color("171e13"),color,0,2));b.AddThemeStyleboxOverride("hover",Box(new Color("28301d"),color,0,2));cards.AddChild(b);choiceButtons.Add(b);choiceColors.Add(color);
+            var inset=Margin(22);inset.MouseFilter=Control.MouseFilterEnum.Ignore;b.AddChild(inset);Fill(inset);
+            var cardBody=new VBoxContainer{MouseFilter=Control.MouseFilterEnum.Ignore};Gap(cardBody,12);inset.AddChild(cardBody);
+            var head=new HBoxContainer{MouseFilter=Control.MouseFilterEnum.Ignore};cardBody.AddChild(head);var symbol=Label(icon,32,color);symbol.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;head.AddChild(symbol);head.AddChild(Label((i+1).ToString(),16,muted));
+            cardBody.AddChild(Paragraph(category.ToUpperInvariant(),13,color));cardBody.AddChild(Paragraph(title,21,parchment));cardBody.AddChild(Paragraph(description,16,parchment));
+            if(hint.Length>0)cardBody.AddChild(Paragraph(hint,13,muted));
+            cardBody.AddChild(new Control{MouseFilter=Control.MouseFilterEnum.Ignore,SizeFlagsVertical=Control.SizeFlags.ExpandFill});cardBody.AddChild(Paragraph(rank,13,color));
+            cardBody.MinimumSizeChanged+=()=>b.CustomMinimumSize=new(0,Math.Max(400,cardBody.GetCombinedMinimumSize().Y+44));
         }
         choiceSelection=Label("Сначала выдели карточку",14,muted);body.AddChild(choiceSelection);choiceMoney=Label("",13,amber);body.AddChild(choiceMoney);
         var actions=new HBoxContainer();Gap(actions,12);body.AddChild(actions);
@@ -132,13 +124,24 @@ public partial class Main
         {
             bool ok=reward?game.ClaimReward(game.OfferSelection):game.Choose(game.OfferSelection);if(!ok)return;CloseOverlay();RefreshHud(true);SaveCurrent();lastStatus=RunStatus.Ready;HandleStatus();
         },true);actions.AddChild(confirmChoice);
-        body.AddChild(Label(reward?"ОДНА НАГРАДА ИЗ ТРЁХ · 1 / 2 / 3 — ВЫДЕЛИТЬ":"1 / 2 / 3 — ВЫДЕЛИТЬ · ИЗГНАНИЕ ДО КОНЦА ЗАБЕГА · РЕРОЛЛ 5 / 10 / 15… ЗОЛОТА ЗАБЕГА",12,muted));UpdateChoiceSelection();
+        body.AddChild(Paragraph(reward?"ОДНА НАГРАДА ИЗ ТРЁХ · 1 / 2 / 3 — ВЫДЕЛИТЬ":"1 / 2 / 3 — ВЫДЕЛИТЬ · ИЗГНАНИЕ ДО КОНЦА ЗАБЕГА · РЕРОЛЛ 5 / 10 / 15… ЗОЛОТА ЗАБЕГА",12,muted));UpdateOverlayLayout();UpdateChoiceSelection();
+    }
+    private void UpdateOverlayLayout()
+    {
+        var size=GetViewport().GetVisibleRect().Size;
+        if(centeredBody is not null)centeredBody.CustomMinimumSize=new(Math.Min(centeredWidth,size.X-56),0);
+        if(choiceScroll is not null)choiceScroll.CustomMinimumSize=new(0,Math.Clamp(size.Y-300,240,500));
     }
     private void SelectChoice(int index){int count=overlayKind=="reward"?game.Rewards.Count:game.Offers.Count;if(index<0||index>=count)return;game.OfferSelection=index;choiceButtons[index].GrabFocus();UpdateChoiceSelection();SaveCurrent();}
     private void UpdateChoiceSelection()
     {
         bool selected=game.OfferSelection>=0&&game.OfferSelection<choiceButtons.Count;
-        for(int i=0;i<choiceButtons.Count;i++)choiceButtons[i].AddThemeStyleboxOverride("focus",Box(Colors.Transparent,i==game.OfferSelection?amber:muted,0,i==game.OfferSelection?3:1));
+        for(int i=0;i<choiceButtons.Count;i++)
+        {
+            bool active=i==game.OfferSelection;
+            choiceButtons[i].AddThemeStyleboxOverride("normal",Box(new Color(active?"293020":"171e13"),active?amber:choiceColors[i],0,active?3:2));
+            choiceButtons[i].AddThemeStyleboxOverride("focus",Box(Colors.Transparent,amber,0,2));
+        }
         if(confirmChoice is not null)confirmChoice.Disabled=!selected;
         if(choiceSelection is not null)choiceSelection.Text=selected?"ВЫДЕЛЕНО: "+(overlayKind=="reward"?RewardTitle(game.Rewards[game.OfferSelection]):content.ById[game.Offers[game.OfferSelection]].Title):"Сначала выдели карточку";
         if(choiceMoney is not null)choiceMoney.Text="ЗОЛОТО ЗАБЕГА: "+game.GoldAvailable;
@@ -146,11 +149,12 @@ public partial class Main
         if(rerollChoice is not null){rerollChoice.Text="РЕРОЛЛ · "+game.RerollCost+" ЗОЛ.";rerollChoice.Disabled=game.IsTest||game.GoldAvailable<game.RerollCost||game.RerollPool().Count<game.Offers.Count;}
     }
     private string RewardTitle(Choice option)=>option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Title,"upgrade"=>content.ById[option.Id].Title,"gold"=>$"{MathF.Floor(option.Value*.45f*game.Greed)} золота","xp"=>$"{MathF.Floor(option.Value*game.Growth*game.XpEfficiency)} опыта",_=>"Три защитных заряда"};
-    private string RewardText(Choice option)=>option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Icon+" ЭВОЛЮЦИЯ\n\n"+RewardTitle(option)+"\n\n"+content.Recipes.First(r=>r.Id==option.Id).Description,"upgrade"=>content.ById[option.Id].Icon+" "+(content.ById[option.Id].Weapon?"ОРУЖИЕ":"ПАССИВКА")+"\n\n"+RewardTitle(option)+"\n\n"+content.ById[option.Id].Description,_=>RewardTitle(option)+"\n\nНачисляется только после подтверждения выбора."};
     private void ShowEnding()
     {
-        var body=Modal("ending","Ночь победила",game.IsTest?"Тест окончен. Обычный прогресс не изменился.":$"Сохранено {game.GoldAvailable} золота · на рероллы потрачено {game.RerollGoldSpent}");body.Alignment=BoxContainer.AlignmentMode.Center;
-        body.AddChild(Label(" .-.\n(x x)\n |=|\n_|_|_",40,red));body.AddChild(Label($"ВРЕМЯ {FormatTime(game.Time)} · ИЗГНАНО {game.Kills} · УРОВЕНЬ {game.Level}",23,amber));body.AddChild(Button("ЕЩЁ ОДИН ЗАБЕГ →",StartNew,true));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{MakeReady();ShowIntro();}));
+        var body=Modal("ending","",width:620);
+        body.AddChild(CenterText("Ночь победила",30,parchment));
+        body.AddChild(CenterText(game.IsTest?"Тест окончен. Обычный прогресс не изменился.":$"Сохранено {game.GoldAvailable} золота · на рероллы потрачено {game.RerollGoldSpent}",14,muted));
+        body.AddChild(CenterText(" .-. \n(x x)\n |=| \n_|_|_",40,red));body.AddChild(CenterText($"ВРЕМЯ {FormatTime(game.Time)} · ИЗГНАНО {game.Kills} · УРОВЕНЬ {game.Level}",16,amber));body.AddChild(Button("ЕЩЁ ОДИН ЗАБЕГ →",StartNew,true));body.AddChild(Button("НА СТАРТОВЫЙ ЭКРАН",()=>{MakeReady();ShowIntro();}));
     }
     private void ShowShop()
     {
@@ -196,7 +200,7 @@ public partial class Main
     private void ShowMetrics()
     {
         PrepareAux();var body=Modal("metrics","Движок и вклад оружия","Симуляция — 60 шагов/с. Отрисовка — частота окна. Данные текущего забега.",true);var rows=new VBoxContainer();Scroll(body,rows);
-        foreach(string value in new[]{"FPS: "+Engine.GetFramesPerSecond(),"ВРАГОВ: "+game.Enemies.Count+" · В КАДРЕ: "+renderer.RenderedEnemies,"ПИК ВРАГОВ: "+game.PeakEnemies,"ПАМЯТЬ GODOT: "+(OS.GetStaticMemoryUsage()/1048576)+" МБ","ВРЕМЯ: "+FormatTime(game.Time),"ИЗГНАНО: "+game.Kills+" · БОССОВ: "+game.BossKills,"УРОН: "+game.Combat.Damage.ToString("0")+" · ЛИШНИЙ УРОН: "+game.Combat.Overkill.ToString("0"),"ПОЛУЧЕНО УРОНА: "+game.Combat.Hurt.ToString("0")+" · ЛЕЧЕНИЕ: "+game.Combat.Healing.ToString("0"),"АПТЕЧКИ: ВЫПАЛО "+game.Combat.HeartsDropped+" · ВЗЯТО "+game.Combat.HeartsTaken})rows.AddChild(Label(value,16,muted));
+        foreach(string value in new[]{"FPS: "+Engine.GetFramesPerSecond(),"ВРАГОВ: "+game.Enemies.Count+" · ВИДНО: "+renderer.VisibleEnemies+" · ASCII-ОТТИСКОВ: "+renderer.RenderedEnemies,"ПИК ВРАГОВ: "+game.PeakEnemies,"ПАМЯТЬ GODOT: "+(OS.GetStaticMemoryUsage()/1048576)+" МБ","ВРЕМЯ: "+FormatTime(game.Time),"ИЗГНАНО: "+game.Kills+" · БОССОВ: "+game.BossKills,"УРОН: "+game.Combat.Damage.ToString("0")+" · ЛИШНИЙ УРОН: "+game.Combat.Overkill.ToString("0"),"ПОЛУЧЕНО УРОНА: "+game.Combat.Hurt.ToString("0")+" · ЛЕЧЕНИЕ: "+game.Combat.Healing.ToString("0"),"АПТЕЧКИ: ВЫПАЛО "+game.Combat.HeartsDropped+" · ВЗЯТО "+game.Combat.HeartsTaken})rows.AddChild(Label(value,16,muted));
         rows.AddChild(Label("ВКЛАД ОРУЖИЯ ЗА ЗАБЕГ",20,amber));
         foreach(var pair in game.Combat.Weapons.OrderByDescending(p=>p.Value))rows.AddChild(Label((content.ById.GetValueOrDefault(pair.Key)?.Title??pair.Key)+$" · {pair.Value/Math.Max(1,game.Time):0.0} DPS · {pair.Value/Math.Max(1,game.Combat.Damage)*100:0}%",14));
         if(game.Options.Stress){body.AddChild(Button("ДОБАВИТЬ 5 МИНУТ НАГРУЗКИ",()=>{game.PressureOffset+=300;CloseAux();}));body.AddChild(Button("ВОЛНЫ ПОСЛЕ 10 МИНУТ",()=>{game.PressureOffset=Math.Max(game.PressureOffset,600-game.Time);CloseAux();}));}

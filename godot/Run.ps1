@@ -1,6 +1,7 @@
 param(
     [string]$Godot = $env:GODOT4,
-    [ValidateSet('Play','Verify','Smoke','Export')][string]$Mode = 'Play'
+    [ValidateSet('Play','Verify','Smoke','Export')][string]$Mode = 'Play',
+    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'Builds/Windows')
 )
 $ErrorActionPreference = 'Stop'
 if (-not $Godot) {
@@ -22,10 +23,10 @@ switch ($Mode) {
         & $Godot --path $PSScriptRoot -- "--smoke-test=$shots"
     }
     'Export' {
-        $destination = Join-Path $PSScriptRoot 'Builds/Windows'
+        $destination = [IO.Path]::GetFullPath($OutputDirectory)
         New-Item -ItemType Directory -Force -Path $destination | Out-Null
-        & $Godot --headless --path $PSScriptRoot --export-release 'Windows Desktop'
-        if ($LASTEXITCODE -ne 0) { throw 'Export failed. Install the matching .NET export templates in Godot.' }
+        & $Godot --headless --path $PSScriptRoot --export-release 'Windows Desktop' (Join-Path $destination 'ASCII-Survivors.exe')
+        if ($LASTEXITCODE -ne 0) { throw 'Export failed. Check Godot output and matching .NET templates. If the EXE is open, use -OutputDirectory with a different folder.' }
         & (Join-Path $destination 'ASCII-Survivors.console.exe') --headless -- --verify
         if ($LASTEXITCODE -ne 0) { throw 'Exported game verification failed' }
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'README.md') -Destination $destination

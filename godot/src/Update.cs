@@ -41,19 +41,28 @@ public sealed partial class Simulation
     }
     private void SeparateCrowd()
     {
-        foreach(var e in Enemies.Where(e=>e.Alive))
+        if(Timings is {} timing)timing.CrowdCandidates=0;
+        foreach(var e in Enemies)
         {
-            int budget=8;
-            foreach(var other in Near(e.Pos,55))
+            if(!e.Alive)continue;
+            int tested=0,resolved=0,minX=(int)MathF.Floor((e.Pos.X-55)/80),maxX=(int)MathF.Floor((e.Pos.X+55)/80),minY=(int)MathF.Floor((e.Pos.Y-55)/80),maxY=(int)MathF.Floor((e.Pos.Y+55)/80);
+            for(int y=minY;y<=maxY&&tested<32&&resolved<8;y++)for(int x=minX;x<=maxX&&tested<32&&resolved<8;x++)
             {
-                if(other.Id>=e.Id||--budget<0)continue;var delta=e.Pos-other.Pos;float distance=delta.Length(),minimum=(e.Radius+other.Radius)*.7f;if(distance>=minimum)continue;
-                var direction=distance>.001f?delta/distance:World.Direction(e.Phase);float amount=Math.Min(3,(minimum-distance)*.25f);MoveEnemy(e,direction*amount);MoveEnemy(other,-direction*amount);
+                if(!grid.TryGetValue(x+y*1024,out var cell)||cell.Count==0)continue;
+                // Rotate bounded samples so a dense cell cannot turn separation into an all-pairs scan.
+                int samples=Math.Min(4,cell.Count),start=(int)(((long)e.Id*17+Steps*13)%cell.Count);
+                for(int i=0;i<samples&&tested<32&&resolved<8;i++)
+                {
+                    var other=cell[(start+(int)((long)i*cell.Count/samples))%cell.Count];tested++;if(Timings is {} t)t.CrowdCandidates++;
+                    if(!other.Alive||other.Id>=e.Id)continue;var delta=e.Pos-other.Pos;float minimum=(e.Radius+other.Radius)*.7f,squared=delta.LengthSquared();if(squared>=minimum*minimum)continue;
+                    float distance=MathF.Sqrt(squared);var direction=distance>.001f?delta/distance:World.Direction(e.Phase);float amount=Math.Min(3,(minimum-distance)*.25f);MoveEnemy(e,direction*amount);MoveEnemy(other,-direction*amount);resolved++;
+                }
             }
         }
     }
     public void Tick(float dt)
     {
-        if(Status!=RunStatus.Running)return;dt=Math.Clamp(dt,0,.05f);float before=Time;Elapsed+=dt;Steps++;LeechBudget=Math.Min(2,LeechBudget+dt*.6f);
+        if(Status!=RunStatus.Running)return;long started=Timings is null?0:System.Diagnostics.Stopwatch.GetTimestamp();dt=Math.Clamp(dt,0,.05f);float before=Time;Elapsed+=dt;Steps++;LeechBudget=Math.Min(2,LeechBudget+dt*.6f);
         if((int)(Time/60)>(int)(before/60))AwardGold(5);
         Player.Prev=Player.Pos;Player.Invulnerable=Math.Max(0,Player.Invulnerable-dt);Player.DashReady=Math.Max(0,Player.DashReady-dt);Heal((L("regen")*.2f+L("leftSign")*.1f)*dt);
         var direction=MoveInput.LengthSquared()>1?Vector2.Normalize(MoveInput):MoveInput;
@@ -80,7 +89,10 @@ public sealed partial class Simulation
             if(World.SegmentDistance(Player.Pos,start,shot.Pos)<Player.Radius+shot.Radius){HurtPlayer(shot.Damage);shot.Life=0;}
         }
         EnemyShots.RemoveAll(s=>s.Life<=0||s.Pos.X<=0||s.Pos.Y<=0||s.Pos.X>=World.Width||s.Pos.Y>=World.Height);
-        RebuildGrid();SeparateCrowd();RebuildGrid();UpdateWeapons(dt);
+        long crowdStart=Timings is null?0:System.Diagnostics.Stopwatch.GetTimestamp();
+        RebuildGrid();SeparateCrowd();RebuildGrid();
+        long weaponsStart=Timings is null?0:System.Diagnostics.Stopwatch.GetTimestamp();UpdateWeapons(dt);
+        if(Timings is {} timing){timing.EnemiesMs=System.Diagnostics.Stopwatch.GetElapsedTime(started,crowdStart).TotalMilliseconds;timing.CrowdMs=System.Diagnostics.Stopwatch.GetElapsedTime(crowdStart,weaponsStart).TotalMilliseconds;timing.WeaponsMs=System.Diagnostics.Stopwatch.GetElapsedTime(weaponsStart).TotalMilliseconds;}
         foreach(var e in Enemies)if(e.Alive&&Vector2.Distance(e.Pos,Player.Pos)<Player.Radius+e.Radius)HurtPlayer(e.Damage*(e.ChargeTime>0?1.35f:1),e);
         Enemies.RemoveAll(e=>!e.Alive);
         foreach(var gem in Gems)

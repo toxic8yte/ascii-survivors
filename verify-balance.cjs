@@ -64,9 +64,9 @@ const passives = fixture(); passives.levels.power=passives.levels.haste=5;
 assert.equal(passives.power,1.5);assert.equal(passives.haste,1.4);assert.ok(passives.power*passives.haste<2.11);
 passives.levels.area=passives.levels.duration=passives.levels.velocity=5;
 assert.equal(passives.area,1.3);assert.equal(passives.effectDuration,1.4);assert.equal(passives.projectileSpeed,1.4);
-for(const [kind,roll,expected] of [['ghoul',.008749,1],['ghoul',.00875,0],['ghoul',.01749,0],['lichLord',.24999,1],['lichLord',.25,0],['lichLord',.4999,0]]) {
+for(const [kind,roll,expected] of [['ghoul',.00875,1],['ghoul',.0096249,1],['ghoul',.009625,0],['ghoul',.01749,0],['lichLord',.25,1],['lichLord',.274999,1],['lichLord',.275,0],['lichLord',.4999,0]]) {
   const drops=fixture();drops.burst=()=>{};const e=drops.spawn(kind,500,500);drops.random=()=>roll;drops.hurtEnemy(e,e.hp+1);
-  assert.equal(drops.hearts.length,expected,'Another exact 50% reduction in normal/boss healing drop probabilities');
+  assert.equal(drops.hearts.length,expected,'Ten percent relative increase in normal/boss healing drop probabilities');
 }
 const lucky=fixture();lucky.levels.luck=5;lucky.random=()=>NightBalance.heartDropChance*lucky.luck;const unluckyDrop=lucky.spawn('ghoul',500,500);lucky.hurtEnemy(unluckyDrop,10000);assert.equal(lucky.hearts.length,0,'Luck respects the new half-open drop threshold');
 for(const weapon of NightUpgrades.filter(u=>u.weapon)) {
@@ -93,4 +93,4 @@ const food=leech.spawn('brute',leech.player.x+100,leech.player.y);leech.hurtEnem
 assert.ok(Math.abs(leech.player.hp-20.6)<1e-8,'Life-steal refill is capped at 0.6 HP/s across the entire crowd');
 const validation=require('./build-content.cjs');
 for(const multiplier of [0,-1,1.1,null]){const data=validation.readContent();data.weapons[0].damageMultiplier=multiplier;assert.throws(()=>validation.validateContent(data,require('./data/enemies.json')),/damage multiplier/);}
-console.log('PASS: slower level-scaled fractional XP and saves, linear passive power/haste, audited weapon damage and splash, finite pentagram with no free XP, another half healing drops, armor cap, reduced regeneration, gold, stronger post-six-minute enemies and retained encounters.');
+console.log('PASS: slower level-scaled fractional XP and saves, linear passive power/haste, audited weapon damage and splash, finite pentagram with no free XP, 10% more healing drops, armor cap, reduced regeneration, gold, stronger post-six-minute enemies and retained encounters.');

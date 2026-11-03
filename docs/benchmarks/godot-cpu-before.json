@@ -1,0 +1,62 @@
+[
+  {
+    "count": 1000,
+    "dense": false,
+    "meanMs": 2.6898583333333335,
+    "p95Ms": 14.5063,
+    "enemiesMs": 0.7996583333333334,
+    "crowdMs": 1.052175,
+    "weaponsMs": 0.8248000000000001,
+    "bytesPerTick": 189552
+  },
+  {
+    "count": 5000,
+    "dense": false,
+    "meanMs": 12.600658333333334,
+    "p95Ms": 15.4332,
+    "enemiesMs": 1.4693083333333334,
+    "crowdMs": 10.92,
+    "weaponsMs": 0.15336666666666665,
+    "bytesPerTick": 830014
+  },
+  {
+    "count": 10000,
+    "dense": false,
+    "meanMs": 33.140883333333335,
+    "p95Ms": 57.131,
+    "enemiesMs": 2.5295083333333332,
+    "crowdMs": 30.100866666666665,
+    "weaponsMs": 0.309525,
+    "bytesPerTick": 1619746
+  },
+  {
+    "count": 1000,
+    "dense": true,
+    "meanMs": 3.3935999999999997,
+    "p95Ms": 4.9292,
+    "enemiesMs": 0.168575,
+    "crowdMs": 3.1356083333333333,
+    "weaponsMs": 0.053058333333333346,
+    "bytesPerTick": 161085.33333333334
+  },
+  {
+    "count": 5000,
+    "dense": true,
+    "meanMs": 90.52273333333335,
+    "p95Ms": 136.7292,
+    "enemiesMs": 1.2315916666666669,
+    "crowdMs": 88.55295833333332,
+    "weaponsMs": 0.6960416666666668,
+    "bytesPerTick": 759144.6666666666
+  },
+  {
+    "count": 10000,
+    "dense": true,
+    "meanMs": 348.0882000000001,
+    "p95Ms": 410.56,
+    "enemiesMs": 1.7007666666666668,
+    "crowdMs": 346.16035833333336,
+    "weaponsMs": 0.14890833333333334,
+    "bytesPerTick": 1514461.3333333333
+  }
+]
