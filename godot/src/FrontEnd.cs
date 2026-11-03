@@ -29,7 +29,7 @@ public partial class Main
         var logo=CenterText("SURVIVORS",82,new Color("efb86f"));logo.AddThemeColorOverride("font_shadow_color",new Color("672f21"));logo.AddThemeConstantOverride("shadow_offset_x",4);logo.AddThemeConstantOverride("shadow_offset_y",5);body.AddChild(logo);
         body.AddChild(CenterText("—  ПОКА НЕ РАССВЕЛО  —",18,red));
         var castleCenter=new CenterContainer();body.AddChild(castleCenter);
-        var castle=Label(MenuBackdrop.Castle,14,new Color("b29a64"));castle.Name="TitleCastle";castle.AccessibilityName="Замок с башнями и закрытыми воротами";castleCenter.AddChild(castle);
+        var castle=new PseudoArt{Font=renderer.Font,Art=MenuBackdrop.Castle,CellHeight=14,Ink=new Color("b29a64")};castle.Name="TitleCastle";castle.AccessibilityName="Замок с башнями и закрытыми воротами";castleCenter.AddChild(castle);
         var center=new CenterContainer();body.AddChild(center);var launch=new VBoxContainer{CustomMinimumSize=new(420,0)};Gap(launch,10);center.AddChild(launch);
         launch.AddChild(MenuAction("Play","ИГРАТЬ  →",PlayFromTitle,true));
         if(store.SavedRun is {} saved)launch.AddChild(MenuAction("Continue","ПРОДОЛЖИТЬ · "+saved.Hero.Name+" · "+FormatTime(saved.Time),ContinueRun));

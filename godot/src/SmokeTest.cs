@@ -83,7 +83,7 @@ public partial class Main
                 Assert(Math.Abs(root.Size.X-viewport.X)<2&&Math.Abs(root.Size.Y-viewport.Y)<2,tag+" HUD covers viewport");
                 Assert(renderer.Field.Position.X==0&&Math.Abs(renderer.Field.End.X-viewport.X)<2,tag+" arena fills full width");
                 var run=game;MakeReady();ShowIntro();await Shot("title-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" title fits");
-                var castle=overlay.FindChildren("TitleCastle","Label",true,false).Cast<Label>().Single();Assert(overlay.GetGlobalRect().Encloses(castle.GetGlobalRect()),tag+" castle fits without clipping");
+                var castle=overlay.FindChildren("TitleCastle","",true,false).Cast<PseudoArt>().Single();Assert(overlay.GetGlobalRect().Encloses(castle.GetGlobalRect()),tag+" castle fits without clipping");
                 Press("Play");await Shot("heroes-"+tag);Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" hero selection fits");
                 Press("ChooseStage");await Settle();Assert(overlay.GetGlobalRect().Encloses(centeredBody!.GetGlobalRect()),tag+" stage selection fits");
                 CloseOverlay();game=run;renderer.Game=run;game.Status=RunStatus.Running;ShowPause();await Settle();Assert(centeredBody!.Size.X<=540&&overlay.GetGlobalRect().Encloses(centeredBody.GetGlobalRect()),tag+" pause stays compact");
