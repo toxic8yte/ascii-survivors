@@ -11,5 +11,5 @@ for(const item of NightUpgrades.filter(u=>u.weapon))for(const evolved of [false,
   const shots=[...g.shots,...g.relics,...g.boomerangs];
   cases.push({id:item.id,evolved,directDamage:1000000-e.hp,shots:shots.map(s=>({vx:s.vx,vy:s.vy,damage:s.damage,life:s.life??2.5,radius:s.radius??(item.id==='needle'?5:16),remaining:s.remaining??100000,charge:s.chargeLeft||0})),pools:g.pools.map(p=>({x:p.x-g.player.x,y:p.y-g.player.y,radius:p.radius,life:p.life})),blasts:g.meteors.map(b=>({x:b.x-g.player.x,y:b.y-g.player.y,damage:b.damage,radius:b.radius,wait:b.wait})),frozen:g.freezes.get(e.id)||0,chilled:e.chilledTill,shields:g.shieldCharges,bibleUntil:g.bibleUntil,cooldown:item.cooldown?item.cooldown*(evolved&&['dagger','pentagram','pistol'].includes(item.id)?item.id==='pistol'?.5:.4:1)*.85/g.haste/(1+(g.levels[item.id]-1)*.05):null});
 }
-const output={sourceCommit:'2362535908541fa7e94d277bff228759ceb6fa08',cases};
-fs.writeFileSync(require('node:path').join(__dirname,'reference.json'),JSON.stringify(output,null,2)+'\n');console.log(`Exported ${cases.length} original JS weapon/evolution references`);
+const output={source:'Shared JS combat logic in core.js, including passive compatibility fixes',cases};
+fs.writeFileSync(require('node:path').join(__dirname,'reference.json'),JSON.stringify(output,null,2)+'\n');console.log(`Exported ${cases.length} shared JS weapon/evolution references`);

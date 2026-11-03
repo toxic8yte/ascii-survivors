@@ -49,8 +49,8 @@
     Object.assign(save, pick(game, scalarKeys));
     for (const [key, fields] of Object.entries(effects)) save[key] = game[key].map(entity => {
       const copy = pick(entity, fields);
-      if (key === 'shots') copy.hits = Array.from(entity.hits);
-      if (key === 'boomerangs') copy.hits = Array.from(entity.hits.entries());
+      if (key === 'shots') { copy.hits = Array.from(entity.hits); copy.radius = entity.radius ?? 5; }
+      if (key === 'boomerangs') { copy.hits = Array.from(entity.hits.entries()); copy.radius = entity.radius ?? 16; }
       if (key === 'enemyShots') copy.glyph = entity.glyph;
       if (key === 'pools') { copy.kind = entity.kind || 'poison'; copy.damage = entity.damage || 0; copy.home = Boolean(entity.home); copy.acid = Boolean(entity.acid); }
       if (key === 'relics' && entity.kind === 'chozo') { copy.chargeLeft = entity.chargeLeft || 0; copy.chargeAngle = entity.chargeAngle || 0; }
@@ -232,8 +232,8 @@
       }
       for (const [key, fields] of Object.entries(effects)) game[key] = list(save.version < 3 && ['relics', 'bossWhips'].includes(key) ? [] : save[key], limits[key]).map(entity => {
         const copy = numeric(entity, fields); copy.prevX = copy.x; copy.prevY = copy.y;
-        if (key === 'shots') copy.hits = new Set(list(entity.hits, 100000).map(id => number(id, 1)));
-        if (key === 'boomerangs') copy.hits = new Map(list(entity.hits, 100000).map(pair => [number(pair[0], 1), number(pair[1], 0)]));
+        if (key === 'shots') { copy.hits = new Set(list(entity.hits, 100000).map(id => number(id, 1))); copy.radius = number(entity.radius ?? 5, 0, 100); }
+        if (key === 'boomerangs') { copy.hits = new Map(list(entity.hits, 100000).map(pair => [number(pair[0], 1), number(pair[1], 0)])); copy.radius = number(entity.radius ?? 16, 0, 100); }
         if (key === 'enemyShots') { if (!['o', '~'].includes(entity.glyph)) throw new Error('Invalid shot'); copy.glyph = entity.glyph; }
         if (key === 'pools' && entity.kind) { if (!['water', 'poison'].includes(entity.kind)) throw new Error('Invalid pool'); copy.kind = entity.kind; copy.damage = number(entity.damage, 0); }
         if (key === 'pools') { copy.home = Boolean(entity.home); copy.acid = Boolean(entity.acid); }

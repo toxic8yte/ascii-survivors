@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "2362535908541fa7e94d277bff228759ceb6fa08",
+  "source": "Shared JS combat logic in core.js, including passive compatibility fixes",
   "cases": [
     {
       "id": "whip",
@@ -1081,10 +1081,17 @@
     {
       "id": "lightning",
       "evolved": true,
-      "directDamage": 47.59999999997672,
+      "directDamage": 95.19999999995343,
       "shots": [],
       "pools": [],
       "blasts": [
+        {
+          "x": 65,
+          "y": 0,
+          "damage": 56,
+          "radius": 55,
+          "wait": 0.4
+        },
         {
           "x": 65,
           "y": 0,

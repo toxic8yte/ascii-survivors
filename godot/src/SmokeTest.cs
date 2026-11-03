@@ -45,7 +45,14 @@ public partial class Main
                 if(weapon=="garlic")
                 {game.Elapsed+=.7;await Shot("weapon-garlic-rotation");game.Manual=true;game.Cast("garlic");RefreshHud(true);await Shot("weapon-garlic-manual");}
             }
-            edit.Sandbox=false;edit.Weapon="starter";MakeReady();game.Start();game.Status=RunStatus.Upgrading;game.Offers=["gauntlets","flamethrower","area"];DisplayServer.WindowSetSize(new(960,640));ShowChoices(false);SelectChoice(0);await Shot("11-small-window");Assert(confirmChoice!.GetGlobalRect().End.Y<=root.Size.Y+1,"Small-window actions fit");
+            foreach(string weapon in new[]{"whip","lightning","crowbar"})foreach(int rank in new[]{0,3})
+            {
+                edit.Weapon=weapon;edit.Passive=rank==0?"none":"fork";edit.PassiveRank=Math.Max(1,rank);edit.Enemy="dummy";edit.Manual=edit.Evolved=false;edit.Rank=2;StartNew();game.Clocks[weapon]=1000;
+                game.Enemies[0].Pos=game.Enemies[0].Prev=game.Player.Pos+new System.Numerics.Vector2(120,0);game.RebuildGrid();game.Cast(weapon);
+                for(int i=0;i<6;i++)game.Tick(1/60f);game.Status=RunStatus.Paused;RefreshHud(true);await Shot("duplicator-"+weapon+"-"+rank);
+                Assert(game.Visuals.Count(v=>v.Weapon==weapon)==(weapon=="whip"?2:1)+rank,weapon+" Duplicator visible effects");
+            }
+            edit.Passive="none";edit.PassiveRank=1;edit.Sandbox=false;edit.Weapon="starter";MakeReady();game.Start();game.Status=RunStatus.Upgrading;game.Offers=["gauntlets","flamethrower","area"];DisplayServer.WindowSetSize(new(960,640));ShowChoices(false);SelectChoice(0);await Shot("11-small-window");Assert(confirmChoice!.GetGlobalRect().End.Y<=root.Size.Y+1,"Small-window actions fit");
             var matrix=new List<object>();
             foreach(var resolution in new[]{new Vector2I(960,640),new Vector2I(1024,768),new Vector2I(1280,720),new Vector2I(1920,1080),new Vector2I(2560,1080),new Vector2I(2560,1440),new Vector2I(3440,1440)})
             {
