@@ -37,6 +37,17 @@ public static partial class PortTests
         var circle=Fixture(c);circle.NextBossAt=0;Tick(circle,5.1f);var lich=circle.Enemies.First(e=>e.Def.Boss);Close(lich.MaxHp,1500,"First boss health");Check(circle.Arena?.Phase=="locked","Warning closes");circle.Player.Invulnerable=100;Tick(circle,15.1f);Check(circle.Arena is null&&lich.Alive,"Wall expires while boss lives");circle.HurtEnemy(lich,1e9f);Check(circle.Chests.Count==1,"Boss drops chest");Check(circle.OpenChest(circle.Chests[0]),"Chest opens");Check(circle.Rewards.Count==3&&circle.ClaimReward(0)&&!circle.ClaimReward(0),"One of three rewards only");
         var supply=Fixture(c);supply.Player.Hp=40;var box=supply.MapWorld.Supplies.First(b=>b.Kind=="heal");supply.Player.Pos=box.Pos;Check(supply.OpenSupply(box)&&!supply.OpenSupply(box),"Crate only once");Close(supply.Player.Hp,70,"Crate heal");
         CheckStarterWeapons(c);
+        CheckPassives(c);
+        CheckSoundEvents(c);
+        CheckTelemetry(c);
+        CheckCleanup(c);
+        CheckLateWaves(c);
+        CheckVideoSettings();
+        CheckCrowd(c);
+        var castleRows=MenuBackdrop.Castle.Split('\n');
+        Check(castleRows.Length==9&&castleRows.All(row=>row.Length==41),"Castle uses a uniform cell grid");
+        char Mirror(char ch)=>ch switch{'/'=>'\\','\\'=>'/','<'=>'>','>'=>'<','┌'=>'┐','┐'=>'┌','├'=>'┤','┤'=>'├',_=>ch};
+        Check(castleRows.All(row=>row.SequenceEqual(row.Reverse().Select(Mirror))),"Castle walls, roofs and flags are mirror symmetric");
         var crowd=Benchmarks.Scene(c,512,true,false);foreach(var e in crowd.Enemies)e.Pos=crowd.Player.Pos+new Vector2(80,0);crowd.RebuildGrid();crowd.Tick(1/60f);
         Check(crowd.Enemies.Count==512&&crowd.Timings!.CrowdCandidates is >0 and <=512*32,"Dense crowd candidate work is bounded without dropping enemies");
         Check(crowd.Enemies.Select(e=>e.Pos).Distinct().Count()>1,"Bounded crowd solver separates overlapping bodies");

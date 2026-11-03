@@ -49,6 +49,7 @@ jobs:
           node verify-sheet-edits.cjs
           node --check verify-upgrades.cjs
           node verify-upgrades.cjs
+          node verify-passives.cjs
           node --check verify-reroll.cjs
           node verify-reroll.cjs
           node --check verify-supplies.cjs

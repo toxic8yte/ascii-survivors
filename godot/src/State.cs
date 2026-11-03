@@ -14,6 +14,7 @@ public sealed class Enemy
     public int Id,ArenaMember;
     public string Kind="";
     [JsonIgnore] public EnemyDef Def=null!;
+    [JsonIgnore] public Vector2 CrowdPosition;
     public Vector2 Pos,Prev,Charge,Target;
     public float Hp,MaxHp,Damage,Speed,Radius,Phase,SkillClock,Windup,ChargeTime,Flash,BladeAt=-10,ChilledUntil,FrozenUntil,PoisonAt,BornAt;
     public float HolyUntil,HolyNext,HolyDamage,BurnUntil,BurnNext,BurnDamage;

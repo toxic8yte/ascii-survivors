@@ -11,14 +11,21 @@ public sealed partial class Simulation
         string[] titles=["Первые шорохи","Мёртвая поступь","Голодная стая","Охота началась","Железная процессия","Красная жатва","Ночной дозор","Бездонный натиск"];
         string[][] order=[["fast","heavy","special"],["heavy","fast","special"],["fast","special","heavy"],["fast","special","heavy"],["heavy","special","fast"],["fast","special","heavy"],["special","heavy","fast"],["heavy","fast","special"]];
         float[][] weights=[[34,28,18,10,4],[30,28,20,18,4],[34,24,30,15,5],[14,20,34,28,20],[12,18,28,38,24],[30,23,36,26,6],[26,24,28,32,7],[33,22,34,36,7]];
-        var available=Content.Enemies.Values.Where(e=>!e.Boss&&(e.Roster?e.At<=age:e.At<=age*.65f)).ToList();List<EnemyDef> selected=[];
-        foreach(string role in (age>=360&&!Options.Stress?new[]{"normal"}:new[]{"swarm","normal"}).Concat(order[stage]))
-        {var pool=available.Where(e=>e.Roster&&e.Role==role).OrderByDescending(e=>e.At).ToList();if(pool.Count>0&&selected.Count<4)selected.Add(pool[(minute/3)%Math.Min(2,pool.Count)]);}
+        float oldest=age<600?0:Math.Min(1440,age-300);
+        var available=Content.Enemies.Values.Where(e=>!e.Boss&&(e.Roster?e.At<=age:e.At<=age*.65f)&&(oldest==0||e.Roster&&e.At>=oldest)).ToList();List<EnemyDef> selected=[];
+        var roles=age>=1500?new[]{"heavy","special"}:(age>=360&&!Options.Stress?new[]{"normal"}:new[]{"swarm","normal"}).Concat(order[stage]);
+        foreach(string role in roles)
+        {var pool=available.Where(e=>e.Roster&&e.Role==role).OrderByDescending(e=>age>=1500&&role=="heavy"?e.Hp:e.At).ToList();if(pool.Count>0&&selected.Count<4)selected.Add(pool[(minute/3)%Math.Min(2,pool.Count)]);}
         var old=available.Where(e=>!e.Roster).ToList();if(old.Count>0)selected.Add(old[minute%old.Count]);if(selected.Count==0)selected.Add(Content.Enemies["grave_rat"]);
         WaveDef? wave=null;var map=Content.Stages[MapId];if(!Options.Stress&&map.Waves.Length>0){int m=(int)(Time/60);wave=map.Waves[m<30?m:24+m%6];selected=wave.Enemies.Keys.Select(id=>Content.Enemies[id]).ToList();}
         HashSet<string> support=[];
         if(!Options.Stress&&Time>=45)foreach(string ai in new[]{"ranged","charge"})
-        {if(selected.Any(e=>e.Ai==ai))continue;var pool=Content.Enemies.Values.Where(e=>!e.Boss&&e.Ai==ai&&e.At<=Time).ToList();if(pool.Count>0){var e=pool[(int)(((uint)(Time/20)+Seed)%(uint)pool.Count)];selected.Add(e);support.Add(e.Id);}}
+        {
+            if(selected.Any(e=>e.Ai==ai))continue;float supportFloor=Time<600?0:Math.Min(1440,Time-300);
+            var pool=Content.Enemies.Values.Where(e=>!e.Boss&&e.Ai==ai&&e.At<=Time).ToList();
+            if(ai=="charge"&&supportFloor>0){var newer=pool.Where(e=>e.At>=supportFloor).ToList();pool=newer.Count>0?newer:pool.OrderByDescending(e=>e.At).Take(1).ToList();}
+            if(pool.Count>0){var e=pool[(int)(((uint)(Time/20)+Seed)%(uint)pool.Count)];selected.Add(e);support.Add(e.Id);}
+        }
         bool surge=!Options.Stress&&minute>=2&&age%60<10,recovery=!Options.Stress&&minute>=2&&age%60>=48,danger=!Options.Stress&&age>=360;float after=Math.Max(0,age-360);
         float population=Options.Stress?18+Math.Min(age,1800)*.12f+Math.Max(0,age-1800)*.1f:24+Math.Min(age,360)*.35f+after*2.25f;
         int target=Math.Min(Options.Stress?24000:2000,(int)MathF.Round(population*(surge?(age>=360?1.25f:1.12f):recovery?.9f:1)));
@@ -26,7 +33,7 @@ public sealed partial class Simulation
             Interval=Options.Stress?Math.Max(.24f,.85f-age/4000):Math.Max(.15f,.85f-Math.Min(age,360)/1200-after/900)*(surge?.8f:recovery?1.35f:1),
             Group=Options.Stress?Math.Min(8,2+(int)(age/180)):Math.Max(3,Math.Min(32,3+(int)(Math.Min(age,360)/60)+(int)(after/20)+(surge?2:recovery?-2:0))),
             RangedCap=Math.Max(1,Math.Min(danger?18:8,(int)(target*(danger?.07f:.06f)))),ChargeCap=Math.Max(1,Math.Min(danger?8:4,(int)(target*.03f))),SpecialCap=Math.Max(3,Math.Min(danger?70:40,(int)(target*(danger?.18f:.14f)))),EliteCap=Math.Max(1,Math.Min(danger?45:28,(int)(target*(danger?.09f:.04f))))};
-        foreach(var e in selected){int roleIndex=Array.IndexOf(new[]{"swarm","normal","fast","heavy","special"},RoleOf(e));float w=support.Contains(e.Id)?e.Ai=="ranged"?20:16:wave is not null?wave.Enemies[e.Id]:e.Ai=="ranged"?danger?12:5:roleIndex<0?6:weights[stage][roleIndex];plan.Entries.Add(new(e.Id,w,e.Ai=="ranged",e.Ai=="charge",RoleOf(e)=="special",e.Rank=="elite"));}
+        foreach(var e in selected){int roleIndex=Array.IndexOf(new[]{"swarm","normal","fast","heavy","special"},RoleOf(e));float w=support.Contains(e.Id)?e.Ai=="ranged"?20:16:wave is not null?wave.Enemies[e.Id]:age>=1500&&RoleOf(e)=="heavy"?60:e.Ai=="ranged"?danger?12:5:roleIndex<0?6:weights[stage][roleIndex];plan.Entries.Add(new(e.Id,w,e.Ai=="ranged",e.Ai=="charge",RoleOf(e)=="special",e.Rank=="elite"));}
         return plan;
     }
     private string PickEnemy(List<WaveEntry> entries)
@@ -37,16 +44,29 @@ public sealed partial class Simulation
         float pressure=!d.Boss&&!IsTest?1+Math.Max(0,PressureTime-360)/300:1;
         float scale=Options.Sandbox?1:(d.Mega?1+Math.Max(0,Time-600)/1200:1+WaveAge/340)*pressure;
         var e=new Enemy{Id=NextId++,Kind=kind,Def=d,Pos=pos,Prev=pos,Hp=d.Hp*scale,MaxHp=d.Hp*scale,Damage=d.Damage*(Options.Sandbox?1:1+(int)(PressureTime/180)*.12f),Speed=d.Speed,Radius=d.Radius,Phase=Random()*MathF.Tau,SkillClock=1.5f+Random()*2,Target=pos,ArenaMember=member,BornAt=Time};
-        if(d.Ai=="direct")e.Charge=SafeDirection(Player.Pos-pos);if(!Options.Sandbox)MapWorld.Resolve(ref e.Pos,e.Radius,Arena);World.ResolveRing(ref e.Pos,e.Radius,Arena,member>0);e.Prev=e.Pos;Enemies.Add(e);Encountered.Add(kind);return e;
+        if(d.Ai=="direct")e.Charge=SafeDirection(Player.Pos-pos);if(!Options.Sandbox)MapWorld.Resolve(ref e.Pos,e.Radius,Arena);World.ResolveRing(ref e.Pos,e.Radius,Arena,member>0);e.Prev=e.Pos;Enemies.Add(e);Encountered.Add(kind);if(d.Boss)SoundSignals|=SoundCue.Boss;return e;
     }
     public void SpawnWave()
     {
         var plan=GetWave();int reserve=Arena?.Phase=="warning"?1:0,count=Math.Min(Options.EnemyLimit-Enemies.Count-reserve,Options.Stress?Math.Min(128,2+(int)(WaveAge/45)):Math.Min(plan.Group,Math.Max(0,plan.Target-Enemies.Count)));
-        int ranged=Enemies.Count(e=>e.Alive&&!e.Def.Boss&&e.Def.Ai=="ranged"),charge=Enemies.Count(e=>e.Alive&&!e.Def.Boss&&e.Def.Ai=="charge"),special=Enemies.Count(e=>e.Alive&&!e.Def.Boss&&RoleOf(e.Def)=="special"),elite=Enemies.Count(e=>e.Alive&&!e.Def.Boss&&e.Def.Rank=="elite");
+        int ranged=0,charge=0,special=0,elite=0;
+        foreach(var e in Enemies)if(e.Alive&&!e.Def.Boss){if(e.Def.Ai=="ranged")ranged++;if(e.Def.Ai=="charge")charge++;if(RoleOf(e.Def)=="special")special++;if(e.Def.Rank=="elite")elite++;}
         string? stressKind=Options.Stress?PickEnemy(plan.Entries):null;
-        for(int i=0;i<count;i++){var choices=Options.Stress?plan.Entries:plan.Entries.Where(e=>(!e.Ranged||ranged<plan.RangedCap)&&(!e.Charger||charge<plan.ChargeCap)&&(!e.Special||special<plan.SpecialCap)&&(!e.Elite||elite<plan.EliteCap)).ToList();if(choices.Count==0)break;var e=Spawn(stressKind??PickEnemy(choices));if(e.Def.Ai=="ranged")ranged++;if(e.Def.Ai=="charge")charge++;if(RoleOf(e.Def)=="special")special++;if(e.Def.Rank=="elite")elite++;}
+        for(int i=0;i<count;i++)
+        {
+            string? kind=stressKind;
+            if(kind is null)
+            {
+                float total=0;foreach(var entry in plan.Entries)if(Fits(entry,plan,ranged,charge,special,elite))total+=entry.Weight;
+                if(total<=0)break;float roll=Random()*total;
+                foreach(var entry in plan.Entries)if(Fits(entry,plan,ranged,charge,special,elite)){kind=entry.Id;roll-=entry.Weight;if(roll<0)break;}
+            }
+            var e=Spawn(kind!);if(e.Def.Ai=="ranged")ranged++;if(e.Def.Ai=="charge")charge++;if(RoleOf(e.Def)=="special")special++;if(e.Def.Rank=="elite")elite++;
+        }
         SpawnClock+=Options.Stress?Math.Max(.12f,.86f-WaveAge*.0014f):plan.Interval;
     }
+    private static bool Fits(WaveEntry e,WavePlan p,int ranged,int charge,int special,int elite)
+        =>(!e.Ranged||ranged<p.RangedCap)&&(!e.Charger||charge<p.ChargeCap)&&(!e.Special||special<p.SpecialCap)&&(!e.Elite||elite<p.EliteCap);
     public void SpawnSandbox()
     {
         bool known=Content.Enemies.TryGetValue(Options.Enemy,out var definition),ring=known&&definition!.Boss&&Options.Arena;int count=ring?1:Options.Count;
@@ -61,7 +81,7 @@ public sealed partial class Simulation
     }
     public bool FirstBoss(Enemy e)=>BossIndex==1&&e.Def.Boss&&e.Kind==Catalog.BossOrder[0];
     public float BossHealth(int index)=> (index==1?1500:3200+Math.Max(0,index-2)*1000)+Math.Max(0,Level-1)*200;
-    public void BeginEncounter(){Arena=new(){Pos=Player.Pos,Radius=ArenaRadius,Kind=Catalog.BossOrder[BossIndex%Catalog.BossOrder.Length]};Notice="ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ КОЛЬЦА";}
+    public void BeginEncounter(){SoundSignals|=SoundCue.Boss;Arena=new(){Pos=Player.Pos,Radius=ArenaRadius,Kind=Catalog.BossOrder[BossIndex%Catalog.BossOrder.Length]};Notice="ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ КОЛЬЦА";}
     private void UpdateEncounter(float dt)
     {
         if(Arena is not {} arena)return;
@@ -134,10 +154,10 @@ public sealed partial class Simulation
     }
     public void HurtEnemy(Enemy e,float amount,float knockback=0,string weapon="other")
     {
-        if(!e.Alive)return;float damage=amount*(Content.ById.TryGetValue(weapon,out var item)?item.DamageMultiplier:1);float effective=Math.Min(e.Hp,damage);Combat.Hit(weapon,damage,effective);
+        if(!e.Alive)return;SoundSignals|=SoundCue.Hit;if(weapon is "blades" or "bible")SoundSignals|=SoundCue.Orbit;float damage=amount*(Content.ById.TryGetValue(weapon,out var item)?item.DamageMultiplier:1);float effective=Math.Min(e.Hp,damage);Combat.Hit(weapon,damage,effective);
         if(weapon=="poison"&&Hero.Trait("lifesteal")>0)LeechBudget-=Heal(Math.Min(LeechBudget,Math.Min(1,effective*Hero.Trait("lifesteal"))));
         e.Hp-=damage;e.Flash=.12f;if(knockback>0){float resistance=e.Def.Resistance>0?e.Def.Resistance:FirstBoss(e)?.65f:0;MoveEnemy(e,SafeDirection(e.Pos-Player.Pos)*knockback*(1-resistance));}
-        if(e.Hp>0)return;e.Alive=false;Kills++;
+        if(e.Hp>0)return;SoundSignals|=e.Def.Boss?SoundCue.BossDeath:SoundCue.Kill;e.Alive=false;Kills++;
         if(Options.Sandbox){if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ТЕСТ");return;}
         if(Kills%5==0)AwardGold(1);
         if(e.Def.Boss){BossKills++;AwardGold(e.Def.Mega?125:25);if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК");else Notice="БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК";NextBossAt=Math.Max(NextBossAt,PressureTime+90);Chests.Add(new(){Id=NextChestId++,Pos=e.Pos,Source=e.Kind,CanEvolve=e.Def.Mega||e.BornAt>=600});if(Chests.Count>64)Chests.RemoveAt(0);}

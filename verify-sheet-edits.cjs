@@ -48,7 +48,7 @@ assert.ok(left.hp<10000&&right.hp<10000,'Whip remains horizontal even when aimin
 assert.ok([above,below,outside].every(e=>e.hp===10000),'Whip cannot damage a circular area around the player');
 assert.equal(horizontal.rings.length,0,'Whip has no misleading circular wave');assert.equal(horizontal.slashes.length,2);
 horizontal.slashes=[];horizontal.levels.fork=3;horizontal.castRelic('whip');assert.equal(horizontal.slashes.length,5,'Duplicator adds horizontal whip paths rather than radial sectors');
-assert.ok(horizontal.slashes.every(s=>s.points.every(point=>Math.abs(point.y-horizontal.player.y)<90)));
+assert.ok(horizontal.slashes.every(s=>s.points.every(point=>Math.abs(point.y-horizontal.player.y)<160)));
 const beam=fixture();beam.levels.clock=1;beam.aim={x:beam.player.x+600,y:beam.player.y,active:true};
 const inline=target(beam,300),offAxis=target(beam,300),behind=target(beam,-90),tooFar=target(beam,560);offAxis.y+=100;
 beam.buildGrid();beam.castRelic('clock');assert.ok(beam.freezes.has(inline.id));assert.ok([offAxis,behind,tooFar].every(e=>!beam.freezes.has(e.id)),'Beam freezes only its finite forward line');

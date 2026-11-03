@@ -4,18 +4,21 @@ using System.Text.Json;
 
 namespace AsciiSurvivors;
 
-public sealed class TickTimings {public double EnemiesMs,CrowdMs,WeaponsMs;public int CrowdCandidates;}
+public sealed class TickTimings {public double EnemiesMs,CrowdMs,WeaponsMs;public int CrowdCandidates,CrowdMoves;}
 
 public static class Benchmarks
 {
-    public static Simulation Scene(Catalog content,int count,bool dense,bool arsenal)
+    public static Simulation Scene(Catalog content,int count,bool dense,bool arsenal,bool mixed=false,bool late=false)
     {
         var game=new Simulation(content,781,new(){Sandbox=true,Stress=arsenal,Invulnerable=true,Rank=4,EnemyLimit=24000});game.Start();game.Enemies.Clear();game.Elapsed=900;game.Timings=new();
+        if(late)game.Elapsed=1800;
         foreach(string key in game.Clocks.Keys.ToArray())game.Clocks[key]=0;
+        string[] kinds=["brute","skeleton","ghoul","bat","pumpkin","mummy"];string elite=content.Enemies.First(e=>e.Value.Rank=="elite"&&e.Value.Ai=="chase").Key;
+        if(late){kinds=["funeral_machine","last_witness","cathedral_head","iron_martyr","black_halo","pumpkin"];elite="grand_martyr";}
         for(int i=0;i<count;i++)
         {
             float angle=i*2.399963f,radius=(dense?60:140)+MathF.Sqrt((i+.5f)/count)*(dense?100:800);
-            var enemy=game.Spawn("brute",game.Player.Pos+World.Direction(angle)*radius);enemy.Hp=enemy.MaxHp=100000000;
+            var enemy=game.Spawn(mixed?(i%8==7?elite:kinds[i%kinds.Length]):"brute",game.Player.Pos+World.Direction(angle)*radius);enemy.Hp=enemy.MaxHp=100000000;
         }
         game.RebuildGrid();return game;
     }

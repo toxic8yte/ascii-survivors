@@ -9,6 +9,9 @@ public partial class Main : Node
     private SaveStore store=null!;
     private Simulation game=null!;
     private AsciiRenderer renderer=null!;
+    private AudioController audio=null!;
+    private VideoSettings video=null!;
+    private Telemetry telemetry=null!;
     private Control root=null!,overlay=null!,arenaSpace=null!;
     private VBoxContainer layout=null!;
     private Label hpLabel=null!,timeLabel=null!,enemyLabel=null!,levelLabel=null!,modeLabel=null!,waveLabel=null!,goldLabel=null!,saveLabel=null!,noticeLabel=null!;
@@ -37,7 +40,10 @@ public partial class Main : Node
             string? renderBench=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--render-benchmark="));smokeTesting=smoke is not null||renderBench is not null;
             string savePath=smoke is not null?Path.Combine(smoke[13..],"state.json"):renderBench is not null?Path.Combine(renderBench[19..],"state.json"):ProjectSettings.GlobalizePath("user://state.json");
             store=new(content,savePath);edit.Hero=store.Profile.Hero;edit.Map=store.Profile.Map;edit.Manual=store.Profile.Manual;
-            renderer=new();AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
+            video=new(Path.Combine(Path.GetDirectoryName(savePath)!,"video.cfg"));video.Apply();
+            audio=new();AddChild(audio);audio.Initialize(Path.Combine(Path.GetDirectoryName(savePath)!,"audio.cfg"),smokeTesting);
+            telemetry=new(Path.Combine(Path.GetDirectoryName(savePath)!,"telemetry"));
+            renderer=new();if(renderBench is not null)renderer.UseGlyphBatch=!OS.GetCmdlineUserArgs().Contains("--legacy-renderer");AddChild(renderer);BuildTheme();BuildHud();MakeReady();ShowIntro();
             GetTree().AutoAcceptQuit=false;
             if(smoke is not null)_=SmokeTest(smoke[13..]);else if(renderBench is not null)_=RenderBenchmarks(renderBench[19..]);
         }
@@ -56,7 +62,7 @@ public partial class Main : Node
     private Label Label(string value,int size=16,Color? color=null)
     {var l=new Label{Text=value};l.AddThemeFontSizeOverride("font_size",size);if(color is {} c)l.AddThemeColorOverride("font_color",c);return l;}
     private Button Button(string text,Action action,bool primary=false)
-    {var b=new Button{Text=text,MouseDefaultCursorShape=Control.CursorShape.PointingHand,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill,CustomMinimumSize=new(0,42)};if(primary){b.AddThemeStyleboxOverride("normal",Box(red,new Color("f48761"),14));b.AddThemeColorOverride("font_color",new Color("170e09"));}b.Pressed+=action;return b;}
+    {var b=new Button{Text=text,MouseDefaultCursorShape=Control.CursorShape.PointingHand,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill,CustomMinimumSize=new(0,42)};if(primary){b.AddThemeStyleboxOverride("normal",Box(red,new Color("f48761"),14));b.AddThemeColorOverride("font_color",new Color("170e09"));}b.Pressed+=()=>{audio.Play(SoundCue.Ui);action();};return b;}
     private static void Fill(Control control)=>control.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
     private static MarginContainer Margin(int size){var c=new MarginContainer();foreach(string side in new[]{"left","right","top","bottom"})c.AddThemeConstantOverride("margin_"+side,size);return c;}
     private static void Gap(BoxContainer container,int size=10)=>container.AddThemeConstantOverride("separation",size);
@@ -95,29 +101,30 @@ public partial class Main : Node
     private void SaveCurrent()
     {if(game.IsTest)return;bool ok=game.Status==RunStatus.Dead?store.Finish(game):store.Checkpoint(game);saveLabel.Text=ok?"ПРОГРЕСС СОХРАНЁН":store.LastError.Length>0?"ОШИБКА СОХРАНЕНИЯ":"АВТОСОХРАНЕНИЕ";if(!ok&&store.LastError.Length>0)Toast(store.LastError);}
     private void Toast(string value){noticeLabel.Text=value;noticeClock=4;}
-    private void ToggleFullscreen()=>DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.ExclusiveFullscreen);
+    private void ToggleFullscreen(){DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen?DisplayServer.WindowMode.Windowed:DisplayServer.WindowMode.ExclusiveFullscreen);video.Apply();}
     public override void _PhysicsProcess(double delta)
     {
         if(game is null)return;
         if(overlayKind.Length==0&&game.Status==RunStatus.Running)
         {
             float x=(Input.IsPhysicalKeyPressed(Key.D)||Input.IsKeyPressed(Key.Right)?1:0)-(Input.IsPhysicalKeyPressed(Key.A)||Input.IsKeyPressed(Key.Left)?1:0),y=(Input.IsPhysicalKeyPressed(Key.S)||Input.IsKeyPressed(Key.Down)?1:0)-(Input.IsPhysicalKeyPressed(Key.W)||Input.IsKeyPressed(Key.Up)?1:0);
-            game.MoveInput=new(x,y);game.Firing=Input.IsPhysicalKeyPressed(Key.F)||Input.IsMouseButtonPressed(MouseButton.Left)&&renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Aim=renderer.ToWorld(GetViewport().GetMousePosition());game.AimActive=renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Tick((float)delta);
+            game.MoveInput=new(x,y);game.Firing=Input.IsPhysicalKeyPressed(Key.F)||Input.IsMouseButtonPressed(MouseButton.Left)&&renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Aim=renderer.ToWorld(GetViewport().GetMousePosition());game.AimActive=renderer.Field.HasPoint(GetViewport().GetMousePosition());game.Timings??=new();long tickStart=System.Diagnostics.Stopwatch.GetTimestamp();game.Tick((float)delta);telemetry.Tick(System.Diagnostics.Stopwatch.GetElapsedTime(tickStart).TotalMilliseconds,game.Timings);
             saveClock+=delta;if(saveClock>=5){saveClock=0;SaveCurrent();}
         }
         HandleStatus();
     }
     public override void _Process(double delta)
     {
-        if(game is null)return;var rect=arenaSpace.GetGlobalRect();renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
-        var target=game.Arena?.Phase=="locked"?game.Arena.Pos:game.Player.Pos;renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.Interpolation=1;renderer.QueueRedraw();
+        if(game is null)return;long audioStart=System.Diagnostics.Stopwatch.GetTimestamp();audio.Update(game,overlayKind.Length>0,delta);double audioMs=System.Diagnostics.Stopwatch.GetElapsedTime(audioStart).TotalMilliseconds;var rect=arenaSpace.GetGlobalRect();telemetry.Frame(game,renderer.LastDrawMs,audioMs,game.Status==RunStatus.Running&&overlayKind.Length==0,renderer.VisibleEnemies,renderer.RenderedEnemies,audio.ActiveVoices,(int)root.Size.X,(int)root.Size.Y,renderer.BatchedGlyphs,renderer.GlyphDrawCalls);renderer.Field=rect;noticeLabel.Position=new(rect.Position.X,rect.Position.Y+72);noticeLabel.Size=new(rect.Size.X,28);
+        renderer.Interpolation=game.Status==RunStatus.Running&&overlayKind.Length==0?(float)Engine.GetPhysicsInterpolationFraction():1;
+        var target=game.Arena?.Phase=="locked"?game.Arena.Pos:V.Lerp(game.Player.Prev,game.Player.Pos,renderer.Interpolation);renderer.Camera=V.Lerp(renderer.Camera,target,(float)(1-Math.Exp(-delta*8)));renderer.QueueRedraw();
         if(noticeClock>0){noticeClock-=delta;if(noticeClock<=0)noticeLabel.Text="";}
         if(game.Notice.Length>0){Toast(game.Notice);game.Notice="";}
-        uiClock+=delta;if(uiClock>=.1){uiClock=0;RefreshHud();}
+        uiClock+=delta;if(uiClock>=.1){uiClock=0;RefreshHud();if(settingsFps is not null)settingsFps.Text="ФАКТИЧЕСКИ: "+Engine.GetFramesPerSecond()+" FPS";}
     }
     private void HandleStatus()
     {
-        if(lastStatus==game.Status)return;lastStatus=game.Status;
+        if(lastStatus==game.Status)return;lastStatus=game.Status;telemetry.Flush();
         if(game.Status==RunStatus.Upgrading){ShowChoices(false);SaveCurrent();}
         else if(game.Status==RunStatus.Reward){ShowChoices(true);SaveCurrent();}
         else if(game.Status==RunStatus.Dead){if(!finished){SaveCurrent();finished=true;}ShowEnding();}
@@ -176,5 +183,6 @@ public partial class Main : Node
         if(what==NotificationWMCloseRequest){if(game is not null)SaveCurrent();GetTree().Quit();}
         else if(what==NotificationApplicationFocusOut&&!smokeTesting&&game is not null&&game.Status==RunStatus.Running&&overlayKind.Length==0)ShowPause();
     }
+    public override void _ExitTree()=>telemetry?.Dispose();
     private static string FormatTime(float seconds)=>$"{(int)seconds/60:00}:{(int)seconds%60:00}";
 }

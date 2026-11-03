@@ -60,6 +60,7 @@ public sealed class Catalog
     public Dictionary<string,ItemDef> ById=[];
     public Dictionary<string,HeroDef> Heroes=[];
     public Dictionary<string,EnemyDef> Enemies=[];
+    public EnemyDef[] ScheduledBosses=[];
     public List<RecipeDef> Recipes=[];
     public List<ShopDef> Permanents=[],Features=[];
     public Dictionary<string,StageDef> Stages=[];
@@ -90,6 +91,7 @@ public sealed class Catalog
             if(visual.TryGetProperty("frames",out var frames))d.Frames=JsonSerializer.Deserialize<string[]>(frames.GetRawText(),Options)!;
             c.Enemies.Add(d.Id,d);
         }
+        c.ScheduledBosses=c.Enemies.Values.Where(e=>e.Roster&&e.Boss).OrderBy(e=>e.At).ToArray();
         c.Recipes=Read<List<RecipeDef>>("evolutions");c.Permanents=Read<List<ShopDef>>("permanents");c.Features=Read<List<ShopDef>>("features");c.Stages=Read<List<StageDef>>("stages").ToDictionary(x=>x.Id);
         if(c.Heroes.Count!=30||c.Items.Count(x=>x.Weapon)!=33||c.Enemies.Count!=58||c.Recipes.Count!=31)throw new InvalidDataException("Unexpected content counts");
         foreach(var hero in c.Heroes.Values)if(!all.ContainsKey(hero.Weapon))throw new InvalidDataException(hero.Id);

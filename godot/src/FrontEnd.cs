@@ -22,12 +22,14 @@ public partial class Main
         var top=new HBoxContainer();Gap(top,20);body.AddChild(top);
         var quit=MenuAction("Quit","ВЫХОД",()=>GetTree().Quit());quit.SizeFlagsHorizontal=Control.SizeFlags.Fill;quit.CustomMinimumSize=new(160,42);top.AddChild(quit);
         top.AddChild(CenterText("[$] "+store.Profile.Gold+" ЗОЛОТА",20,amber));
+        var sound=MenuAction("Settings","[=] НАСТРОЙКИ",ShowSettings);sound.SizeFlagsHorizontal=Control.SizeFlags.Fill;sound.CustomMinimumSize=new(200,42);top.AddChild(sound);
         var screen=MenuAction("Fullscreen","ПОЛНЫЙ ЭКРАН",ToggleFullscreen);screen.SizeFlagsHorizontal=Control.SizeFlags.Fill;screen.CustomMinimumSize=new(180,42);top.AddChild(screen);
         body.AddChild(new Control{CustomMinimumSize=new(0,14)});
         var ascii=CenterText("ASCII",48,amber);ascii.AddThemeColorOverride("font_shadow_color",new Color("050604"));ascii.AddThemeConstantOverride("shadow_offset_y",4);body.AddChild(ascii);
         var logo=CenterText("SURVIVORS",82,new Color("efb86f"));logo.AddThemeColorOverride("font_shadow_color",new Color("672f21"));logo.AddThemeConstantOverride("shadow_offset_x",4);logo.AddThemeConstantOverride("shadow_offset_y",5);body.AddChild(logo);
         body.AddChild(CenterText("—  ПОКА НЕ РАССВЕЛО  —",18,red));
-        body.AddChild(CenterText("       .-.       \n      /o o\\      \n      /|+|\\      \n     _/   \\_     ",23,parchment));
+        var castleCenter=new CenterContainer();body.AddChild(castleCenter);
+        var castle=new PseudoArt{Font=renderer.Font,Art=MenuBackdrop.Castle,CellHeight=14,Ink=new Color("b29a64")};castle.Name="TitleCastle";castle.AccessibilityName="Замок с башнями и закрытыми воротами";castleCenter.AddChild(castle);
         var center=new CenterContainer();body.AddChild(center);var launch=new VBoxContainer{CustomMinimumSize=new(420,0)};Gap(launch,10);center.AddChild(launch);
         launch.AddChild(MenuAction("Play","ИГРАТЬ  →",PlayFromTitle,true));
         if(store.SavedRun is {} saved)launch.AddChild(MenuAction("Continue","ПРОДОЛЖИТЬ · "+saved.Hero.Name+" · "+FormatTime(saved.Time),ContinueRun));
