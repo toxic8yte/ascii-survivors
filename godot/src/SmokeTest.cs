@@ -118,6 +118,18 @@ public partial class Main
             game.Status=RunStatus.Upgrading;ShowChoices(false);await Shot("fullscreen-upgrades");
             Assert(overlay.GetGlobalRect().Encloses(choiceBody!.GetGlobalRect()),"Fullscreen choice panel fits");
             DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+            DisplayServer.WindowSetSize(new(1440,900));await Settle();edit.Sandbox=true;edit.Stress=false;edit.Weapon="pistol";edit.Enemy="dummy";edit.Rank=1;StartNew();game.Status=RunStatus.Paused;
+            ShowDeveloper();await Shot("developer-menu");Assert(overlay.FindChildren("*","ScrollContainer",true,false).Cast<ScrollContainer>().Single().Size.Y>250,"Developer item list has visible scroll area");int devGold=store.Profile.Gold;Press("DevGold");Assert(store.Profile.Gold==devGold+1000,"Developer gold changes intended wallet");
+            var rotation=overlay.FindChildren("Rotation-pentagram","CheckButton",true,false).Cast<CheckButton>().Single();rotation.ButtonPressed=false;
+            Assert(store.Profile.DisabledItems.Contains("pentagram")&&game.DisabledItems.Contains("pentagram"),"Developer rotation excludes item");
+            var reread=new SaveStore(content,Path.Combine(directory,"state.json"));Assert(reread.Profile.DisabledItems.Contains("pentagram"),"Rotation persists on disk");rotation.ButtonPressed=true;
+            Press("Give-pentagram");Assert(game.L("pentagram")==1,"Developer grants pentacle in test");Press("DevAllWeapons");Assert(content.Items.Where(i=>i.Weapon).All(i=>game.L(i.Id)==i.Max),"Developer grants complete test arsenal");
+            Press("DevClear");Assert(game.Inventory(true).Count==1&&game.Inventory(false).Count==0,"Developer resets test build");
+            Press("ArtGallery");await Shot("roster-gallery");Assert(overlayKind=="gallery"&&overlay.FindChildren("*","ScrollContainer",true,false).Cast<ScrollContainer>().Single().Size.Y>250,"Roster gallery has visible portrait area");CloseAux();
+            edit.Sandbox=false;edit.Stress=false;MakeReady();ShowShop();await Shot("legacy-expanded");store.Profile.Ranks["seal1"]=1;Press("Seals");await Settle();
+            overlay.FindChildren("Seal-pentagram","CheckButton",true,false).Cast<CheckButton>().Single().ButtonPressed=true;await Shot("legacy-seals");Assert(store.Profile.SealedItems.Contains("pentagram"),"Player seal UI works");CloseAux();
+            MakeReady();game.Start();game.Status=RunStatus.Upgrading;game.DrawOffers();game.Meta["skip"]=1;game.SkipsLeft=2;DisplayServer.WindowSetSize(new(960,640));ShowChoices(false);await Shot("legacy-skip-small");Assert(confirmChoice!.GetGlobalRect().End.Y<=root.Size.Y&&FindButton("SkipUpgrade").GetGlobalRect().End.Y<=root.Size.Y,"Skip and confirm fit small window");
+            DisplayServer.WindowSetSize(new(1440,900));MakeReady();CloseOverlay();game.Status=RunStatus.Paused;game.Player.Pos=game.Player.Prev=new(6620,4590);renderer.Camera=game.Player.Pos;RefreshHud(true);await Shot("forest-environment");
             File.WriteAllText(Path.Combine(directory,"resolutions.json"),System.Text.Json.JsonSerializer.Serialize(matrix,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
             GD.Print("PASS: native UI smoke test, title/hero/stage navigation, hero locks, saved-run resume, isolated test modes, compact pause, 7 window sizes + fullscreen, upgrades, boss damage, exported music loop, three themes, persisted volume and bounded audio voices. Screenshots at "+directory);GetTree().Quit();
         }

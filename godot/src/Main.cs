@@ -26,7 +26,7 @@ public partial class Main : Node
     private bool finished;
     private bool smokeTesting;
     private readonly Color parchment=new("e8dcc0"),amber=new("e4b66d"),red=new("d75b43"),muted=new("9d9c80"),green=new("142319");
-    private static readonly Color[] rarityColors=new[]{"e4d9a6","91c77c","6fb4ff","ff8b2b","f1bf65"}.Select(x=>new Color(x)).ToArray();
+    private static readonly Color[] rarityColors=new[]{"c5c6c3","91c77c","6fb4ff","bf91ed","ffbd48"}.Select(x=>new Color(x)).ToArray();
     public override void _Ready()
     {
         try
@@ -87,7 +87,7 @@ public partial class Main : Node
         noticeLabel=Label("",14,amber);noticeLabel.HorizontalAlignment=HorizontalAlignment.Center;noticeLabel.MouseFilter=Control.MouseFilterEnum.Ignore;root.AddChild(noticeLabel);
     }
     private RunOptions CopyOptions()=>new(){Hero=edit.Hero,Map=edit.Map,Manual=edit.Manual,Weapon=edit.Weapon,Rank=edit.Rank,Passive=edit.Passive,PassiveRank=edit.PassiveRank,Enemy=edit.Enemy,Count=edit.Count,Evolved=edit.Evolved,Invulnerable=edit.Invulnerable,Arena=edit.Arena,Sandbox=edit.Sandbox,Stress=edit.Stress,EnemyLimit=edit.EnemyLimit,Meta=new(store.Profile.Ranks)};
-    private void MakeReady(){game=new(content,(uint)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),CopyOptions());renderer.Game=game;renderer.Camera=game.Player.Pos;slotKey="";lastStatus=RunStatus.Ready;finished=false;RefreshHud(true);}
+    private void MakeReady(){game=new(content,(uint)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),CopyOptions());game.DisabledItems=store.RotationExclusions();renderer.Game=game;renderer.Camera=game.Player.Pos;slotKey="";lastStatus=RunStatus.Ready;finished=false;RefreshHud(true);}
     private void StartNew()
     {
         if(!edit.Sandbox&&!edit.Stress&&!store.Profile.Heroes.Contains(edit.Hero)){Toast("СНАЧАЛА ОТКРОЙ ГЕРОЯ ЗА ЗОЛОТО");return;}
@@ -147,7 +147,7 @@ public partial class Main : Node
     }
     private string InfoTitle(string id)=>game.Evolved(id)?game.Recipe(id)!.Title:content.ById[id].Title;
     private string InfoIcon(string id)=>game.Evolved(id)?game.Recipe(id)!.Icon:content.ById[id].Icon;
-    private string ItemTooltip(string id)=>WrapTooltip(InfoIcon(id)+" "+InfoTitle(id)+"\n"+(content.ById[id].Weapon?"ОРУЖИЕ":"ПАССИВКА")+" · "+game.L(id)+"/"+content.ById[id].Max+"\n"+content.ById[id].Description+(game.Evolved(id)?"\n\n"+game.Recipe(id)!.Description:""));
+    private string ItemTooltip(string id)=>WrapTooltip(InfoIcon(id)+" "+InfoTitle(id)+"\n"+(content.ById[id].Weapon?"ОРУЖИЕ":"ПАССИВКА")+" · "+game.L(id)+"/"+content.ById[id].Max+"\n"+content.ById[id].Description+(content.ById[id].Weapon?$"\nКачество: +{(game.WeaponQuality(id)-1)*100:0}% {Simulation.QualityStat(id)}. Ранг 3+: сбивает шары тыкв при контакте с атакой.":"")+(game.Evolved(id)?"\n\n"+game.Recipe(id)!.Description:""));
     private static string WrapTooltip(string value)
     {
         var lines=new List<string>();
@@ -166,6 +166,7 @@ public partial class Main : Node
         {
             if(overlayKind is "level" or "reward"&&(key.Keycode==Key.Space||key.Keycode==Key.Escape)){GetViewport().SetInputAsHandled();return;}
             if(!key.Pressed||key.Echo)return;
+            if(key.Keycode==Key.F8&&overlayKind is not ("level" or "reward")){ShowDeveloper();GetViewport().SetInputAsHandled();return;}
             if(key.Keycode==Key.F11){ToggleFullscreen();GetViewport().SetInputAsHandled();return;}
             if(overlayKind is "level" or "reward"){if(key.Keycode>=Key.Key1&&key.Keycode<=Key.Key3){SelectChoice((int)(key.Keycode-Key.Key1));GetViewport().SetInputAsHandled();}return;}
             if(key.Keycode==Key.Escape&&overlayKind.Length>0){if(overlayKind=="pause")Resume();else if(overlayKind!="intro")CloseAux();GetViewport().SetInputAsHandled();return;}

@@ -22,14 +22,20 @@ public sealed partial class Simulation
     public double Elapsed;
     public long Steps;
     public int Level=1,Xp,XpNeed=6,Kills,BossKills,ChestsOpened,NextId=1,NextChestId=1,PeakEnemies,BossIndex,RosterBossIndex,ClockStep,RevivesUsed,RerollsUsed,RerollGoldSpent,BanishesLeft=3,OfferSelection=-1;
-    public int GoldEarned,ShieldCharges;
+    public int GoldEarned,ShieldCharges,FreeRerollsUsed,SkipsLeft;
     public float GoldCarry,XpCarry,PressureOffset,SpawnClock=.35f,NextBossAt=60,NextMegaAt=600,SpawnRadius=650,ArenaRadius=205,BibleUntil,ShieldUntil,LeechBudget=2,SandboxClock;
     public bool Manual;
     public Dictionary<string,int> Levels=[],Meta=[];
     public Dictionary<string,float> Clocks=[];
+    public Dictionary<string,int> OfferTiers=[];
+    public Dictionary<string,float> QualityBonus=[];
+    public HashSet<string> DisabledItems=[];
     public Dictionary<int,float> BibleHits=[],WaterHits=[];
     public HashSet<string> Evolutions=[],Banished=[],Encountered=[];
     public HashSet<int> TreasuresTaken=[],SuppliesTaken=[];
+    public HashSet<int> CampfiresBroken=[];
+    public Dictionary<int,int> CampfireHits=[];
+    public Dictionary<int,float> CampfireHitAt=[];
     public List<string> WeaponOrder=[],PassiveOrder=[],Offers=[];
     public List<Enemy> Enemies=[];
     public List<Projectile> Shots=[],EnemyShots=[];
@@ -51,6 +57,7 @@ public sealed partial class Simulation
         RunId=$"{Seed}-{Guid.NewGuid():N}";MapWorld=new World(MapId,Seed);
         Levels=content.Items.ToDictionary(x=>x.Id,_=>0);Meta=content.Permanents.ToDictionary(x=>x.Id,x=>options.Sandbox?0:Math.Clamp(options.Meta.GetValueOrDefault(x.Id),0,x.Max));
         Player.Hp=Player.MaxHp=Hero.Hp+M("vital")*10;
+        BanishesLeft=3+M("banish")*2;SkipsLeft=M("skip")*2;
         SelectedWeapon=Hero.Weapon;Levels[SelectedWeapon]=1;WeaponOrder.Add(SelectedWeapon);
         foreach(string id in Hero.ExtraWeapons){Levels[id]=1;WeaponOrder.Add(id);}
         foreach(var item in content.Items.Where(x=>x.Weapon))Clocks[item.Id]=item.Id=="needle"?.15f:.3f;
@@ -71,22 +78,24 @@ public sealed partial class Simulation
     [JsonIgnore] public bool Invincible=>Options.Stress||Options.Sandbox&&Options.Invulnerable;
     public int L(string id)=>Levels.GetValueOrDefault(id);
     public int M(string id)=>Meta.GetValueOrDefault(id);
-    [JsonIgnore] public float Power=>(1+L("power")*.1f)*(1+M("power")*.05f+Hero.Trait("power"));
+    [JsonIgnore] public float Power=>(1+L("power")*.1f)*(1+M("power")*.05f+M("omni")*.02f+Hero.Trait("power"));
     [JsonIgnore] public float Haste=>(1+L("haste")*.08f)*(1+M("haste")*.04f);
-    [JsonIgnore] public float Area=>1+L("area")*.06f+L("silverRing")*.05f+Hero.Trait("area");
-    [JsonIgnore] public float Duration=>1+L("duration")*.08f+L("silverRing")*.03f;
-    [JsonIgnore] public float ProjectileSpeed=>1+L("velocity")*.08f;
+    [JsonIgnore] public float Area=>1+L("area")*.06f+L("silverRing")*.05f+M("area")*.05f+M("omni")*.02f+Hero.Trait("area");
+    [JsonIgnore] public float Duration=>1+L("duration")*.08f+L("silverRing")*.03f+M("duration")*.15f+M("omni")*.02f;
+    [JsonIgnore] public float ProjectileSpeed=>1+L("velocity")*.08f+M("velocity")*.1f+M("omni")*.02f;
+    [JsonIgnore] public int Amount=>L("fork")+M("amount");
     [JsonIgnore] public float Armor=>L("armor")+M("armor")+Hero.Trait("armor");
     [JsonIgnore] public float Growth=>1+L("growth")*.05f+M("growth")*.03f;
     [JsonIgnore] public float XpEfficiency=>1/(1+(Level-1)*.08f);
-    [JsonIgnore] public float Luck=>1+L("luck")*.1f;
-    [JsonIgnore] public float Greed=>1+L("greed")*.15f+L("capital")*.15f+L("curse")*.2f+(L("goldRing")+L("rightSign"))*.1f+Hero.Trait("greed");
+    [JsonIgnore] public float Luck=>1+L("luck")*.1f+M("luck")*.1f;
+    [JsonIgnore] public float Greed=>1+L("greed")*.15f+L("capital")*.15f+L("curse")*.2f+(L("goldRing")+L("rightSign"))*.1f+M("greed")*.1f+Hero.Trait("greed");
     [JsonIgnore] public float Speed=>Hero.Speed*(1+.08f*L("stride")+.03f*M("stride"))*(Player.SlowUntil>Time?.65f:1);
-    [JsonIgnore] public float DashCooldown=>Hero.Dash*.6f*MathF.Pow(.95f,L("stride"));
+    [JsonIgnore] public float DashCooldown=>Math.Max(.5f,MathF.Pow(.88f,L("dash"))*MathF.Pow(.95f,L("stride")));
     [JsonIgnore] public float Magnet=>Hero.Magnet+L("magnet")*20+M("magnet")*15;
     [JsonIgnore] public float PressureTime=>(Time+PressureOffset)*(1+L("curse")*.1f+(L("goldRing")+L("rightSign"))*.08f);
     [JsonIgnore] public float WaveAge=>PressureTime<=600?PressureTime*.65f:390+(PressureTime-600)*.85f;
-    [JsonIgnore] public int RerollCost=>5*(RerollsUsed+1);
+    [JsonIgnore] public int FreeRerollsLeft=>Math.Max(0,M("reroll")*2-FreeRerollsUsed);
+    [JsonIgnore] public int RerollCost=>FreeRerollsLeft>0?0:5*(RerollsUsed-FreeRerollsUsed+1);
     [JsonIgnore] public int GoldAvailable=>Math.Max(0,GoldEarned-RerollGoldSpent);
     public float Random()
     {
@@ -114,39 +123,49 @@ public sealed partial class Simulation
         Clocks[r.Weapon]=0;if(r.Id=="mikolenin"){Shots.RemoveAll(s=>s.Weapon=="boomerang");Blasts.RemoveAll(b=>b.Weapon=="hammer");}
         SoundSignals|=SoundCue.Evolution;Notice="ЭВОЛЮЦИЯ: "+r.Title;return true;
     }
-    public bool CanUpgrade(string id)=>Content.ById.TryGetValue(id,out var u)&&!Banished.Contains(id)&&!Consumed(id)&&L(id)<u.Max&&(L(id)>0||IsTest||Inventory(u.Weapon).Count<5);
-    public bool ApplyUpgrade(string id)
+    public bool CanUpgrade(string id)=>Content.ById.TryGetValue(id,out var u)&&!DisabledItems.Contains(id)&&!Banished.Contains(id)&&!Consumed(id)&&L(id)<u.Max&&(L(id)>0||IsTest||Inventory(u.Weapon).Count<5);
+    public bool ApplyUpgrade(string id,int tier=0)
     {
         if(!CanUpgrade(id))return false;var u=Content.ById[id];if(L(id)==0)(u.Weapon?WeaponOrder:PassiveOrder).Add(id);Levels[id]++;
+        if(u.Weapon)QualityBonus[id]=QualityBonus.GetValueOrDefault(id)+TierBonus[Math.Clamp(tier,0,4)];
         if(id=="vital"){Player.MaxHp+=25;Heal(20);}if(id=="leftSign"){Player.MaxHp+=10;Heal(10);}if(u.Weapon)Clocks[id]=Math.Min(Clocks.GetValueOrDefault(id),.2f);return true;
     }
-    private float Weight(string id)
-    {var u=Content.ById[id];int tier=Math.Max(0,Array.IndexOf(Catalog.RarityIds,u.Rarity));return u.OfferWeight??Catalog.RarityWeights[tier]*(1+(Luck-1)*tier);}
+    public static readonly float[] TierBonus=[0,.1f,.2f,.35f,.5f];
+    public static string QualityStat(string id)=>id=="clock"?"длительности заморозки":id=="laurel"?"времени защиты":"урона";
+    public float WeaponQuality(string id)=>1+QualityBonus.GetValueOrDefault(id);
+    public float Weight(string id)=>Content.ById[id].OfferWeight??100;
+    public float[] TierWeights()=>new[]{65f,23,9,2.5f,.5f}.Select((w,i)=>w*(1+(Luck-1)*i)).ToArray();
+    public int RollTier()
+    {var weights=TierWeights();float r=Random()*weights.Sum();for(int i=0;i<weights.Length;i++){r-=weights[i];if(r<0)return i;}return 4;}
     private string? Pick(List<string> pool)
     {if(pool.Count==0)return null;float r=Random()*pool.Sum(Weight);foreach(string id in pool){r-=Weight(id);if(r<0)return id;}return pool[^1];}
     public void DrawOffers(IEnumerable<string>? candidates=null)
     {
-        var pool=(candidates??Content.Items.Select(x=>x.Id).Where(CanUpgrade)).ToList();Offers=[];
-        void Take(List<string> choices){string? id=Pick(choices);if(id is not null){Offers.Add(id);pool.Remove(id);}}
-        Take(pool.Where(id=>Content.ById[id].Weapon&&L(id)==0).ToList());
-        while(Offers.Count(id=>Content.ById[id].Weapon)<2&&pool.Any(id=>Content.ById[id].Weapon))Take(pool.Where(id=>Content.ById[id].Weapon).ToList());
-        Take(pool.Where(id=>!Content.ById[id].Weapon).ToList());while(Offers.Count<3&&pool.Count>0)Take(pool);OfferSelection=-1;
+        var pool=(candidates??Content.Items.Select(x=>x.Id)).Distinct().Where(CanUpgrade).ToList();Offers=[];OfferTiers=[];
+        while(Offers.Count<3&&pool.Count>0)
+        {
+            bool weapon=Random()<.5f;var category=pool.Where(id=>Content.ById[id].Weapon==weapon).ToList();
+            string id=Pick(category.Count>0?category:pool)!;Offers.Add(id);pool.Remove(id);if(Content.ById[id].Weapon)OfferTiers[id]=RollTier();
+        }
+        OfferSelection=-1;
     }
     public List<string> RerollPool()=>Content.Items.Where(u=>CanUpgrade(u.Id)&&!Offers.Contains(u.Id)).Select(u=>u.Id).ToList();
     public bool Reroll()
     {
         var pool=RerollPool();if(IsTest||Status!=RunStatus.Upgrading||Offers.Count==0||pool.Count<Offers.Count||GoldAvailable<RerollCost)return false;
-        RerollGoldSpent+=RerollCost;RerollsUsed++;DrawOffers(pool);return true;
+        int cost=RerollCost;RerollGoldSpent+=cost;if(FreeRerollsLeft>0)FreeRerollsUsed++;RerollsUsed++;DrawOffers(pool);return true;
     }
     public bool Banish(int index)
     {
         if(Status!=RunStatus.Upgrading||BanishesLeft<=0||index<0||index>=Offers.Count)return false;string id=Offers[index];Banished.Add(id);BanishesLeft--;
         var candidates=Content.Items.Where(u=>CanUpgrade(u.Id)&&!Offers.Contains(u.Id)).Select(u=>u.Id).ToList();var same=candidates.Where(x=>Content.ById[x].Weapon==Content.ById[id].Weapon).ToList();string? replacement=Pick(same.Count>0?same:candidates);
-        if(replacement is null)Offers.RemoveAt(index);else Offers[index]=replacement;OfferSelection=-1;if(Offers.Count==0)FinishUpgrade();return true;
+        OfferTiers.Remove(id);if(replacement is null)Offers.RemoveAt(index);else{Offers[index]=replacement;if(Content.ById[replacement].Weapon)OfferTiers[replacement]=RollTier();}OfferSelection=-1;if(Offers.Count==0)FinishUpgrade();return true;
     }
     public bool Choose(int index)
-    {if(Status!=RunStatus.Upgrading||index<0||index>=Offers.Count||!ApplyUpgrade(Offers[index]))return false;SoundSignals|=SoundCue.Upgrade;FinishUpgrade();return true;}
-    public void FinishUpgrade(){Player.Invulnerable=Math.Max(Player.Invulnerable,.65f);Offers=[];OfferSelection=-1;Status=RunStatus.Running;CheckLevel();}
+    {if(Status!=RunStatus.Upgrading||index<0||index>=Offers.Count||!ApplyUpgrade(Offers[index],OfferTiers.GetValueOrDefault(Offers[index])))return false;SoundSignals|=SoundCue.Upgrade;FinishUpgrade();return true;}
+    public bool SkipUpgrade()
+    {if(Status!=RunStatus.Upgrading||SkipsLeft<=0)return false;SkipsLeft--;GainXp(XpNeed*.1f,false);FinishUpgrade();return true;}
+    public void FinishUpgrade(){Player.Invulnerable=Math.Max(Player.Invulnerable,.65f);Offers=[];OfferTiers=[];OfferSelection=-1;Status=RunStatus.Running;CheckLevel();}
     public void GainXp(float value,bool check=true)
     {
         if(Options.Sandbox)return;float total=value*Growth*XpEfficiency+XpCarry;int whole=(int)MathF.Floor(total+1e-7f);XpCarry=Math.Max(0,total-whole);Xp+=whole;Combat.Xp+=whole;if(check)CheckLevel();
@@ -187,6 +206,11 @@ public sealed partial class Simulation
     }
     public Vector2 AimPoint(float range=620)
     {var delta=AimActive?Aim-Player.Pos:Player.Facing*range;float length=delta.Length();return World.Bound(Player.Pos+(length>.001f?delta*Math.Min(length,range)/length:Vector2.Zero),0);}
+    private Vector2? AutoAimPoint(float range=620)
+    {
+        var enemy=Targets(Player.Pos,range,1).FirstOrDefault();if(enemy is not null)return enemy.Pos;
+        if(IsTest)return null;var fire=MapWorld.Campfires.Where(f=>!CampfiresBroken.Contains(f.Id)&&Vector2.DistanceSquared(f.Pos,Player.Pos)<range*range).OrderBy(f=>Vector2.DistanceSquared(f.Pos,Player.Pos)).Select(f=>(Vector2?)f.Pos).FirstOrDefault();return fire;
+    }
     public Enemy? AimedTarget(float range=620)
     {var end=AimPoint(range);return Enemies.Where(e=>e.Alive&&(Arena?.Phase!="locked"||e.ArenaMember>0)&&World.SegmentDistance(e.Pos,Player.Pos,end)<e.Radius+24).OrderBy(e=>Vector2.DistanceSquared(e.Pos,end)).FirstOrDefault();}
     private bool WantsFire(string id)=>L(id)>0&&(Manual?SelectedWeapon==id&&(Firing||QueuedWeapon==id):true);

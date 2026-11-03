@@ -14,7 +14,7 @@ public static partial class PortTests
             Check((g.TakeSounds()&Simulation.WeaponSound(weapon.Id))!=0,weapon.Id+" successful cast emits audio");
             Check(g.TakeSounds()==SoundCue.None,"Sound events consumed once");
         }
-        var empty=Fixture(c);empty.Manual=false;empty.TakeSounds();empty.Cast("needle");empty.Levels["lightning"]=1;empty.Cast("lightning");Check(empty.TakeSounds()==SoundCue.None,"No phantom gun or lightning audio without target");
+        var empty=Fixture(c);empty.MapWorld.Campfires.Clear();empty.Manual=false;empty.TakeSounds();empty.Cast("needle");empty.Levels["lightning"]=1;empty.Cast("lightning");Check(empty.TakeSounds()==SoundCue.None,"No phantom gun or lightning audio without enemy or campfire target");
         var crowd=Fixture(c);var target=crowd.Spawn("brute",crowd.Player.Pos+new Vector2(80,0));target.Hp=target.MaxHp=1000000;crowd.TakeSounds();
         for(int i=0;i<5000;i++)crowd.HurtEnemy(target,1,0,"needle");Check(crowd.TakeSounds()==SoundCue.Hit,"5000 hits coalesce into one flag, no per-enemy queue");
         crowd.SoundSignals=SoundCue.Hurt;Check(!JsonSerializer.Serialize(crowd,SaveStore.JsonOptions).Contains("SoundSignals"),"Transient sounds never replay from saves");crowd.TakeSounds();

@@ -93,6 +93,15 @@ public sealed class Catalog
         }
         c.ScheduledBosses=c.Enemies.Values.Where(e=>e.Roster&&e.Boss).OrderBy(e=>e.At).ToArray();
         c.Recipes=Read<List<RecipeDef>>("evolutions");c.Permanents=Read<List<ShopDef>>("permanents");c.Features=Read<List<ShopDef>>("features");c.Stages=Read<List<StageDef>>("stages").ToDictionary(x=>x.Id);
+        using(var additions=JsonDocument.Parse(readFile("desktop-additions.json")))
+        {
+            foreach(var item in JsonSerializer.Deserialize<ItemDef[]>(additions.RootElement.GetProperty("passives").GetRawText(),Options)!){c.Items.Add(item);all.Add(item.Id,item);}
+            c.Permanents.AddRange(JsonSerializer.Deserialize<ShopDef[]>(additions.RootElement.GetProperty("permanents").GetRawText(),Options)!);
+            foreach(var entry in additions.RootElement.GetProperty("heroes").EnumerateObject())
+            {var hero=c.Heroes[entry.Name];hero.Sprite=entry.Value.GetProperty("sprite").GetString()!;hero.FacingSprites=JsonSerializer.Deserialize<Dictionary<string,string>>(entry.Value.GetProperty("facingSprites").GetRawText(),Options)!;}
+            foreach(var entry in additions.RootElement.GetProperty("bosses").EnumerateObject())
+            {var boss=c.Enemies[entry.Name];boss.Sprite=entry.Value.GetString()!;boss.Frames=[];}
+        }
         if(c.Heroes.Count!=30||c.Items.Count(x=>x.Weapon)!=33||c.Enemies.Count!=58||c.Recipes.Count!=31)throw new InvalidDataException("Unexpected content counts");
         foreach(var hero in c.Heroes.Values)if(!all.ContainsKey(hero.Weapon))throw new InvalidDataException(hero.Id);
         foreach(var recipe in c.Recipes)if(!all.ContainsKey(recipe.Weapon)||recipe.Passives.Keys.Any(id=>!all.ContainsKey(id)))throw new InvalidDataException(recipe.Id);

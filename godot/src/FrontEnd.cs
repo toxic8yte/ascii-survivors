@@ -102,6 +102,7 @@ public partial class Main
         returnView="intro";var body=Modal("lab","Испытания","Место, где можно быть бессмертным. И всё равно что-нибудь сломать.",true,width:700);
         body.AddChild(MenuAction("Sandbox","[>]  ПЕСОЧНИЦА",OpenSandbox));body.AddChild(Paragraph("Любой герой, любое оружие и выбранные враги. Проверяй атаки и эволюции без покупки героев.",15,muted));
         body.AddChild(MenuAction("StressSetup","[!]  НАГРУЗОЧНЫЙ ТЕСТ",ShowStressSetup));body.AddChild(Paragraph("Полный арсенал, неуязвимость и растущая толпа. Результаты испытаний не изменяют обычный прогресс.",15,muted));
+        body.AddChild(MenuAction("Developer","[~]  МАСТЕРСКАЯ РАЗРАБОТЧИКА · F8",ShowDeveloper));
     }
     private void ShowStressSetup()
     {

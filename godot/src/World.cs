@@ -11,19 +11,23 @@ public sealed class World
     public string Map;
     public Obstacle?[] Cells=new Obstacle?[Cols*Rows];
     public List<PickupBox> Treasures=[],Supplies=[];
-    private static readonly (string kind,float w,float h,string art,int ink)[] Graves=[("grave",46,46," ._.\n |+|\n_|_|_",1),("rock",60,42," .--.\n/####\\\n\\____/",1),("tree",46,58," \\|/\n--Y--\n  |\n /|\\",3),("crypt",76,54," _____\n|[_+_]|\n|_|||_|",1),("wall",84,30,"[]===[]\n[]===[]",1)];
-    private static readonly (string kind,float w,float h,string art,int ink)[] Forest=[("pine",44,58,"  /\\\n /**\\\n/****\\\n  ||",17),("oak",64,58," .oo.\n(oOOo)\n \\||/\n  ||",17),("stump",32,28," _ _\n|o_o|",18),("boulder",60,42," .--.\n/::::\\\n\\____/",1)];
+    public List<PickupBox> Campfires=[];
+    private static readonly (string kind,float w,float h,string art,int ink)[] Graves=[("grave",46,46,"┌─┐\n│✝│\n┴─┴",1),("rock",60,42," ▄▄▄ \n▐▓▓▓▌\n ▀▀▀ ",1),("tree",46,58,"╲│╱\n─╫─\n ║ \n╱╨╲",3),("crypt",76,54,"╔══╦══╗\n║ ▓╬▓ ║\n╚══╩══╝",1),("wall",84,30,"╥─╥─╥─╥\n╨─╨─╨─╨",1)];
+    private static readonly (string kind,float w,float h,string art,int ink)[] Forest=[("pine",44,58,"   ▲   \n  ▟█▙  \n ▟███▙ \n▟█████▙\n  ▐▌   ",17),("oak",64,58," ▄██▄ \n▐▓██▓▌\n ▀╫▀  \n  ║   ",17),("stump",32,28,"╭─╮\n▐▒▌",18),("boulder",60,42," ▄▄▄ \n▐▓▒▓▌\n ▀▀▀ ",1),("ruin",76,54,"╔═╗ ╔═╗\n║▒╚═╝▒║\n╚═╦═╦═╝",18),("wall",84,30,"╥─╥─╥─╥\n╨─╨─╨─╨",18)];
     public World(string map,uint seed)
     {
         Map=map;
         for(int y=0;y<Rows;y++)for(int x=0;x<Cols;x++)
         {
             uint value=Hash((uint)x,(uint)y);if(value%4==0)continue;
-            var types=map=="forest"?Forest:Graves;int type=map=="forest"?new[]{0,1,0,1,2,3}[(value>>5)%6]:(int)(value%(uint)types.Length);
+            var types=map=="forest"?Forest:Graves;int type=map=="forest"?new[]{0,1,0,1,2,3,4,5}[(value>>5)%8]:(int)(value%(uint)types.Length);
             var t=types[type];var pos=new Vector2(x*400+120+value%160,y*320+100+(value>>10)%120);
             if(Vector2.Distance(pos,new(6400,4800))<300||map=="forest"&&Ground(pos)!="grass")continue;
             Cells[y*Cols+x]=new(pos,new(t.w,t.h),t.art,t.ink,t.kind);
+            if(value%13==0&&Vector2.Distance(pos,new(6400,4800))>350){Cells[y*Cols+x]=new(pos,new(34,24)," ░▒░ \n ▒▓▒ \n╱╲╳╱╲",12,"campfire");Campfires.Add(new(y*Cols+x,pos,"campfire"));}
         }
+        // A nearby fire makes the new breakable visible in an ordinary fresh run.
+        var near=new Vector2(6660,4660);Cells[14*Cols+16]=new(near,new(34,24)," ░▒░ \n ▒▓▒ \n╱╲╳╱╲",12,"campfire");Campfires.RemoveAll(f=>f.Id==14*Cols+16);Campfires.Add(new(14*Cols+16,near,"campfire"));
         for(int i=0;i<12;i++){uint h=Hash((uint)i+seed%10000,37);var p=new Vector2(600+h%(uint)(Width-1200),600+(h>>12)%(uint)(Height-1200));Resolve(ref p,20,null);Treasures.Add(new(i,p,"treasure"));}
         for(int i=0;i<48;i++)
         {

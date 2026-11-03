@@ -13,7 +13,7 @@ public static partial class PortTests
     {var g=new Simulation(c,727,new(){Hero=hero,Map=map,Manual=true});g.Start();g.Enemies=[];g.NextBossAt=g.SpawnClock=g.NextMegaAt=1e8f;return g;}
     public static void Run(Catalog c,string referenceJson)
     {
-        Check(c.Heroes.Count==30&&c.Items.Count(x=>x.Weapon)==33&&c.Items.Count(x=>!x.Weapon)==22&&c.Enemies.Count==58&&c.Recipes.Count==31,"Full content roster");
+        Check(c.Heroes.Count==30&&c.Items.Count(x=>x.Weapon)==33&&c.Items.Count(x=>!x.Weapon)==23&&c.Enemies.Count==58&&c.Recipes.Count==31,"Full desktop content roster");
         foreach(var hero in c.Heroes.Values){var g=Fixture(c,hero.Id);Check(g.Inventory(true).SequenceEqual(new[]{hero.Weapon}.Concat(hero.ExtraWeapons)),hero.Id+" starting loadout");Close(g.Player.Hp,hero.Hp,hero.Id+" hp");}
         using var references=JsonDocument.Parse(referenceJson);
         foreach(var sample in references.RootElement.GetProperty("cases").EnumerateArray())
@@ -28,9 +28,9 @@ public static partial class PortTests
             var pools=sample.GetProperty("pools").EnumerateArray().ToArray();Check(pools.Length==g.Pools.Count,label+" pools");for(int i=0;i<pools.Length;i++){Close(g.Pools[i].Radius,pools[i].GetProperty("radius").GetSingle(),label+" pool radius");Close(g.Pools[i].Life,pools[i].GetProperty("life").GetSingle(),label+" pool life");}
             var blasts=sample.GetProperty("blasts").EnumerateArray().ToArray();Check(blasts.Length==g.Blasts.Count,label+" blasts");for(int i=0;i<blasts.Length;i++){Close(g.Blasts[i].Damage,blasts[i].GetProperty("damage").GetSingle(),label+" blast damage");Close(g.Blasts[i].Radius,blasts[i].GetProperty("radius").GetSingle(),label+" blast radius");}
             Close(enemy.FrozenUntil,sample.GetProperty("frozen").GetSingle(),label+" freeze");Close(enemy.ChilledUntil,sample.GetProperty("chilled").GetSingle(),label+" chill");Check(g.ShieldCharges==sample.GetProperty("shields").GetInt32(),label+" shield");Close(g.BibleUntil,sample.GetProperty("bibleUntil").GetSingle(),label+" books");
-            if(sample.GetProperty("cooldown").ValueKind!=JsonValueKind.Null)Close(g.Cooldown(id),sample.GetProperty("cooldown").GetSingle(),label+" cooldown",.0001f);
+            if(sample.GetProperty("cooldown").ValueKind!=JsonValueKind.Null)Close(g.Cooldown(id),id=="clock"?1.1f*.85f/(1+(g.L(id)-1)*.05f):sample.GetProperty("cooldown").GetSingle(),label+" cooldown",.0001f);
         }
-        var rolls=Fixture(c);rolls.GainXp(6);Check(rolls.Status==RunStatus.Upgrading,"Level pauses");Check(rolls.Offers.Count(id=>c.ById[id].Weapon)==2,"Two weapons and one passive");Check(!rolls.Reroll(),"No money from Legacy");rolls.GoldEarned=20;var first=rolls.Offers.ToArray();Check(rolls.Reroll()&&rolls.GoldAvailable==15&&rolls.RerollCost==10,"Run-only escalating reroll");Check(rolls.Offers.All(id=>!first.Contains(id)),"Full replacement");Check(rolls.Choose(0),"Confirm reward");
+        var rolls=Fixture(c);rolls.GainXp(6);Check(rolls.Status==RunStatus.Upgrading,"Level pauses");Check(rolls.Offers.Count==3,"Three independently rolled offers");Check(!rolls.Reroll(),"No money from Legacy");rolls.GoldEarned=20;var first=rolls.Offers.ToArray();Check(rolls.Reroll()&&rolls.GoldAvailable==15&&rolls.RerollCost==10,"Run-only escalating reroll");Check(rolls.Offers.All(id=>!first.Contains(id)),"Full replacement");Check(rolls.Choose(0),"Confirm reward");
         foreach(var map in c.Stages.Keys){var g=Fixture(c,map:map);g.Elapsed=140;var plan=g.GetWave();Check(plan.Entries.Any(e=>e.Ranged)&&plan.Entries.Any(e=>e.Charger),map+" early threats");for(int i=0;i<100;i++)g.SpawnWave();Check(g.Enemies.Count==g.GetWave().Target,map+" population cap");}
         foreach(var pair in c.Enemies.Where(x=>x.Value.Boss))
         {var g=new Simulation(c,83,new(){Sandbox=true,Manual=true,Enemy=pair.Key});g.Start();Check(g.Arena?.Phase=="locked",pair.Key+" sandbox ring");g.Player.Hp=g.Player.MaxHp=1000;g.Enemies[0].SkillClock=0;Tick(g,7);Check(g.Combat.Hurt>0,pair.Key+" inflicts damage");var boss=g.Enemies.First(e=>e.Def.Boss);g.HurtEnemy(boss,1e9f);Check(g.Arena is null&&g.GoldEarned==0&&g.Chests.Count==0,pair.Key+" releases without rewards");}
@@ -44,6 +44,8 @@ public static partial class PortTests
         CheckLateWaves(c);
         CheckVideoSettings();
         CheckCrowd(c);
+        CheckGameplayReview(c);
+        CheckLegacyExpansion(c);
         var castleRows=MenuBackdrop.Castle.Split('\n');
         Check(castleRows.Length==9&&castleRows.All(row=>row.Length==41),"Castle uses a uniform cell grid");
         char Mirror(char ch)=>ch switch{'/'=>'\\','\\'=>'/','<'=>'>','>'=>'<','┌'=>'┐','┐'=>'┌','├'=>'┤','┤'=>'├',_=>ch};

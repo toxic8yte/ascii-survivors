@@ -18,7 +18,7 @@ public sealed class Enemy
     public Vector2 Pos,Prev,Charge,Target;
     public float Hp,MaxHp,Damage,Speed,Radius,Phase,SkillClock,Windup,ChargeTime,Flash,BladeAt=-10,ChilledUntil,FrozenUntil,PoisonAt,BornAt;
     public float HolyUntil,HolyNext,HolyDamage,BurnUntil,BurnNext,BurnDamage;
-    public bool Alive=true,TrainingDummy;
+    public bool Alive=true,TrainingDummy,Pacified;
 }
 public sealed class Projectile
 {
@@ -56,11 +56,11 @@ public sealed class Gem
     public Vector2 Pos;
     public float Value;
     public int Bin;
-    public bool Magnetized,Taken;
+    public bool Magnetized,Taken,Gold;
 }
 public sealed class Heart {public Vector2 Pos;public float Value=20,Expires;public bool Taken;}
 public sealed class Chest {public int Id;public Vector2 Pos;public string Source="lichLord";public bool CanEvolve,Treasure;}
-public sealed class Choice {public string Kind="",Id="";public float Value;public int Rank;}
+public sealed class Choice {public string Kind="",Id="";public float Value;public int Rank,Tier;}
 public sealed class Encounter
 {
     public Vector2 Pos;

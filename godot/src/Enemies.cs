@@ -28,13 +28,13 @@ public sealed partial class Simulation
         }
         bool surge=!Options.Stress&&minute>=2&&age%60<10,recovery=!Options.Stress&&minute>=2&&age%60>=48,danger=!Options.Stress&&age>=360;float after=Math.Max(0,age-360);
         float population=Options.Stress?18+Math.Min(age,1800)*.12f+Math.Max(0,age-1800)*.1f:24+Math.Min(age,360)*.35f+after*2.25f;
-        int target=Math.Min(Options.Stress?24000:2000,(int)MathF.Round(population*(surge?(age>=360?1.25f:1.12f):recovery?.9f:1)));
+        int target=Math.Min(Options.Stress?24000:2000,(int)MathF.Round(population*(surge?(age>=360?1.25f:1.12f):recovery?.9f:1)*(1+M("curse")*.1f))+20*M("charm"));
         var plan=new WavePlan{Title=wave?.Title??titles[stage],Phase=Options.Stress?"Нагрузочный тест":surge?"Наплыв":recovery?"Передышка":"Натиск",Target=target,
             Interval=Options.Stress?Math.Max(.24f,.85f-age/4000):Math.Max(.15f,.85f-Math.Min(age,360)/1200-after/900)*(surge?.8f:recovery?1.35f:1),
             Group=Options.Stress?Math.Min(8,2+(int)(age/180)):Math.Max(3,Math.Min(32,3+(int)(Math.Min(age,360)/60)+(int)(after/20)+(surge?2:recovery?-2:0))),
             RangedCap=Math.Max(1,Math.Min(danger?18:8,(int)(target*(danger?.07f:.06f)))),ChargeCap=Math.Max(1,Math.Min(danger?8:4,(int)(target*.03f))),SpecialCap=Math.Max(3,Math.Min(danger?70:40,(int)(target*(danger?.18f:.14f)))),EliteCap=Math.Max(1,Math.Min(danger?45:28,(int)(target*(danger?.09f:.04f))))};
         foreach(var e in selected){int roleIndex=Array.IndexOf(new[]{"swarm","normal","fast","heavy","special"},RoleOf(e));float w=support.Contains(e.Id)?e.Ai=="ranged"?20:16:wave is not null?wave.Enemies[e.Id]:age>=1500&&RoleOf(e)=="heavy"?60:e.Ai=="ranged"?danger?12:5:roleIndex<0?6:weights[stage][roleIndex];plan.Entries.Add(new(e.Id,w,e.Ai=="ranged",e.Ai=="charge",RoleOf(e)=="special",e.Rank=="elite"));}
-        return plan;
+        plan.Interval/=1+M("curse")*.1f;return plan;
     }
     private string PickEnemy(List<WaveEntry> entries)
     {float r=Random()*entries.Sum(e=>e.Weight);foreach(var e in entries){r-=e.Weight;if(r<0)return e.Id;}return entries[^1].Id;}
@@ -44,6 +44,8 @@ public sealed partial class Simulation
         float pressure=!d.Boss&&!IsTest?1+Math.Max(0,PressureTime-360)/300:1;
         float scale=Options.Sandbox?1:(d.Mega?1+Math.Max(0,Time-600)/1200:1+WaveAge/340)*pressure;
         var e=new Enemy{Id=NextId++,Kind=kind,Def=d,Pos=pos,Prev=pos,Hp=d.Hp*scale,MaxHp=d.Hp*scale,Damage=d.Damage*(Options.Sandbox?1:1+(int)(PressureTime/180)*.12f),Speed=d.Speed,Radius=d.Radius,Phase=Random()*MathF.Tau,SkillClock=1.5f+Random()*2,Target=pos,ArenaMember=member,BornAt=Time};
+        e.Hp*=1+M("curse")*.1f;e.MaxHp=e.Hp;e.Speed*=1+M("curse")*.1f;
+        if(!d.Boss&&M("defang")>0&&Random()<M("defang")*.03f){e.Pacified=true;e.Damage=0;}
         if(d.Ai=="direct")e.Charge=SafeDirection(Player.Pos-pos);if(!Options.Sandbox)MapWorld.Resolve(ref e.Pos,e.Radius,Arena);World.ResolveRing(ref e.Pos,e.Radius,Arena,member>0);e.Prev=e.Pos;Enemies.Add(e);Encountered.Add(kind);if(d.Boss)SoundSignals|=SoundCue.Boss;return e;
     }
     public void SpawnWave()
@@ -80,7 +82,7 @@ public sealed partial class Simulation
         RebuildGrid();
     }
     public bool FirstBoss(Enemy e)=>BossIndex==1&&e.Def.Boss&&e.Kind==Catalog.BossOrder[0];
-    public float BossHealth(int index)=> (index==1?1500:3200+Math.Max(0,index-2)*1000)+Math.Max(0,Level-1)*200;
+    public float BossHealth(int index)=> ((index==1?1500:3200+Math.Max(0,index-2)*1000)+Math.Max(0,Level-1)*200)*(1+M("curse")*.1f);
     public void BeginEncounter(){SoundSignals|=SoundCue.Boss;Arena=new(){Pos=Player.Pos,Radius=ArenaRadius,Kind=Catalog.BossOrder[BossIndex%Catalog.BossOrder.Length]};Notice="ПЯТЬ СЕКУНД ДО ЗАМЫКАНИЯ КОЛЬЦА";}
     private void UpdateEncounter(float dt)
     {
@@ -106,6 +108,7 @@ public sealed partial class Simulation
     public (float Speed,float Duration,float Warning) ChargeAttack(Enemy e)=>(e.Def.Boss?380:340,e.Def.Roster?e.Def.Movement.ChargeDuration:e.Def.Boss?.65f:.45f,e.Def.Roster?Math.Max(.8f,e.Def.Movement.WindupDuration):e.Def.Boss?1:.85f);
     private void EnemySkill(Enemy e)
     {
+        if(e.Pacified)return;
         var d=e.Def;
         if(d.Ai=="darklord")
         {
@@ -117,7 +120,7 @@ public sealed partial class Simulation
         else if(d.Ai=="ranged")
         {
             float angle=World.Angle(Player.Pos-e.Pos);int count=e.Kind=="lich"||FirstBoss(e)?1:3;
-            for(int i=0;i<count&&EnemyShots.Count<256;i++)EnemyShots.Add(new(){Pos=e.Pos,Prev=e.Pos,Velocity=World.Direction(angle+(i-(count-1)/2f)*.22f)*d.ProjectileSpeed,Life=4,Damage=e.Damage*d.ProjectileDamageScale,Radius=7,Ink=d.Ink,Glyph=e.Kind=="pumpkin"?"o":"~"});
+            for(int i=0;i<count&&EnemyShots.Count<256;i++)EnemyShots.Add(new(){Weapon=e.Kind,Pos=e.Pos,Prev=e.Pos,Velocity=World.Direction(angle+(i-(count-1)/2f)*.22f)*d.ProjectileSpeed,Life=e.Kind=="pumpkin"?3.2f:4,Damage=e.Damage*d.ProjectileDamageScale,Radius=7,Ink=d.Ink,Glyph=e.Kind=="pumpkin"?"o":"~"});
             if(e.Kind=="lichLord")QueueSummons(e,"skeleton",FirstBoss(e)?2:3);
         }
         else if(d.Ai=="summoner"){QueueSummons(e,"ghoul",3);QueueSummons(e,"mummy",1);}
@@ -154,12 +157,12 @@ public sealed partial class Simulation
     }
     public void HurtEnemy(Enemy e,float amount,float knockback=0,string weapon="other")
     {
-        if(!e.Alive)return;SoundSignals|=SoundCue.Hit;if(weapon is "blades" or "bible")SoundSignals|=SoundCue.Orbit;float damage=amount*(Content.ById.TryGetValue(weapon,out var item)?item.DamageMultiplier:1);float effective=Math.Min(e.Hp,damage);Combat.Hit(weapon,damage,effective);
+        if(!e.Alive)return;SoundSignals|=SoundCue.Hit;if(weapon is "blades" or "bible")SoundSignals|=SoundCue.Orbit;float damage=amount*(Content.ById.TryGetValue(weapon,out var item)?item.DamageMultiplier*WeaponQuality(weapon):1);float effective=Math.Min(e.Hp,damage);Combat.Hit(weapon,damage,effective);
         if(weapon=="poison"&&Hero.Trait("lifesteal")>0)LeechBudget-=Heal(Math.Min(LeechBudget,Math.Min(1,effective*Hero.Trait("lifesteal"))));
         e.Hp-=damage;e.Flash=.12f;if(knockback>0){float resistance=e.Def.Resistance>0?e.Def.Resistance:FirstBoss(e)?.65f:0;MoveEnemy(e,SafeDirection(e.Pos-Player.Pos)*knockback*(1-resistance));}
         if(e.Hp>0)return;SoundSignals|=e.Def.Boss?SoundCue.BossDeath:SoundCue.Kill;e.Alive=false;Kills++;
         if(Options.Sandbox){if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ТЕСТ");return;}
-        if(Kills%5==0)AwardGold(1);
+        if(Kills%5==0)AddGem(e.Pos,1,true);
         if(e.Def.Boss){BossKills++;AwardGold(e.Def.Mega?125:25);if(Arena?.BossId==e.Id)ReleaseArena("БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК");else Notice="БОСС ПОБЕЖДЁН · ЗАБЕРИ СУНДУК";NextBossAt=Math.Max(NextBossAt,PressureTime+90);Chests.Add(new(){Id=NextChestId++,Pos=e.Pos,Source=e.Kind,CanEvolve=e.Def.Mega||e.BornAt>=600});if(Chests.Count>64)Chests.RemoveAt(0);}
         if(e.Def.Xp>0&&(e.Def.Boss||Options.Stress||Random()<.5f))AddGem(e.Pos,e.Def.Xp);
         if(!IsTest&&Random()<(e.Def.Boss?.275f:.009625f*Luck)){Hearts.Add(new(){Pos=e.Pos+new Vector2(14,0),Value=e.Def.Boss?60:20,Expires=Time+120});Combat.HeartsDropped++;}

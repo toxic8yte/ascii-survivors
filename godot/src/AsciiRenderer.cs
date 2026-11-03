@@ -93,6 +93,11 @@ public partial class AsciiRenderer : Node2D
                 Stamp(pos,"*",Ink("needle",7));continue;
             }
             if(shot.Weapon=="flamethrower"){Stamp(pos,MathF.Sin(g.Time*25+shot.Age)>0?")}":"{~",ink);Stamp(pos-Safe(shot.Velocity)*24,"~",Ink(shot.Weapon,7));continue;}
+            if(shot.Weapon=="plasmaMinigun")
+            {
+                var dir=Safe(shot.Velocity);var side=new V(-dir.Y,dir.X);float tail=Math.Min(90,shot.Age*shot.Velocity.Length());
+                Line(pos-dir*tail,pos,ink,"═");Line(pos-dir*tail+side*5,pos+side*5,ink,"─",.6f);Stamp(pos,"◉",ink);continue;
+            }
             if(shot.Weapon=="poison")ink=3;
             string glyph=shot.Evolved?shot.Weapon switch{"crossbow"=>"|=>","gauss"=>"=G=>","plasmaMinigun"=>"{R}","chozo"=>"(@)","electropistol"=>"~Z>",_=>shot.Glyph}:shot.Glyph;
             Stamp(pos,glyph,ink);
@@ -104,7 +109,8 @@ public partial class AsciiRenderer : Node2D
         {
             if(!e.Alive)continue;var pos=Interpolated(e);var screen=Screen(pos);if(screen.X<Field.Position.X-50||screen.X>Field.End.X+50||screen.Y<Field.Position.Y-70||screen.Y>Field.End.Y+70)continue;
             VisibleEnemies++;var def=e.Def;int ink=e.Flash>0?8:e.ChilledUntil>g.Time||e.FrozenUntil>g.Time?9:def.Ink;
-            string art=e.TrainingDummy?" ._.\n[+|+]\n / \\":def.Frames.Length>0?def.Frames[((int)(g.Time*6)+e.Id)%def.Frames.Length]:def.Sprite;
+            if(def.Ai=="darklord"&&ink==14)ink=1;
+            string art=e.TrainingDummy?" ._.\n[+|+]\n / \\":def.Frames.Length>0?def.Frames[((int)(g.Time*6)+e.Id)%def.Frames.Length]:def.Sprite;if(e.Pacified)ink=1;
             bool important=def.Boss||def.Rank=="elite"||e.Windup>0||e.ChargeTime>0||e.TrainingDummy;
             if(!important&&g.Enemies.Count>2000)
             {
@@ -134,7 +140,7 @@ public partial class AsciiRenderer : Node2D
             }
         }
         foreach(var shot in g.EnemyShots)Stamp(Interpolated(shot),shot.Glyph,shot.Ink);
-        foreach(var gem in g.Gems)Stamp(gem.Pos,gem.Value>=6?"<*>":"*",16);
+        foreach(var gem in g.Gems)Stamp(gem.Pos,gem.Gold?"◉":gem.Value>=6?"<*>":"*",gem.Gold?7:16);
         foreach(var heart in g.Hearts)Stamp(heart.Pos,"[+]",11);
         foreach(var chest in g.Chests){Stamp(chest.Pos,chest.CanEvolve?" ___ \n[E*]\n|__|":" ___ \n[?*]\n|__|",chest.CanEvolve?5:7);Stamp(chest.Pos-new V(0,36),(int)(g.Time*3)%2==1?"*":"+",8);}
         if(!g.Options.Sandbox)foreach(var cache in g.MapWorld.Treasures)if(!g.TreasuresTaken.Contains(cache.Id))Stamp(cache.Pos,"[X]",7);

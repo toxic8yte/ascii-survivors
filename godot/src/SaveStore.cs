@@ -11,6 +11,8 @@ public sealed class Profile
     public bool Manual;
     public Dictionary<string,int> Ranks=[],CreditedGross=[],CreditedNet=[];
     public HashSet<string> Heroes=["hunter"],Features=[],Seen=[],Finished=[];
+    public HashSet<string> DisabledItems=[];
+    public HashSet<string> SealedItems=[];
 }
 public sealed class SaveDocument {public int Version=1;public Profile Profile=new();public Simulation? Run;}
 public sealed class SaveStore
@@ -49,6 +51,8 @@ public sealed class SaveStore
         if(Profile is null||Profile.Gold<0||Profile.LifetimeGold<0||Profile.Heroes is null||Profile.Features is null||Profile.Seen is null||Profile.Ranks is null||Profile.Finished is null||Profile.CreditedGross is null||Profile.CreditedNet is null||!double.IsFinite(Profile.Seconds+Profile.BestTime))throw new InvalidDataException("Invalid profile");
         Profile.Heroes.RemoveWhere(id=>!content.Heroes.ContainsKey(id));Profile.Heroes.Add("hunter");Profile.Features.RemoveWhere(id=>!content.Features.Any(f=>f.Id==id));Profile.Seen.RemoveWhere(id=>!content.Enemies.ContainsKey(id));
         foreach(var u in content.Permanents)Profile.Ranks[u.Id]=Math.Clamp(Profile.Ranks.GetValueOrDefault(u.Id),0,u.Max);
+        Profile.DisabledItems??=[];Profile.DisabledItems.RemoveWhere(id=>!content.ById.ContainsKey(id));
+        Profile.SealedItems??=[];Profile.SealedItems=Profile.SealedItems.Where(content.ById.ContainsKey).Take(SealCapacity).ToHashSet();
         if(!Profile.Heroes.Contains(Profile.Hero))Profile.Hero="hunter";if(!content.Stages.ContainsKey(Profile.Map))Profile.Map="forest";
     }
     public bool Write()
@@ -89,10 +93,18 @@ public sealed class SaveStore
     {
         int pending=Math.Max(0,g.GoldEarned-Profile.CreditedGross.GetValueOrDefault(g.RunId));
         if(Profile.Gold+pending<g.RerollCost)return false;
-        var profile=CloneProfile();var oldRun=Document.Run;var offers=g.Offers;int selected=g.OfferSelection,spent=g.RerollGoldSpent,used=g.RerollsUsed;uint rng=g.RandomState;
+        var profile=CloneProfile();var oldRun=Document.Run;var offers=g.Offers;var tiers=g.OfferTiers;int selected=g.OfferSelection,spent=g.RerollGoldSpent,used=g.RerollsUsed,free=g.FreeRerollsUsed;uint rng=g.RandomState;
         if(!g.Reroll())return false;
         if(Checkpoint(g))return true;
-        Document.Profile=profile;Document.Run=oldRun;g.Offers=offers;g.OfferSelection=selected;g.RerollGoldSpent=spent;g.RerollsUsed=used;g.RandomState=rng;return false;
+        Document.Profile=profile;Document.Run=oldRun;g.Offers=offers;g.OfferTiers=tiers;g.OfferSelection=selected;g.RerollGoldSpent=spent;g.RerollsUsed=used;g.FreeRerollsUsed=free;g.RandomState=rng;return false;
+    }
+    public int SealCapacity=>Profile.Ranks.GetValueOrDefault("seal1")+Profile.Ranks.GetValueOrDefault("seal2")*2+Profile.Ranks.GetValueOrDefault("seal3")*3;
+    public HashSet<string> RotationExclusions()=>Profile.DisabledItems.Concat(Profile.SealedItems).ToHashSet();
+    public bool SetSeal(string id,bool sealedItem)
+    {
+        if(!content.ById.ContainsKey(id)||sealedItem&&!Profile.SealedItems.Contains(id)&&Profile.SealedItems.Count>=SealCapacity)return false;
+        var before=new HashSet<string>(Profile.SealedItems);if(sealedItem)Profile.SealedItems.Add(id);else Profile.SealedItems.Remove(id);
+        if(Write())return true;Profile.SealedItems=before;return false;
     }
     public bool Purchase(string id,string category)
     {
