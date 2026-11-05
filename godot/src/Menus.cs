@@ -147,9 +147,15 @@ public partial class Main
         }
         if(confirmChoice is not null)confirmChoice.Disabled=!selected;
         if(choiceSelection is not null)choiceSelection.Text=selected?"ВЫДЕЛЕНО: "+(overlayKind=="reward"?RewardTitle(game.Rewards[game.OfferSelection]):content.ById[game.Offers[game.OfferSelection]].Title):"Сначала выдели карточку";
-        if(choiceMoney is not null)choiceMoney.Text="ЗОЛОТО ЗАБЕГА: "+game.GoldAvailable;
+        int missingGold=Math.Max(0,game.RerollCost-game.GoldAvailable);
+        if(choiceMoney is not null)choiceMoney.Text="ЗОЛОТО ЗАБЕГА: "+game.GoldAvailable+(overlayKind=="level"&&missingGold>0?$" · РЕРОЛЛ СТОИТ {game.RerollCost} · НЕ ХВАТАЕТ {missingGold}":"");
         if(banishChoice is not null){banishChoice.Disabled=!selected||game.BanishesLeft<=0;banishChoice.Text="ИЗГНАТЬ · "+game.BanishesLeft;}
-        if(rerollChoice is not null){rerollChoice.Text=game.FreeRerollsLeft>0?"РЕРОЛЛ · БЕСПЛАТНО · "+game.FreeRerollsLeft:"РЕРОЛЛ · "+game.RerollCost+" ЗОЛ.";rerollChoice.Disabled=game.IsTest||game.GoldAvailable<game.RerollCost||game.RerollPool().Count<game.Offers.Count;}
+        if(rerollChoice is not null)
+        {
+            rerollChoice.Text=game.FreeRerollsLeft>0?"РЕРОЛЛ · БЕСПЛАТНО · "+game.FreeRerollsLeft:missingGold>0?"РЕРОЛЛ · НЕ ХВАТАЕТ "+missingGold:"РЕРОЛЛ · "+game.RerollCost+" ЗОЛ.";
+            rerollChoice.Disabled=game.IsTest||missingGold>0||game.RerollPool().Count<game.Offers.Count;
+            rerollChoice.TooltipText=game.IsTest?"В песочнице выдавай предметы через F8.":game.RerollPool().Count<game.Offers.Count?"Недостаточно новых вариантов для полной замены карточек.":$"Цена: {game.RerollCost} золота забега. Доступно: {game.GoldAvailable}. "+(missingGold>0?$"Не хватает {missingGold}. ":"")+"Общий кошелёк Наследия сюда не входит. Бесплатные повторы покупаются в Наследии и действуют со следующего забега.";
+        }
     }
     private string RewardTitle(Choice option)=>option.Kind switch{"evolution"=>content.Recipes.First(r=>r.Id==option.Id).Title,"upgrade"=>content.ById[option.Id].Title,"gold"=>$"{MathF.Floor(option.Value*.45f*game.Greed)} золота","xp"=>$"{MathF.Floor(option.Value*game.Growth*game.XpEfficiency)} опыта",_=>"Три защитных заряда"};
     private void ShowEnding()

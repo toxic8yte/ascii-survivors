@@ -49,6 +49,10 @@ public partial class Main
             SelectChoice(0);Assert(!confirmChoice.Disabled&&game.OfferSelection==0,"Explicit selection");
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Assert(game.Status==RunStatus.Upgrading,"Space does not confirm");
             await Shot("03-upgrades");Assert(confirmChoice.GetGlobalRect().End.Y<=root.Size.Y+1,"Choice actions fit viewport");
+            game.GoldEarned=11;game.RerollGoldSpent=game.RerollsUsed=0;ShowChoices(false);Assert(!rerollChoice!.Disabled,"First reroll available with eleven run coins");rerollChoice.EmitSignal(Godot.Button.SignalName.Pressed);
+            Assert(game.GoldAvailable==6&&game.RerollCost==10&&rerollChoice!.Disabled&&rerollChoice.Text.Contains("4")&&choiceMoney!.Text.Contains("НЕ ХВАТАЕТ 4"),"Second reroll explains missing run gold even with a rich profile");await Shot("reroll-not-enough-gold");
+            game.GoldEarned=50;UpdateChoiceSelection();foreach(int price in new[]{10,15,20}){var previous=game.Offers.ToArray();Assert(!rerollChoice!.Disabled&&game.RerollCost==price,"Next paid reroll enabled");rerollChoice.EmitSignal(Godot.Button.SignalName.Pressed);Assert(game.Offers.All(id=>!previous.Contains(id)),"Repeated UI reroll replaces full hand");}
+            Assert(game.GoldAvailable==0&&game.RerollsUsed==4&&rerollChoice!.Disabled,"Repeated rerolls stop only when funds run out");
             game.Choose(0);CloseOverlay();game.Status=RunStatus.Running;ShowPause();await Shot("04-pause");Assert(centeredBody!.Size.X<=540,"Pause buttons stay compact");
             ShowMetrics();await Shot("04-telemetry");Press("ExportTelemetry");Assert(Directory.GetFiles(telemetry.DirectoryPath,"snapshot-*.json").Length>0,"Telemetry report exported from metrics UI");CloseAux();
             string runId=game.RunId;ShowIntro();Assert(store.SavedRun?.RunId==runId,"Title preserves current battle");Press("Continue");Assert(game.RunId==runId&&game.Status==RunStatus.Running,"Continue resumes same battle");

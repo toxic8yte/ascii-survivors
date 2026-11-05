@@ -22,5 +22,14 @@ public static partial class PortTests
         File.WriteAllText(file,"{broken");var recovered=new SaveStore(c,file);Check(recovered.Profile.Gold==321&&recovered.LastError.Contains("резервная"),"Corrupt primary recovers backup");
         string broken=Path.Combine(dir,"all-bad.json");File.WriteAllText(broken,"""{"Version":1,"Profile":null}""");var fresh=new SaveStore(c,broken);Check(fresh.Profile.Gold==50&&Directory.GetFiles(dir,"all-bad.json.corrupt-*").Length==1,"Corrupt profile preserved and reset safely");
         Console.WriteLine("Save tests isolated at "+dir);
+        string loopFile=Path.Combine(dir,"reroll-loop.json");var loopStore=new SaveStore(c,loopFile);loopStore.Profile.Gold=1000000;
+        var loop=Fixture(c);loop.GoldEarned=50;loop.GainXp(6);Check(loopStore.Checkpoint(loop),"Multi-reroll checkpoint");int expected=50;
+        foreach(int cost in new[]{5,10,15,20})
+        {
+            var previousOffers=loop.Offers.ToArray();Check(loop.RerollCost==cost&&loopStore.Reroll(loop),"Consecutive paid reroll costs "+cost);expected-=cost;
+            Check(loop.GoldAvailable==expected&&loopStore.Profile.Gold==1000000+expected&&loop.Offers.All(id=>!previousOffers.Contains(id)),"Consecutive reroll replaces cards and charges once");
+            loopStore=new SaveStore(c,loopFile);loop=loopStore.SavedRun!;Check(loop is not null&&loop.GoldAvailable==expected,"Consecutive reroll survives reload");
+        }
+        Check(!loopStore.Reroll(loop)&&loop.RerollsUsed==4&&loop.GoldAvailable==0,"Rich Legacy wallet cannot pay when run gold is exhausted");
     }
 }
